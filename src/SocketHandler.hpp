@@ -6,7 +6,7 @@
 # include <iostream>
 
 #define FAILED -1
-#define BACKLOG 100 // NGINX IS 511 BUT TESTING 
+#define BACKLOG 10 // NGINX IS 511 BUT TESTING 
 /*defines the maximum number of pending connections that can be queued up before connections are refused.*/
 
 class SocketHandler
