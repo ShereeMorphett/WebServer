@@ -1,16 +1,10 @@
 // #include "SocketHandler.hpp"
-// #include <iostream>
-
-// ///demo stuff, check whats needed
-// #include <sys/types.h>
-// #include <arpa/inet.h>
-// #include <netdb.h>
-// #include <fcntl.h>
-// #include <unistd.h>
+// #define MYPORT "8080"
+// #define MAXBUFLEN 100
 
 // #include <sys/socket.h>
 // #include <netinet/in.h> //needed for sockaddr_in struct etc
-// #define MAXBUFLEN 100
+
 // // struct sockaddr_in 
 // // { 
 // // 	__uint8_t         sin_len; 
@@ -25,7 +19,7 @@
 // // };
 
 
-// #define MYPORT 4950
+
 
 // long		socketAccept(int fd)
 // {

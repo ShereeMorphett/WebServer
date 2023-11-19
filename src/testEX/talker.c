@@ -13,7 +13,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#define SERVERPORT "4950"    // the port users will be connecting to
+#define SERVERPORT "8080"    // the port users will be connecting to
 
 // struct addrinfo {
 //     int              ai_flags;     // AI_PASSIVE, AI_CANONNAME, etc.
