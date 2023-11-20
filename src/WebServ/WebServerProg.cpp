@@ -191,7 +191,7 @@ void WebServerProg::startProgram()
 			if (m_pollSocketsVec[i].revents & POLLIN) //WHY DOES REQUEST BREAK, okay it need the accept
 			{
 				if (m_pollSocketsVec[i] == LISTENFLAG)
-					acceptConnection(m_pollSocketsVec[i]); //BUT HOW DO I FLAG IT
+					acceptConnection(m_pollSocketsVec[i].fd); //BUT HOW DO I FLAG IT
 				std::cout << "Request: " << std::endl;
 				std::cout << m_pollSocketsVec[i].fd << std::endl;
 				receiveRequest(m_pollSocketsVec[i].fd);
