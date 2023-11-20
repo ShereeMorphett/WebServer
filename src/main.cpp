@@ -13,26 +13,18 @@
 #include "Socket.hpp"
 
 
-// Function to retrieve the sender's address from a sockaddr structure
-void *getSenderAddress(struct sockaddr *sa)
-{
-    if (sa->sa_family == AF_INET)
-    {
-        // If IPv4, return a pointer to the IPv4 address in the sockaddr_in structure
-        return &(((struct sockaddr_in *)sa)->sin_addr);
-    }
-    // If IPv6, return a pointer to the IPv6 address in the sockaddr_in6 structure
-    return &(((struct sockaddr_in6 *)sa)->sin6_addr);
-}
+
+
+
 
 int main()
 {
 
     struct addrinfo defaults;
     memset(&defaults, 0, sizeof defaults);
-    defaults.ai_family = AF_INET6; // Use IPv6
-    defaults.ai_socktype = SOCK_DGRAM; // Use UDP
-    defaults.ai_flags = AI_PASSIVE; // Use the local host's address
+    defaults.ai_family = AF_INET6; // Use IPv6, which should it be
+    defaults.ai_socktype = SOCK_STREAM; //Useds TCP/IP  
+    defaults.ai_flags = AI_PASSIVE; // Use the local host's address, this would probably need to change with config file??
 
     Socket serverSocket(defaults);
     serverSocket.listenForSender();
