@@ -5,11 +5,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include "./WebServ/WebServ.hpp"
+// #include "./WebServ/WebServ.hpp"
+#include "./WebServ/WebServerProg.hpp"
+
 
 int main ()
 {
-	//validate the config file from here
-	WebServ server; // would take a validated config file at construction
-	server.start();
+	//if no config file is given use default
+	//if 
+	WebServerProg program; // would take a validated config file at construction
+	program.startProgram();
 }

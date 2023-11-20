@@ -13,7 +13,7 @@
 #define MAXSOCK 10
 #define PORT 8888
 
-void WebServ::addSocketToPoll(int socket, int event)
+void WebServ::addSocketToPoll(int socket, int event) //moved
 {
 	struct pollfd fd;
 	fd.fd = socket;
@@ -117,7 +117,7 @@ void WebServ::start()
 		}	 
 		if (pollResult == 0)
 			continue;
-		for (size_t i  = 0; i < m_pollSocketsVec.size() && m_pollSocketsVec.size() < MAXSOCK; i++)
+		for (size_t i  = 0; i < m_pollSocketsVec.size(); i++)
 		{
 			if (m_pollSocketsVec[i].revents & POLLIN)
 			{

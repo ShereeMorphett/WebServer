@@ -78,6 +78,8 @@
 		"ios": "cpp",
 		"locale": "cpp",
 		"mutex": "cpp",
-		"optional": "cpp"
+		"optional": "cpp",
+		"__tree": "cpp",
+		"map": "cpp"
 	}
 }
