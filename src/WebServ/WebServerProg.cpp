@@ -13,13 +13,15 @@
 #include <cerrno>
 #include "../Color.hpp"
 
-void WebServerProg::addSocketToPoll(int socket, int event)
+void WebServerProg::addSocketToPoll(int socket, int event) //int listening
 {
 	struct pollfd fd;
 	fd.fd = socket;
 	fd.events = event;
 	fd.revents = 0;
 	m_pollSocketsVec.push_back(fd);
+
+	//there needs to be a flag here that gets set to say if its a server or i client
 }
 
 void  WebServerProg::receiveRequest(int clientSocket)
@@ -32,7 +34,7 @@ void  WebServerProg::receiveRequest(int clientSocket)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 			return ;
-		std::cout << "Error! recv" << std::endl;
+		std::cerr << "Error! recv: " << strerror(errno) << std::endl;
 		exit (1);
 	}
 	else if (bytes_received == 0)
@@ -136,6 +138,28 @@ int WebServerProg::initServer2() // this will need to be done using the input fr
 	return 0;
 }
 
+
+int WebServerProg::acceptConnection(int listenSocket)
+{
+    int clientSocket = accept(listenSocket, nullptr, nullptr);
+    if (clientSocket < 0)
+    {
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return -1; // No new connection, continue polling
+        std::cerr << "Error! accept: " << strerror(errno) << std::endl;
+        return -1; //dont exit
+    }
+    if (fcntl(clientSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
+    {
+        std::cerr << COLOR_RED << " fcntl" << COLOR_RESET << std::endl;
+        close(clientSocket);
+        return -1;
+    }
+    addSocketToPoll(clientSocket, POLLIN);
+    std::cout << COLOR_GREEN << "New connection accepted on client socket " << clientSocket << COLOR_RESET << std::endl;
+    return clientSocket;
+}
+
 void WebServerProg::startProgram()
 {
 	//parse the file into the vector of maps from the 
@@ -143,13 +167,12 @@ void WebServerProg::startProgram()
 	int returnValue = initServer();
 	if (returnValue < 0)
 		std::cerr << COLOR_RED << "Server can no start" << COLOR_RESET << std::endl;
-	std::cout << COLOR_GREEN << "New connection accepted on client socket serverinit	"<< returnValue << COLOR_RESET << std::endl;
+	std::cout << COLOR_GREEN << "New connection on client socket serverinit	"<< returnValue << COLOR_RESET << std::endl;
 	returnValue = initServer2();
 	if (returnValue < 0)
 		std::cerr << COLOR_RED << "Server can no start" << COLOR_RESET << std::endl;
-	std::cout << COLOR_GREEN << "New connection accepted on client socket serverinit2	" << returnValue << COLOR_RESET << std::endl;
+	std::cout << COLOR_GREEN << "New connection on client socket serverinit2	" << returnValue << COLOR_RESET << std::endl;
 	
-
 	while (true) //needs to check all in poll for events
 	{
 		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 100); //how does this work
@@ -162,18 +185,24 @@ void WebServerProg::startProgram()
 			continue;
 		for (size_t i  = 0; i < m_pollSocketsVec.size() ; i++)
 		{
-			if (m_pollSocketsVec[i].events & POLLIN) //WHY DOES REQUEST BREAK
+
+			std::cout << "m_pollSocketsVec[i].events: " << m_pollSocketsVec[i].events << std::endl;
+			
+			if (m_pollSocketsVec[i].revents & POLLIN) //WHY DOES REQUEST BREAK, okay it need the accept
 			{
-					std::cout << "Request: " << std::endl;
-					std::cout << m_pollSocketsVec[i].fd << std::endl;
-					receiveRequest(m_pollSocketsVec[i].fd);
-					sendResponse(m_pollSocketsVec[i].fd);
-					std::cout << COLOR_GREEN << "sent!!" << COLOR_RESET << std::endl;
-					close(m_pollSocketsVec[i].fd);
+				if (m_pollSocketsVec[i] == LISTENFLAG)
+					acceptConnection(m_pollSocketsVec[i]); //BUT HOW DO I FLAG IT
+				std::cout << "Request: " << std::endl;
+				std::cout << m_pollSocketsVec[i].fd << std::endl;
+				receiveRequest(m_pollSocketsVec[i].fd);
+				sendResponse(m_pollSocketsVec[i].fd);
+				std::cout << COLOR_GREEN << "sent!!" << COLOR_RESET << std::endl;
+				close(m_pollSocketsVec[i].fd);
 			}
 		}
 	}
 }
+
 
 WebServerProg::WebServerProg()
 {

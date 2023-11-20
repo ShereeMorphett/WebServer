@@ -26,6 +26,7 @@ class WebServerProg
 		int initServer2(); //not staying
 		void sendResponse(int clientSocket);
 		void receiveRequest(int clientSocket);
+		int acceptConnection(int listenSocket);
 		WebServerProg();
 		//WebServerProg(std::string filename);
 		~WebServerProg();
