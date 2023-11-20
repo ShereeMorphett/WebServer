@@ -6,9 +6,10 @@
 #include <unistd.h>
 #include <string.h>
 #include "./WebServ/WebServ.hpp"
+
 int main ()
 {
-	WebServ server;
-
+	//validate the config file from here
+	WebServ server; // would take a validated config file at construction
 	server.start();
 }

@@ -1,5 +1,11 @@
 {
 	"files.associations": {
+		"*.excalidraw": "json",
+		"*.excalidrawlib": "json",
+		"*.json": "c",
+		"": "",
+		"minishell.h": "c",
+		"ft_hash.h": "c",
 		"array": "cpp",
 		"atomic": "cpp",
 		"bit": "cpp",
@@ -51,6 +57,27 @@
 		"streambuf": "cpp",
 		"thread": "cpp",
 		"cinttypes": "cpp",
-		"typeinfo": "cpp"
+		"typeinfo": "cpp",
+		"__bit_reference": "cpp",
+		"__config": "cpp",
+		"__debug": "cpp",
+		"__errc": "cpp",
+		"__functional_base": "cpp",
+		"__hash_table": "cpp",
+		"__locale": "cpp",
+		"__mutex_base": "cpp",
+		"__node_handle": "cpp",
+		"__nullptr": "cpp",
+		"__split_buffer": "cpp",
+		"__string": "cpp",
+		"__threading_support": "cpp",
+		"__tuple": "cpp",
+		"bitset": "cpp",
+		"complex": "cpp",
+		"cstring": "cpp",
+		"ios": "cpp",
+		"locale": "cpp",
+		"mutex": "cpp",
+		"optional": "cpp"
 	}
 }
