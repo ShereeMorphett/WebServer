@@ -64,7 +64,7 @@ void  WebServerProg::sendResponse(int clientSocket)
 	}
 }
 
-int WebServerProg::initServer() // this will need to be done using the input from config file this will take in the server map??
+int WebServerProg::initServer(int port) // this will need to be done using the input from config file this will take in the server map??
 {
 	int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (listenSocket < 0)
@@ -79,7 +79,7 @@ int WebServerProg::initServer() // this will need to be done using the input fro
     }
 	struct sockaddr_in server_addr;
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(8888); // this will need to be done using the input from config file
+	server_addr.sin_port = htons(port); // this will need to be done using the input from config file
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	int enable = 1;
 	if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
@@ -98,50 +98,14 @@ int WebServerProg::initServer() // this will need to be done using the input fro
 		return -1;
 	}
 	addSocketToPoll(listenSocket, POLLIN); //will only get here if successfully configured but is that correct
-	return 0;
-}
-
-int WebServerProg::initServer2() // this will need to be done using the input from config file this will take in the server map??
-{
-	int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (listenSocket < 0)
-	{
-		std::cerr << COLOR_RED << "Error! socket not created" << COLOR_RESET << std::endl;
-		return -1;
-	}
-    if (fcntl(listenSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
-	{
-		std::cerr << COLOR_RED << " fcntl" << COLOR_RESET << std::endl;
-		return -1;
-    }
-	struct sockaddr_in server_addr;
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(8080); // this will need to be done using the input from config file
-	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	int enable = 1;
-	if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-	{
-		std::cerr << COLOR_RED << "Error! setsockopt(SO_REUSEADDR)" << COLOR_RESET << std::endl;
-		return -1;
-	}
-	if ((bind(listenSocket, (struct sockaddr*)&server_addr, sizeof(server_addr))) < 0)
-	{
-		std::cerr << COLOR_RED << "Error! bind" << COLOR_RESET << std::endl;
-		return -1;
-	}	 
-	if (listen(listenSocket, 5) < 0) //why is it 5? pretty sure it should be something bigger? MAXSOCK
-	{
-		std::cerr << COLOR_RED << "Error! Listen" << COLOR_RESET << std::endl;
-		return -1;
-	}
-	addSocketToPoll(listenSocket, POLLIN); //will only get here if successfully configured but is that correct
+	serverCount++; 
 	return 0;
 }
 
 
 int WebServerProg::acceptConnection(int listenSocket)
 {
-    int clientSocket = accept(listenSocket, nullptr, nullptr);
+    int clientSocket = accept(listenSocket, NULL, NULL); //, POLLIN); //okay but does it HAVE to have POLLIN and why doesnt it work
     if (clientSocket < 0)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -164,16 +128,16 @@ void WebServerProg::startProgram()
 {
 	//parse the file into the vector of maps from the 
 	//init the individual servers
-	int returnValue = initServer();
+	int returnValue = initServer(8080);
 	if (returnValue < 0)
 		std::cerr << COLOR_RED << "Server can no start" << COLOR_RESET << std::endl;
 	std::cout << COLOR_GREEN << "New connection on client socket serverinit	"<< returnValue << COLOR_RESET << std::endl;
-	returnValue = initServer2();
+	returnValue = initServer(8888);
 	if (returnValue < 0)
 		std::cerr << COLOR_RED << "Server can no start" << COLOR_RESET << std::endl;
-	std::cout << COLOR_GREEN << "New connection on client socket serverinit2	" << returnValue << COLOR_RESET << std::endl;
+	std::cout << COLOR_GREEN << "New connection on client socket serverinit	" << returnValue << COLOR_RESET << std::endl;
 	
-	while (true) //needs to check all in poll for events
+	while (true)
 	{
 		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 100); //how does this work
 		if (pollResult < 0)
@@ -185,27 +149,28 @@ void WebServerProg::startProgram()
 			continue;
 		for (size_t i  = 0; i < m_pollSocketsVec.size() ; i++)
 		{
-
-			std::cout << "m_pollSocketsVec[i].events: " << m_pollSocketsVec[i].events << std::endl;
-			
-			if (m_pollSocketsVec[i].revents & POLLIN) //WHY DOES REQUEST BREAK, okay it need the accept
+			if (m_pollSocketsVec[i].revents & POLLIN) 
 			{
-				if (m_pollSocketsVec[i] == LISTENFLAG)
-					acceptConnection(m_pollSocketsVec[i].fd); //BUT HOW DO I FLAG IT
+				int fd = 0;
+				if (i < serverCount)
+					fd = acceptConnection(m_pollSocketsVec[i].fd); 
+				else
+					fd = m_pollSocketsVec[i].fd;
 				std::cout << "Request: " << std::endl;
-				std::cout << m_pollSocketsVec[i].fd << std::endl;
-				receiveRequest(m_pollSocketsVec[i].fd);
-				sendResponse(m_pollSocketsVec[i].fd);
+				std::cout << fd << std::endl;
+				receiveRequest(fd);
+				sendResponse(fd);
 				std::cout << COLOR_GREEN << "sent!!" << COLOR_RESET << std::endl;
-				close(m_pollSocketsVec[i].fd);
+				close(fd);
 			}
 		}
 	}
 }
 
 
-WebServerProg::WebServerProg()
-{
+WebServerProg::WebServerProg() : serverCount(0)
+{	
+
 	//this will have the default config file
 }
 

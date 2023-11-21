@@ -15,6 +15,7 @@ class WebServerProg
 		std::vector<struct pollfd> m_pollSocketsVec;// this is where the polling will happen
 		//parse the configfile
 		//vector<maps<string, string>> servers
+		size_t serverCount;
 		
 	public:
 
@@ -22,8 +23,7 @@ class WebServerProg
 		void startProgram();
 		//parseConfig();
 		//initServers;
-		int initServer();
-		int initServer2(); //not staying
+		int initServer(int port);
 		void sendResponse(int clientSocket);
 		void receiveRequest(int clientSocket);
 		int acceptConnection(int listenSocket);
