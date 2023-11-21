@@ -22,11 +22,11 @@ class WebServerProg
 		void addSocketToPoll(int socket, int event);
 		void startProgram();
 		//parseConfig();
-		//initServers;
 		int initServer(int port);
 		void sendResponse(int clientSocket);
 		void receiveRequest(int clientSocket);
 		int acceptConnection(int listenSocket);
+		void runPoll();
 		WebServerProg();
 		//WebServerProg(std::string filename);
 		~WebServerProg();

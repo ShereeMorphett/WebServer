@@ -1,41 +1,46 @@
 
 
 #include "WebServerProg.hpp"
-
 #include <sys/socket.h>
 #include <sys/poll.h>
 #include <iostream>
 #include <netinet/in.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <cstring>
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
-#include <cerrno>
 #include "../Color.hpp"
+# define MAXSOCKET 10
 
-void WebServerProg::addSocketToPoll(int socket, int event) //int listening
+static void errnoPrinting(std::string message, int error) //probably end up in a utils or Error.hpp //char* deprecated on sherees computer, check school?
+{
+	std::cerr << COLOR_RED << "Error! " << message << ": " << strerror(error) << COLOR_RESET << std::endl; //would errno segfault if unset?
+}
+
+
+void WebServerProg::addSocketToPoll(int socket, int event)
 {
 	struct pollfd fd;
 	fd.fd = socket;
 	fd.events = event;
 	fd.revents = 0;
 	m_pollSocketsVec.push_back(fd);
-
-	//there needs to be a flag here that gets set to say if its a server or i client
 }
+
 
 void  WebServerProg::receiveRequest(int clientSocket)
 {
 	char buffer[1024];
-	memset(buffer, 0, 1024);
+	std::memset(buffer, 0, 1024);
 	int bytes_received = recv(clientSocket, buffer, 1024, 0);
 	std::cout << "in received Request" << bytes_received << " " << clientSocket << std::endl;
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 			return ;
-		std::cerr << "Error! recv: " << strerror(errno) << std::endl;
-		exit (1);
+		errnoPrinting("recv", errno);
+		return ;
 	}
 	else if (bytes_received == 0)
 	{
@@ -59,46 +64,46 @@ void  WebServerProg::sendResponse(int clientSocket)
 	int bytes_sent = send(clientSocket, response, strlen(response), 0);
 	if (bytes_sent < 0)
 	{
-		std::cerr << COLOR_RED << "Error! Response did not send" << COLOR_RESET << std::endl;
-		exit(EXIT_FAILURE);
+		errnoPrinting("Response did not send", errno);
+		return ;
 	}
 }
 
-int WebServerProg::initServer(int port) // this will need to be done using the input from config file this will take in the server map??
+int WebServerProg::initServer(int port)
 {
 	int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (listenSocket < 0)
 	{
-		std::cerr << COLOR_RED << "Error! socket not created" << COLOR_RESET << std::endl;
+		errnoPrinting("socket not created", errno);
 		return -1;
 	}
     if (fcntl(listenSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
 	{
-		std::cerr << COLOR_RED << " fcntl" << COLOR_RESET << std::endl;
-		return -1;
+		errnoPrinting("Fcntl", errno);
+		return -1 ;
     }
 	struct sockaddr_in server_addr;
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(port); // this will need to be done using the input from config file
+	server_addr.sin_port = htons(port);
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	int enable = 1;
 	if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
 	{
-		std::cerr << COLOR_RED << "Error! setsockopt(SO_REUSEADDR)" << COLOR_RESET << std::endl;
-		return -1;
+		errnoPrinting("setsockopt(SO_REUSEADDR)", errno);
+		return -1 ;
 	}
 	if ((bind(listenSocket, (struct sockaddr*)&server_addr, sizeof(server_addr))) < 0)
 	{
-		std::cerr << COLOR_RED << "Error! bind" << COLOR_RESET << std::endl;
-		return -1;
+		errnoPrinting("Bind", errno);
+		return -1 ;
 	}	 
-	if (listen(listenSocket, 5) < 0) //why is it 5? pretty sure it should be something bigger? MAXSOCK
+	if (listen(listenSocket, MAXSOCKET) < 0)
 	{
-		std::cerr << COLOR_RED << "Error! Listen" << COLOR_RESET << std::endl;
-		return -1;
+		errnoPrinting("Listen", errno);
+		return -1 ;
 	}
-	addSocketToPoll(listenSocket, POLLIN); //will only get here if successfully configured but is that correct
-	serverCount++; 
+	addSocketToPoll(listenSocket, POLLIN);
+	serverCount++;
 	return 0;
 }
 
@@ -109,13 +114,13 @@ int WebServerProg::acceptConnection(int listenSocket)
     if (clientSocket < 0)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
-            return -1; // No new connection, continue polling
-        std::cerr << "Error! accept: " << strerror(errno) << std::endl;
-        return -1; //dont exit
+            return -1;
+        errnoPrinting("Accept", errno);
+        return -1; 
     }
     if (fcntl(clientSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
     {
-        std::cerr << COLOR_RED << " fcntl" << COLOR_RESET << std::endl;
+        	errnoPrinting("fcntl", errno);
         close(clientSocket);
         return -1;
     }
@@ -124,26 +129,15 @@ int WebServerProg::acceptConnection(int listenSocket)
     return clientSocket;
 }
 
-void WebServerProg::startProgram()
+void WebServerProg::runPoll()
 {
-	//parse the file into the vector of maps from the 
-	//init the individual servers
-	int returnValue = initServer(8080);
-	if (returnValue < 0)
-		std::cerr << COLOR_RED << "Server can no start" << COLOR_RESET << std::endl;
-	std::cout << COLOR_GREEN << "New connection on client socket serverinit	"<< returnValue << COLOR_RESET << std::endl;
-	returnValue = initServer(8888);
-	if (returnValue < 0)
-		std::cerr << COLOR_RED << "Server can no start" << COLOR_RESET << std::endl;
-	std::cout << COLOR_GREEN << "New connection on client socket serverinit	" << returnValue << COLOR_RESET << std::endl;
-	
 	while (true)
 	{
-		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 100); //how does this work
+		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 100);
 		if (pollResult < 0)
 		{
-			std::cerr << COLOR_RED << "Error! Poll not created" << COLOR_RESET << std::endl;
-			exit (1);
+			errnoPrinting("Poll not created", errno);
+			return ;
 		}
 		if (pollResult == 0)
 			continue;
@@ -165,6 +159,20 @@ void WebServerProg::startProgram()
 			}
 		}
 	}
+}
+
+void WebServerProg::startProgram()
+{
+	//parse the file into the vector of maps from the 
+	//init the individual servers
+	int returnValue = initServer(8080);
+	if (returnValue < 0)
+			errnoPrinting("Server can no start", errno);
+	returnValue = initServer(8888);
+	if (returnValue < 0)
+		errnoPrinting("Server can no start", errno);
+	
+	runPoll();
 }
 
 
