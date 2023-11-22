@@ -1,5 +1,6 @@
 
 
+
 #include "WebServerProg.hpp"
 #include <sys/socket.h>
 #include <sys/poll.h>
@@ -12,6 +13,8 @@
 #include <fcntl.h>
 #include "../Color.hpp"
 # define MAXSOCKET 10
+
+struct server;
 
 static void errnoPrinting(std::string message, int error) //probably end up in a utils or Error.hpp //char* deprecated on sherees computer, check school?
 {
@@ -165,6 +168,9 @@ void WebServerProg::startProgram()
 {
 	//parse the file into the vector of maps from the 
 	//init the individual servers
+
+	// servers = parseConfigFile(defaultFileName);
+	parseConfigFile(defaultFileName);
 	int returnValue = initServer(8080);
 	if (returnValue < 0)
 			errnoPrinting("Server can no start", errno);
@@ -178,6 +184,7 @@ void WebServerProg::startProgram()
 
 WebServerProg::WebServerProg() : serverCount(0)
 {	
+	defaultFileName = "/home/sheree/Desktop/WebServer/src/WebServ/DefaultConfig.conf";
 
 	//this will have the default config file
 }

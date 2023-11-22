@@ -12,7 +12,7 @@
 int main ()
 {
 	//if no config file is given use default
-	//if 
+
 	WebServerProg program; // would take a validated config file at construction
 	program.startProgram();
 }

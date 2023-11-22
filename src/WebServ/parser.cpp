@@ -4,6 +4,8 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <iostream>
+#include "WebServerProg.hpp"
 
 enum Methods
 {
@@ -12,7 +14,7 @@ enum Methods
     DELETE
 };
 
-enum Methods
+enum Listing
 {
     ON,
     OFF
@@ -47,34 +49,34 @@ server {
 }
 */
 
-struct server
+//std::vector<struct server>
+void parseConfigFile(const char* fileName)
 {
-    int client_max_body_size;
-    std::string serverName;
-    std::map<int, std::string> errorPages; //this might be over kill
-    std::vector<location> locations; 
-};
+    std::ifstream file(fileName);
+    std::string line;
 
-struct location
-{
-    std::vector<int> allowedMethods;
-    std::string locationPath;
-    std::string redirection;
-    std::string root;
-    int listing;
-    std::string defaultFile;
-    std::string cgiPath;
-};
+    if (!file)
+        throw std::runtime_error("File open error");
 
+    std::vector<server> servers;
 
-std::vector<struct server> parseConfigFile(std::string fileName)
-{
-    std::ifstream configFile;
-    std::stringstream ss;
+    while (getline(file, line))
+    {
+        std::stringstream ss(line);
+        std::string key;
+        std::string value;
 
-    // if (open(fileName))
-    //     return error;
+        ss >> key >> value;
+        if (key != "{" && key != "}")
+            std::cout << key << value << std::endl;
+        //populate data structures
+    }
 
+    file.close();
 
-
+    //return servers; // Return the parsed server data.
 }
+
+
+
+
