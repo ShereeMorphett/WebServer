@@ -33,5 +33,6 @@ class WebServerProg
 
 };
 
+std::vector parseConfigFile(std<string> fileName);
 
 #endif
