@@ -32,7 +32,7 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 }
 
 
-void  WebServerProg::receiveRequest(int clientSocket)
+void  WebServerProg::receiveRequest(int clientSocket) //server
 {
 	char buffer[1024];
 	std::memset(buffer, 0, 1024);

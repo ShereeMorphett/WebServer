@@ -20,10 +20,11 @@ struct location
 
 struct server
 {
-    int client_max_body_size;
-    std::string serverName;
+	int port;
+	std::string serverName;
     std::map<int, std::string> errorPages; //this might be over kill
     std::vector<location> locations; 
+    int clientMaxBodySize;
 };
 
 
@@ -32,7 +33,7 @@ class WebServerProg
 	private:
 		std::vector<struct pollfd> m_pollSocketsVec;// this is where the polling will happen
 		//parse the configfile
-		std::vector<struct server> servers;
+		std::vector<server> servers;
 		size_t serverCount;
 		const char *defaultFileName;
 		
@@ -53,6 +54,6 @@ class WebServerProg
 };
 
 //std::vector<struct server>
-void parseConfigFile(const char* fileName);
+void parseConfigFile(const std::string& fileName);
 
 #endif
