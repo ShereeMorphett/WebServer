@@ -9,7 +9,7 @@
 
 struct location
 {
-    std::vector<int> allowedMethods;
+    std::vector<std::string> allowedMethods;
     std::string locationPath;
     std::string redirection;
     std::string root;
@@ -35,7 +35,7 @@ class WebServerProg
 		//parse the configfile
 		std::vector<server> servers;
 		size_t serverCount;
-		const char *defaultFileName;
+		std::string defaultFileName;
 		
 	public:
 
@@ -48,7 +48,7 @@ class WebServerProg
 		int acceptConnection(int listenSocket);
 		void runPoll();
 		WebServerProg();
-		//WebServerProg(std::string filename);
+		WebServerProg(std::string fileName);
 		~WebServerProg();
 
 };

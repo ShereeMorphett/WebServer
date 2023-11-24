@@ -1,6 +1,4 @@
 
-
-
 #include "WebServerProg.hpp"
 #include <sys/socket.h>
 #include <sys/poll.h>
@@ -21,7 +19,6 @@ static void errnoPrinting(std::string message, int error) //probably end up in a
 	std::cerr << COLOR_RED << "Error! " << message << ": " << strerror(error) << COLOR_RESET << std::endl; //would errno segfault if unset?
 }
 
-
 void WebServerProg::addSocketToPoll(int socket, int event)
 {
 	struct pollfd fd;
@@ -30,7 +27,6 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 	fd.revents = 0;
 	m_pollSocketsVec.push_back(fd);
 }
-
 
 void  WebServerProg::receiveRequest(int clientSocket) //server
 {
@@ -173,10 +169,10 @@ void WebServerProg::startProgram()
 	parseConfigFile(defaultFileName);
 	int returnValue = initServer(8080);
 	if (returnValue < 0)
-			errnoPrinting("Server can no start", errno);
+			errnoPrinting("Server can not start", errno);
 	returnValue = initServer(8888);
 	if (returnValue < 0)
-		errnoPrinting("Server can no start", errno);
+		errnoPrinting("Server can not start", errno);
 	
 	runPoll();
 }
@@ -184,15 +180,13 @@ void WebServerProg::startProgram()
 
 WebServerProg::WebServerProg() : serverCount(0)
 {	
-	defaultFileName = "/home/sheree/Desktop/WebServer/src/WebServ/DefaultConfig.conf";
-
-	//this will have the default config file
+	defaultFileName = "DefaultConfig.conf";
 }
 
-// WebServerProg::WebServerProg(std::string filename)
-// {
-// 	//open the file etc (it will be pre checked)
-// }
+WebServerProg::WebServerProg(std::string fileName)
+{
+	defaultFileName = fileName;
+}
 
 WebServerProg::~WebServerProg()
 {
