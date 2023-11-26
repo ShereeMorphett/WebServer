@@ -3,11 +3,15 @@
 
 #include <poll.h>
 #include <vector>
+#include <string>
 
 class WebServ
 {
 private:
 	std::vector<struct pollfd> m_pollSocketsVec;
+	std::string	_response;
+	std::string	_request;
+
 
 	
 	void initListenSocket();
