@@ -68,7 +68,7 @@ void  WebServerProg::sendResponse(int clientSocket)
 	}
 }
 
-void WebServerProg::initServers() // removing port
+void WebServerProg::initServers()
 {
 	for (size_t i = 0; i < servers.size(); i++)
 	{
@@ -103,6 +103,7 @@ void WebServerProg::initServers() // removing port
 			errnoPrinting("Listen", errno);
 			return  ;
 		}
+		servers[i].socketFD = listenSocket;
 		addSocketToPoll(listenSocket, POLLIN);
 		serverCount++;
 	}
@@ -166,8 +167,6 @@ void WebServerProg::runPoll()
 
 void WebServerProg::startProgram()
 {
-	//parse the file into the vector of maps from the 
-	//init the individual servers
 	try
 	{
 		servers = parseConfigFile(defaultFileName);
@@ -177,12 +176,7 @@ void WebServerProg::startProgram()
 	{
 		std::cout << COLOR_RED << "Error! " << e.what() << "Server cannot start" << COLOR_RESET << std::endl;
 		return ;
-	}
-
-	// returnValue = initServer(8888);
-	// if (returnValue < 0)
-	// 	errnoPrinting("Server can not start", errno);
-	
+	}	
 	runPoll();
 }
 

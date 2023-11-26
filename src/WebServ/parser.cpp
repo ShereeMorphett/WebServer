@@ -16,54 +16,6 @@ enum Listing
     OFF
 };
 
-/*
-server {
-   listen `host:8080`;
-         server_name  `server_name`;  <- optional
-   error_page  404  /404.html;
-   error_page   500 502 503 504  /50x.html;
-   client_max_body_size 255;
-
-   location / {
-      allow GET;
-      allow POST;
-      redirection /new_path;
-      root   /usr/share/nginx/html;
-      listing on/off;
-      default_file /index.html;
-      cgi_path /folder/file.cgi
-      CGI stuff?
-   }
-   location /example_folder {
-      allow POST;
-      redirection /new_example_folder;
-      root   /usr/share/nginx/html;
-      listing on/off;
-      default_file /index.html;
-      CGI stuff?
-   }
-}
-*/
-// struct location
-// {
-//     std::vector<int> allowedMethods;
-//     std::string locationPath;
-//     std::string redirection;
-//     std::string root;
-//     int listing;
-//     std::string defaultFile;
-//     std::string cgiPath;
-// };
-
-// struct server
-// {
-//		int port;
-//		std::string serverName;
-//     std::map<int, std::string> errorPages; //this might be over kill
-//     std::vector<location> locations; 
-//     int clientMaxBodySize;
-// };
-
 void skipNonPrintable(std::istream& stream)
 {
     while (stream)
@@ -95,6 +47,7 @@ void skipWhitespace(std::istream& stream)
         }
     }
 }
+
 template <typename Type,typename T>
 void printMap(typename std::map<Type, T> theMap)
 {
@@ -133,7 +86,7 @@ void printServer(server &server)
 		std::cout << std::endl;
 }
 
-location parseLocation(std::istream &stream, std::string extValue)
+static location parseLocation(std::istream &stream, std::string extValue)
 {
     char c;
     location temp;
@@ -161,7 +114,7 @@ location parseLocation(std::istream &stream, std::string extValue)
 			temp.root = value;
 		else if (key == "listing")
 		{
-			temp.listing = ON; //setting as on by default until i know what it does :D
+			temp.listing = ON;
 			if (value == "off")
 				temp.listing = OFF;	
 		}
@@ -174,7 +127,7 @@ location parseLocation(std::istream &stream, std::string extValue)
 	return temp;
 }
 
-std::map<int, std::string> parseErrorFile(const std::string &line)
+static std::map<int, std::string> parseErrorFile(const std::string &line)
 {
     std::map<int, std::string> tempMap;
     std::stringstream sstream(line);
@@ -196,7 +149,7 @@ std::map<int, std::string> parseErrorFile(const std::string &line)
     return tempMap;
 }
 
-server parseServer(std::istream &stream)
+static server parseServer(std::istream &stream)
 {
     server temp;
     std::string line;
@@ -250,16 +203,10 @@ server parseServer(std::istream &stream)
             sizeStream >> size;
             temp.clientMaxBodySize = size;
         }
-		else
-		{
-			std::cout << COLOR_CYAN << line << COLOR_RESET << std::endl;
-			std::cout << COLOR_GREEN << key << "	 		" << value << COLOR_RESET << std::endl;
-		}
         line.clear();
     }
     return temp;
 }
-
 
 std::vector<struct server> parseConfigFile(std::istream &stream)
 {
@@ -275,10 +222,8 @@ std::vector<struct server> parseConfigFile(std::istream &stream)
         skipWhitespace(stream);
         while (stream.get(c) && c != '{' && c != '}')
             line += c;
-		//std::cout << COLOR_RED << line << COLOR_RESET << std::endl;
         std::stringstream sstream(line);
         sstream >> key;
-		// std::cout << COLOR_GREEN << key << COLOR_RESET << std::endl;
         if (key == "server")
         {
             try
@@ -288,13 +233,11 @@ std::vector<struct server> parseConfigFile(std::istream &stream)
             catch (const std::exception& e)
             {
                 std::cerr << COLOR_RED << e.what() << COLOR_RESET << std::endl;
-                exit(EXIT_FAILURE); //might want a better way to do this
+                exit(EXIT_FAILURE);
             }
         }
         line.clear();
     }
-	for (size_t i = 0; i < servers.size(); i++)
-		printServer(servers[i]);
     return servers;
 }
 
