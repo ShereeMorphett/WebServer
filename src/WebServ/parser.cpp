@@ -114,7 +114,7 @@ void printLocation(location &location)
 	std::cout << "defaultFile:		"<< location.defaultFile << std::endl;
 	std::cout << "cgiPath:		"<< location.cgiPath << std::endl;
 	std::cout << COLOR_CYAN << "Allowed methods (0 = POST, 1 =GET, 2 =  DELETE):"  << COLOR_RESET << std::endl;
-	for (size_t i = 0; i <= location.allowedMethods.size(); i++)
+	for (size_t i = 0; i < location.allowedMethods.size(); i++)
 	{
 		std::cout << location.allowedMethods[i] << "	";
 	}
@@ -298,8 +298,7 @@ std::vector<struct server> parseConfigFile(std::istream &stream)
     return servers;
 }
 
-//std::vector<struct server>
-void parseConfigFile(const std::string& fileName)
+std::vector<struct server> parseConfigFile(const std::string& fileName)
 {
     std::vector<struct server> servers;
 
@@ -307,7 +306,7 @@ void parseConfigFile(const std::string& fileName)
     if (!file)
         throw std::runtime_error("File open error");
     servers = parseConfigFile(file);
-    //return servers;
+    return servers;
 }
 
 

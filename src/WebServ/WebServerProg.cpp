@@ -68,42 +68,46 @@ void  WebServerProg::sendResponse(int clientSocket)
 	}
 }
 
-int WebServerProg::initServer(int port)
+void WebServerProg::initServers() // removing port
 {
-	int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (listenSocket < 0)
+	for (size_t i = 0; i < servers.size(); i++)
 	{
-		errnoPrinting("socket not created", errno);
-		return -1;
+		int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
+		if (listenSocket < 0)
+		{
+			errnoPrinting("socket not created", errno);
+			return ;
+		}
+		if (fcntl(listenSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
+		{
+			errnoPrinting("Fcntl", errno);
+			return  ;
+		}
+		struct sockaddr_in server_addr;
+		server_addr.sin_family = AF_INET;
+		server_addr.sin_port = htons(servers[i].port);
+		server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+		int enable = 1;
+		if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+		{
+			errnoPrinting("setsockopt(SO_REUSEADDR)", errno);
+			return ;
+		}
+		if ((bind(listenSocket, (struct sockaddr*)&server_addr, sizeof(server_addr))) < 0)
+		{
+			errnoPrinting("Bind", errno);
+			return ;
+		}	 
+		if (listen(listenSocket, MAXSOCKET) < 0)
+		{
+			errnoPrinting("Listen", errno);
+			return  ;
+		}
+		addSocketToPoll(listenSocket, POLLIN);
+		serverCount++;
 	}
-    if (fcntl(listenSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
-	{
-		errnoPrinting("Fcntl", errno);
-		return -1 ;
-    }
-	struct sockaddr_in server_addr;
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(port);
-	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	int enable = 1;
-	if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-	{
-		errnoPrinting("setsockopt(SO_REUSEADDR)", errno);
-		return -1 ;
-	}
-	if ((bind(listenSocket, (struct sockaddr*)&server_addr, sizeof(server_addr))) < 0)
-	{
-		errnoPrinting("Bind", errno);
-		return -1 ;
-	}	 
-	if (listen(listenSocket, MAXSOCKET) < 0)
-	{
-		errnoPrinting("Listen", errno);
-		return -1 ;
-	}
-	addSocketToPoll(listenSocket, POLLIN);
-	serverCount++;
-	return 0;
+
+	return ;
 }
 
 
@@ -164,15 +168,20 @@ void WebServerProg::startProgram()
 {
 	//parse the file into the vector of maps from the 
 	//init the individual servers
+	try
+	{
+		servers = parseConfigFile(defaultFileName);
+		initServers();
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << COLOR_RED << "Error! " << e.what() << "Server cannot start" << COLOR_RESET << std::endl;
+		return ;
+	}
 
-	// servers = parseConfigFile(defaultFileName);
-	parseConfigFile(defaultFileName);
-	int returnValue = initServer(8080);
-	if (returnValue < 0)
-			errnoPrinting("Server can not start", errno);
-	returnValue = initServer(8888);
-	if (returnValue < 0)
-		errnoPrinting("Server can not start", errno);
+	// returnValue = initServer(8888);
+	// if (returnValue < 0)
+	// 	errnoPrinting("Server can not start", errno);
 	
 	runPoll();
 }

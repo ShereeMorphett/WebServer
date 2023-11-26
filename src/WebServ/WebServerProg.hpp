@@ -32,7 +32,6 @@ class WebServerProg
 {
 	private:
 		std::vector<struct pollfd> m_pollSocketsVec;// this is where the polling will happen
-		//parse the configfile
 		std::vector<server> servers;
 		size_t serverCount;
 		std::string defaultFileName;
@@ -41,8 +40,7 @@ class WebServerProg
 
 		void addSocketToPoll(int socket, int event);
 		void startProgram();
-		//parseConfig();
-		int initServer(int port);
+		void	 initServers();
 		void sendResponse(int clientSocket);
 		void receiveRequest(int clientSocket);
 		int acceptConnection(int listenSocket);
@@ -53,7 +51,6 @@ class WebServerProg
 
 };
 
-//std::vector<struct server>
-void parseConfigFile(const std::string& fileName);
+std::vector<struct server> parseConfigFile(const std::string& fileName);
 
 #endif

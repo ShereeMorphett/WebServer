@@ -6,7 +6,7 @@ CC = c++
 
 # compiler flags
 CFLAGS =  -std=c++98 -Wall -Werror -Wextra -MMD 
-DEBUG_FLAGS = -g -fsanitise=address
+DEBUG_FLAGS = -g -fsanitize=address
 
 # src files and path for them
 VPATH := $(shell find src -type d)
