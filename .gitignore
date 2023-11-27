@@ -6,4 +6,4 @@ obj*/
 *.json
 *.gch
 *.o
-.vscode/
+.vscode
