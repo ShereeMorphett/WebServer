@@ -13,8 +13,9 @@
 # define MAXSOCKET 10
 
 struct server;
+void printServer(server &server);
 
-static void errnoPrinting(std::string message, int error) //probably end up in a utils or Error.hpp //char* deprecated on sherees computer, check school?
+static void errnoPrinting(std::string message, int error) 
 {
 	std::cerr << COLOR_RED << "Error! " << message << ": " << strerror(error) << COLOR_RESET << std::endl; //would errno segfault if unset?
 }
@@ -170,6 +171,13 @@ void WebServerProg::startProgram()
 	try
 	{
 		servers = parseConfigFile(defaultFileName);
+		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
+		validateServers(servers);
+		std::cout << COLOR_GREEN << "servers valid" << COLOR_RESET << std::endl;
+	for (size_t i = 0; i < servers.size(); i++)
+    {
+        printServer(servers[i]);
+    }
 		initServers();
 	}
 	catch (const std::exception& e)
