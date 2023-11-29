@@ -61,7 +61,7 @@ void WebServ::parseRequest(int clientSocket, std::string request)
 	printMultimap(clientRequestMap);
 }
 
-void WebServ::receiveRequest(int clientSocket)
+bool WebServ::receiveRequest(int clientSocket)
 {
 	if (m_clientDataMap.find(clientSocket) == m_clientDataMap.end())
 	{
@@ -75,7 +75,7 @@ void WebServ::receiveRequest(int clientSocket)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 		{
-			return ;
+			return 1;
 		}
 		std::cout << "Error! recv" << std::endl;
 		exit (1);
@@ -84,6 +84,7 @@ void WebServ::receiveRequest(int clientSocket)
 	{
 		std::cout << "Closing client socket" << std::endl;
 		close(clientSocket);
+		return 1;
 	}
 	else
 	{
@@ -91,6 +92,7 @@ void WebServ::receiveRequest(int clientSocket)
 
 		parseRequest(clientSocket, request);
 	}
+	return 0;
 }
 
 void WebServ::sendResponse(int clientSocket)
@@ -182,10 +184,13 @@ void WebServ::start()
 				else
 				{
 					std::cout << "Request: " << std::endl;
-					receiveRequest(m_pollSocketsVec[i].fd);
+					if (receiveRequest(m_pollSocketsVec[i].fd))
+						continue;
 					sendResponse(m_pollSocketsVec[i].fd);
 					std::cout << "sent!!" << std::endl;
 					close(m_pollSocketsVec[i].fd);
+					m_clientDataMap.erase(m_pollSocketsVec[i].fd);
+					m_pollSocketsVec.erase(m_pollSocketsVec.begin() + i);
 				}
 			}
 		}

@@ -20,7 +20,7 @@ private:
 	void initListenSocket();
 	void addSocketToPoll(int socket, int event);
 	void parseRequest(int clientSocket, std::string request);
-	void receiveRequest(int clientSocket);
+	bool receiveRequest(int clientSocket);
 	void sendResponse(int clientSocket);
 public:
 	WebServ() {}
