@@ -8,12 +8,8 @@
 #include <string.h>
 #include <fcntl.h>
 #include <cerrno>
-#include "../Color.hpp"
 
-#define MAXSOCK 10
-#define PORT 8888
-
-void WebServ::addSocketToPoll(int socket, int event) //moved
+void WebServ::addSocketToPoll(int socket, int event)
 {
 	struct pollfd fd;
 	fd.fd = socket;
@@ -26,12 +22,13 @@ void WebServ::receiveRequest(int clientSocket)
 {
 	char buffer[1024];
 	memset(buffer, 0, 1024);
-
 	int bytes_received = recv(clientSocket, buffer, 1024, 0);
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
+		{
 			return ;
+		}
 		std::cout << "Error! recv" << std::endl;
 		exit (1);
 	}
@@ -53,66 +50,73 @@ void WebServ::sendResponse(int clientSocket)
 {
 	const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Closed\r\nContent-Type: text/plain\r\n\r\nHello, World!";
 	
-	std::cout << COLOR_CYAN << "sending response..." << COLOR_RESET << std:: endl;
+	std::cout << "sending response..." << std:: endl;
 	int bytes_sent = send(clientSocket, response, strlen(response), 0);
 	if (bytes_sent < 0)
 	{
-		std::cerr << COLOR_RED << "Error! Response did not send" << COLOR_RESET << std::endl;
+		std::cout << "Error! send" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 }
 
-int WebServ::initListenSocket()
+void WebServ::initListenSocket()
 {
 	int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (listenSocket < 0)
 	{
-		std::cerr << COLOR_RED << "Error! socket not created" << COLOR_RESET << std::endl;
-		return -1;
+		std::cout << "Error! socket" << std::endl;
+		exit (1);
 	}
-    if (fcntl(listenSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
+
+	int flags = fcntl(listenSocket, F_GETFL, 0);
+    if (flags == -1)
 	{
-		std::cerr << COLOR_RED << " fcntl" << COLOR_RESET << std::endl;
-		return -1;
+        perror("fcntl F_GETFL");
+		exit (-1);
+    }
+
+    if (fcntl(listenSocket, F_SETFL, flags | O_NONBLOCK) == -1)
+	{
+        perror("fcntl F_SETFL O_NONBLOCK");
+		exit (-1);
     }
 
 	struct sockaddr_in server_addr;
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(PORT);
-	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	int enable = 1;
 
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(8888);
+	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	int enable = 1;
 	if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
 	{
-		std::cerr << COLOR_RED << "Error! setsockopt(SO_REUSEADDR)" << COLOR_RESET << std::endl;
-		return -1;
+		std::cout << "Error! setsockopt(SO_REUSEADDR)" << std::endl;
+		exit (1);
 	}
 	if ((bind(listenSocket, (struct sockaddr*)&server_addr, sizeof(server_addr))) < 0)
 	{
-		std::cerr << COLOR_RED << "Error! bind" << COLOR_RESET << std::endl;
-		return -1;
+		std::cout << "Error! bind" << std::endl;
+		exit (1);
 	}	 
-	if (listen(listenSocket, 5) < 0) //why is it 5? pretty sure it should be something bigger? MAXSOCK
+
+	if (listen(listenSocket, 5) < 0)
 	{
-		std::cerr << COLOR_RED << "Error! Listen" << COLOR_RESET << std::endl;
-		return -1;
+		std::cout << "Error! listen" << std::endl;
+		exit (1);
 	}
 	addSocketToPoll(listenSocket, POLLIN);
-	return 0;
 }
 
 
 void WebServ::start()
 {
-	int returnValue = initListenSocket();
-	if (returnValue < 0)
-		std::cerr << COLOR_RED << "Server can no start" << COLOR_RESET << std::endl;
+	initListenSocket();
 	while (true)
 	{
 		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 100);
 		if (pollResult < 0)
 		{
-			std::cerr << COLOR_RED << "Error! Poll not created" << COLOR_RESET << std::endl;
+			std::cout << "Error! poll" << std::endl;
 			exit (1);
 		}	 
 		if (pollResult == 0)
@@ -124,25 +128,19 @@ void WebServ::start()
 				if (i == 0)
 				{
 					addSocketToPoll(accept(m_pollSocketsVec[i].fd, NULL, NULL), POLLIN);
-					if (fcntl(m_pollSocketsVec.back().fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
-					{
-						std::cerr << COLOR_RED << " fcntl" << COLOR_RESET << std::endl;
-						return ;
-					}
-					std::cout << COLOR_GREEN << "New connection accepted on client socket" << COLOR_RESET << std::endl;
+					int flags = fcntl(m_pollSocketsVec.back().fd, F_GETFL, 0);
+					fcntl(m_pollSocketsVec.back().fd, F_SETFL, flags | O_NONBLOCK);
+					std::cout << "New connection accepted on client socket" << std::endl;
 				}
 				else
 				{
 					std::cout << "Request: " << std::endl;
 					receiveRequest(m_pollSocketsVec[i].fd);
 					sendResponse(m_pollSocketsVec[i].fd);
-					std::cout << COLOR_GREEN << "sent!!" << COLOR_RESET << std::endl;
+					std::cout << "sent!!" << std::endl;
 					close(m_pollSocketsVec[i].fd);
-					//m_pollSocketsVec.erase(i); //should free the spot in the socket array?
-
 				}
 			}
 		}
 	}
-	
 }

@@ -6,17 +6,17 @@
 
 class WebServ
 {
-	private:
-		std::vector<struct pollfd> m_pollSocketsVec;//moved
-		
-		int initListenSocket();
-		void addSocketToPoll(int socket, int event); //moved
-		void receiveRequest(int clientSocket);
-		void sendResponse(int clientSocket);
+private:
+	std::vector<struct pollfd> m_pollSocketsVec;
 
-	public:
-		WebServ() {}
-		void start();
+	
+	void initListenSocket();
+	void addSocketToPoll(int socket, int event);
+	void receiveRequest(int clientSocket);
+	void sendResponse(int clientSocket);
+public:
+	WebServ() {}
+	void start();
 };
 
 
