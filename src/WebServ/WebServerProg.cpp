@@ -35,6 +35,7 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 bool  WebServerProg::receiveRequest(int clientSocket) //server
 {
 	char buffer[1024];
+	_request.clear(); // dummy data
 	std::memset(buffer, 0, 1024);
 	int bytes_received = recv(clientSocket, buffer, 1024, 0);
 	std::cout << "in received Request" << bytes_received << " " << clientSocket << std::endl;
@@ -55,6 +56,7 @@ bool  WebServerProg::receiveRequest(int clientSocket) //server
 	{
 		std::string str = buffer;
 		str += '\0';
+		_request.append(buffer); // dummy data
 		std::cout << str << std::endl;
 	}
 	return true;
@@ -106,14 +108,14 @@ void WebServerProg::sendResponse(int clientSocket)
 	std::string body;
 	std::string path;
 
-
+	// dummy data
 	std::map<std::string, std::string> mp;
 	mp["method"] = "GET";
 	mp["path"] = extractPath(_request);
 
 	
 	// TODO --> add check if path and method is allowed. Can be done after merge of parsing
-
+	// dummy data 
 	path.append(mp["path"]);
 	body = readFile(path, &status);
 	std::cout << body;
@@ -144,7 +146,7 @@ void WebServerProg::sendResponse(int clientSocket)
 	_response.append("\r\n");
 
 	// will need to change this based on what we will return
-	// TYPE WILL HAVE TO BE DETECTED
+	// TYPE WILL HAVE TO BE DETECTED 
 	_response.append("Content-type: ");
 	std::string type = getFileExtension(mp["path"]);
 	std::cout << "type: " << type << "\n";
@@ -168,19 +170,6 @@ void WebServerProg::sendResponse(int clientSocket)
 	}
 	_response.clear();
 }
-
-// void  WebServerProg::sendResponse(int clientSocket)
-// {
-// 	const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Closed\r\nContent-Type: text/plain\r\n\r\nHello, World!";
-	
-// 	std::cout << COLOR_CYAN << "sending response..." << COLOR_RESET << std:: endl;
-// 	int bytes_sent = send(clientSocket, response, strlen(response), 0);
-// 	if (bytes_sent < 0)
-// 	{
-// 		errnoPrinting("Response did not send", errno);
-// 		return ;
-// 	}
-// }
 
 void WebServerProg::initServers()
 {
@@ -221,7 +210,6 @@ void WebServerProg::initServers()
 		addSocketToPoll(listenSocket, POLLIN);
 		serverCount++;
 	}
-
 	return ;
 }
 
