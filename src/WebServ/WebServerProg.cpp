@@ -19,6 +19,16 @@
 struct server;
 void printServer(server &server);
 
+
+template <typename KeyType, typename ValueType>
+void printMultimap(const std::multimap<KeyType, ValueType>& myMultimap) {
+    typename std::multimap<KeyType, ValueType>::const_iterator it;
+
+    for (it = myMultimap.begin(); it != myMultimap.end(); ++it) {
+        std::cout << "Key: " << it->first << " | Value: " << it->second << std::endl;
+    }
+}
+
 static void errnoPrinting(std::string message, int error) 
 {
 	std::cerr << COLOR_RED << "Error! " << message << ": " << strerror(error) << COLOR_RESET << std::endl; //would errno segfault if unset?
@@ -62,7 +72,6 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 		if (key.size() != 1)
 			clientRequestMap.insert(std::make_pair(key, value));
 	}
-	// printMultimap(clientRequestMap);
 }
 
 std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
@@ -71,7 +80,7 @@ std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
 }
 
 
-bool WebServerProg::receiveRequest(int clientSocket) //tuomo's addition, not connected
+bool WebServerProg::receiveRequest(int clientSocket)
 {
 	if (m_clientDataMap.find(clientSocket) == m_clientDataMap.end())
 	{
@@ -114,18 +123,26 @@ void WebServerProg::sendResponse(int clientSocket)
 
 	std::string body;
 	std::string path;
+	// std::cout << COLOR_MAGENTA;
+	// printMultimap(m_clientDataMap.find(clientSocket)->second.requestData);
+	// std::cout << COLOR_RESET;
 
-	// dummy data
+	//dummy data
 	std::map<std::string, std::string> mp;
 	mp["method"] = accessDataInMap(clientSocket, "Method");
-	mp["path"] = accessDataInMap(clientSocket, "Path");
+	//mp["path"] = accessDataInMap(clientSocket, "Path");
+	std::cout << COLOR_MAGENTA <<  mp["path"] << COLOR_RESET << std::endl;
+	
+	mp["path"] = extractPath(_request); //this is the working one
+	//std::cout << COLOR_MAGENTA <<  path << COLOR_RESET << std::endl;
 
 	
 	// TODO --> add check if path and method is allowed. Can be done after merge of parsing
 	// dummy data 
 	path.append(mp["path"]);
 	body = readFile(path, &status);
-	std::cout << body;
+	
+//	std::cout << body;
 
 	// use int status here and check config + read file before assigning status code
 	_response.append("HTTP/1.1 ");

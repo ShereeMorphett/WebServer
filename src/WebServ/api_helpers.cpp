@@ -1,16 +1,18 @@
 #include "api_helpers.hpp"
 
-std::string extractPath(const std::string& request) {
+std::string extractPath(const std::string& request)
+{
     size_t firstSpace = request.find(' ');
-    if (firstSpace == std::string::npos) {
+    if (firstSpace == std::string::npos)
+	{
         return ""; // Invalid request format
     }
 
     size_t secondSpace = request.find(' ', firstSpace + 1);
-    if (secondSpace == std::string::npos) {
+    if (secondSpace == std::string::npos)
+	{
         return ""; // Invalid request format
     }
-
     return request.substr(firstSpace + 1, secondSpace - firstSpace - 1);
 }
 
