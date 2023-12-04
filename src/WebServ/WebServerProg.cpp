@@ -8,6 +8,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <string.h>
+#include <sstream>
 #include <fcntl.h>
 #include "../Color.hpp"
 #include "api_helpers.hpp"
@@ -32,72 +33,109 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 	m_pollSocketsVec.push_back(fd);
 }
 
-bool  WebServerProg::receiveRequest(int clientSocket) //server
-{
-	char buffer[1024];
-	_request.clear(); // dummy data
-	std::memset(buffer, 0, 1024);
-	int bytes_received = recv(clientSocket, buffer, 1024, 0);
-	std::cout << "in received Request" << bytes_received << " " << clientSocket << std::endl;
-	if (bytes_received < 0)
-	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-			return false;
-		errnoPrinting("recv", errno);
-		return false;
-	}
-	else if (bytes_received == 0)
-	{
-		std::cout << "Closing client socket" << std::endl;
-		close(clientSocket);
-		m_pollSocketsVec.pop_back();
-	}
-	else
-	{
-		std::string str = buffer;
-		str += '\0';
-		_request.append(buffer); // dummy data
-		std::cout << str << std::endl;
-	}
-	return true;
-}
-
-
-
-// bool WebServ::receiveRequest(int clientSocket) //tuomo's addition, not connected
+// bool  WebServerProg::receiveRequest(int clientSocket) //server
 // {
-// 	if (m_clientDataMap.find(clientSocket) == m_clientDataMap.end())
-// 	{
-// 		clientData data;
-// 		m_clientDataMap.insert(std::make_pair(clientSocket, data));
-// 	}
 // 	char buffer[1024];
-
-// 	_request.clear();
-// 	memset(buffer, 0, 1024);
+// 	_request.clear(); // dummy data
+// 	std::memset(buffer, 0, 1024);
 // 	int bytes_received = recv(clientSocket, buffer, 1024, 0);
+// 	std::cout << "in received Request" << bytes_received << " " << clientSocket << std::endl;
 // 	if (bytes_received < 0)
 // 	{
 // 		if (errno == EAGAIN || errno == EWOULDBLOCK)
-// 		{
-// 			return 1;
-// 		}
-// 		std::cout << "Error! recv" << std::endl;
-// 		exit (1);
+// 			return false;
+// 		errnoPrinting("recv", errno);
+// 		return false;
 // 	}
 // 	else if (bytes_received == 0)
 // 	{
 // 		std::cout << "Closing client socket" << std::endl;
 // 		close(clientSocket);
-// 		return 1;
+// 		m_pollSocketsVec.pop_back();
 // 	}
 // 	else
 // 	{
-// 		std::string request = buffer;
-// 		parseRequest(clientSocket, request);
+// 		std::string str = buffer;
+// 		str += '\0';
+// 		_request.append(buffer); // dummy data
+// 		std::cout << str << std::endl;
 // 	}
-// 	return 0;
+// 	return true;
 // }
+
+void WebServerProg::parseRequest(int clientSocket, std::string request)
+{
+	std::multimap<std::string, std::string>& clientRequestMap = m_clientDataMap.find(clientSocket)->second.requestData;
+	std::istringstream	ss(request);
+	std::string			token;
+
+	ss >> token;
+	clientRequestMap.insert(std::make_pair("Method", token));
+	ss >> token;
+	clientRequestMap.insert(std::make_pair("Path", token));
+	ss >> token;
+	clientRequestMap.insert(std::make_pair("HTTP-version", token));
+
+	std::string line;
+	while (std::getline(ss, line))
+	{
+		std::string key;
+		std::string value;
+
+		size_t pos = line.find(":");
+		key = line.substr(0, pos);
+		value = line.substr(pos + 1);
+
+		size_t valueStart = value.find_first_not_of(" \t");
+		value = value.substr(valueStart);
+
+		if (key.size() != 1)
+			clientRequestMap.insert(std::make_pair(key, value));
+	}
+	// printMultimap(clientRequestMap);
+}
+
+std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
+{
+	return m_clientDataMap.find(clientSocket)->second.requestData.find(header)->second;
+}
+
+
+bool WebServerProg::receiveRequest(int clientSocket) //tuomo's addition, not connected
+{
+	if (m_clientDataMap.find(clientSocket) == m_clientDataMap.end())
+	{
+		clientData data;
+		m_clientDataMap.insert(std::make_pair(clientSocket, data));
+	}
+	char buffer[1024];
+
+	_request.clear();
+	memset(buffer, 0, 1024);
+	int bytes_received = recv(clientSocket, buffer, 1024, 0);
+	if (bytes_received < 0)
+	{
+		if (errno == EAGAIN || errno == EWOULDBLOCK)
+		{
+			return 1;
+		}
+		std::cout << "Error! recv" << std::endl;
+		exit (1);
+	}
+	else if (bytes_received == 0)
+	{
+		std::cout << "Closing client socket" << std::endl;
+		close(clientSocket);
+		return 1;
+	}
+	else
+	{
+		std::string request = buffer;
+		_request = buffer;
+		parseRequest(clientSocket, request);
+	}
+	return 0;
+}
 
 void WebServerProg::sendResponse(int clientSocket)
 {
@@ -110,8 +148,8 @@ void WebServerProg::sendResponse(int clientSocket)
 
 	// dummy data
 	std::map<std::string, std::string> mp;
-	mp["method"] = "GET";
-	mp["path"] = extractPath(_request);
+	mp["method"] = accessDataInMap(clientSocket, "Method");
+	mp["path"] = accessDataInMap(clientSocket, "Path");
 
 	
 	// TODO --> add check if path and method is allowed. Can be done after merge of parsing

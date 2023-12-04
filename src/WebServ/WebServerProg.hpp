@@ -54,6 +54,8 @@ class WebServerProg
 		void startProgram();
 		void initServers();
 		void sendResponse(int clientSocket);
+		std::string accessDataInMap(int clientSocket, std::string header);
+		void parseRequest(int clientSocket, std::string request);
 		bool receiveRequest(int clientSocket);
 		int  acceptConnection(int listenSocket);
 		void runPoll();
