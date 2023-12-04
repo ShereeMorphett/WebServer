@@ -48,7 +48,7 @@ static int validateErrorPage(const server &servers)
     Port numbers 49152 - 65535 are reserved for clients.
     If you have a server in the client port range (49152 - 65535), define that server in the TCP/IP network services database to prevent port number conflicts.
 */
-void validateServers(const std::vector<struct server> &servers)
+void validateServers(const std::vector<struct server> &servers) //if there is any valid server it should run 
 {
     for (size_t i = 0; i < servers.size(); i++)
     {

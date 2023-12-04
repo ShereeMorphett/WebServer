@@ -115,7 +115,7 @@ void WebServerProg::initServers()
 
 int WebServerProg::acceptConnection(int listenSocket)
 {
-    int clientSocket = accept(listenSocket, NULL, NULL); //, POLLIN); //okay but does it HAVE to have POLLIN and why doesnt it work
+    int clientSocket = accept(listenSocket, NULL, NULL);
     if (clientSocket < 0)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
