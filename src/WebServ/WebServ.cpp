@@ -6,14 +6,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sstream>
 #include <fcntl.h>
 #include <cerrno>
-#include <map>
 
-#include "api_helpers.hpp"
-#include "constants.hpp"
+#include <errno.h>
 
-void WebServ::addSocketToPoll(int socket, int event)
+
+void WebServ::addSocketToPoll(int socket, int event) 
 {
 	struct pollfd fd;
 	fd.fd = socket;
@@ -22,8 +22,54 @@ void WebServ::addSocketToPoll(int socket, int event)
 	m_pollSocketsVec.push_back(fd);
 }
 
-void WebServ::receiveRequest(int clientSocket)
+template <typename KeyType, typename ValueType>
+void printMultimap(const std::multimap<KeyType, ValueType>& myMultimap) {
+    typename std::multimap<KeyType, ValueType>::const_iterator it;
+
+    for (it = myMultimap.begin(); it != myMultimap.end(); ++it) {
+        std::cout << "Key: " << it->first << " | Value: " << it->second << std::endl;
+    }
+}
+
+void WebServ::parseRequest(int clientSocket, std::string request)
 {
+	std::multimap<std::string, std::string>& clientRequestMap = m_clientDataMap.find(clientSocket)->second.requestData;
+	std::istringstream	ss(request);
+	std::string			token;
+
+	ss >> token;
+	clientRequestMap.insert(std::make_pair("Method", token));
+	ss >> token;
+	clientRequestMap.insert(std::make_pair("Path", token));
+	ss >> token;
+	clientRequestMap.insert(std::make_pair("HTTP-version", token));
+
+	std::string line;
+	while (std::getline(ss, line))
+	{
+		std::string key;
+		std::string value;
+
+		size_t pos = line.find(":");
+		key = line.substr(0, pos);
+		value = line.substr(pos + 1);
+
+		size_t valueStart = value.find_first_not_of(" \t");
+		value = value.substr(valueStart);
+
+		if (key.size() != 1)
+			clientRequestMap.insert(std::make_pair(key, value));
+	}
+	printMultimap(clientRequestMap);
+}
+
+bool WebServ::receiveRequest(int clientSocket)
+{
+	if (m_clientDataMap.find(clientSocket) == m_clientDataMap.end())
+	{
+		clientData data;
+		m_clientDataMap.insert(std::make_pair(clientSocket, data));
+	}
 	char buffer[1024];
 
 	_request.clear();
@@ -33,7 +79,7 @@ void WebServ::receiveRequest(int clientSocket)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 		{
-			return ;
+			return 1;
 		}
 		std::cout << "Error! recv" << std::endl;
 		exit (1);
@@ -42,15 +88,15 @@ void WebServ::receiveRequest(int clientSocket)
 	{
 		std::cout << "Closing client socket" << std::endl;
 		close(clientSocket);
-		m_pollSocketsVec.pop_back();
+		return 1;
 	}
 	else
 	{
-		std::string str = buffer;
-		str += '\0';
-		_request = str;
-		std::cout << str << std::endl;
+		std::string request = buffer;
+
+		parseRequest(clientSocket, request)
 	}
+	return 0;
 }
 
 void WebServ::sendResponse(int clientSocket)
@@ -137,13 +183,13 @@ void WebServ::initListenSocket()
 	int flags = fcntl(listenSocket, F_GETFL, 0);
     if (flags == -1)
 	{
-        perror("fcntl F_GETFL");
+        std::cout << "fcntl" << std::endl;
 		exit (-1);
     }
 
     if (fcntl(listenSocket, F_SETFL, flags | O_NONBLOCK) == -1)
 	{
-        perror("fcntl F_SETFL O_NONBLOCK");
+        std::cout << "fcntl" << std::endl;
 		exit (-1);
     }
 
@@ -201,10 +247,13 @@ void WebServ::start()
 				else
 				{
 					std::cout << "Request: " << std::endl;
-					receiveRequest(m_pollSocketsVec[i].fd);
+					if (receiveRequest(m_pollSocketsVec[i].fd))
+						continue;
 					sendResponse(m_pollSocketsVec[i].fd);
 					std::cout << "sent!!" << std::endl;
 					close(m_pollSocketsVec[i].fd);
+					m_clientDataMap.erase(m_pollSocketsVec[i].fd);
+					m_pollSocketsVec.erase(m_pollSocketsVec.begin() + i);
 				}
 			}
 		}
