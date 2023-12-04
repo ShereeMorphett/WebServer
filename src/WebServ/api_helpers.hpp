@@ -2,10 +2,16 @@
 # define API_HELPERS_HPP
 
 # include "constants.hpp"
+# include <iostream>
+# include <fstream>
 # include <string>
 
-FileType getFileType(const std::string& extension);
-std::string extractPath(const std::string& request);
+// General
+std::string	readFile(const std::string& path, int* status);
 std::string getFileExtension(const std::string& fileName);
+std::string extractPath(const std::string& request);
+
+// Check permissions
+
 
 #endif // !API_HELPERS_HPP

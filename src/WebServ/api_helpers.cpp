@@ -23,15 +23,29 @@ std::string getFileExtension(const std::string& fileName) {
         return fileName.substr(dotPosition + 1);
     } else {
         // No extension found or the dot is the last character
+		std::cout << "Invalid file, no extension \n";
         return "";
-    }
+	}
 }
 
-FileType getFileType(const std::string& extension) {
-    if (extension == "html") return HTML;
-    if (extension == "css")  return CSS;
-    if (extension == "png")  return PNG;
-    if (extension == "js")   return JS;
+std::string	readFile(const std::string& path, int* status) {
+	std::ifstream	inFile;
+	std::string		line;
+	std::string		body;
 
-    return UNKNOWN;  // Default case
+	inFile.open("." + path);
+	if (!inFile) {
+		if (*status == 404) {
+			return body;
+		}
+		*status = NOT_FOUND;
+		body = readFile("/src/defaults/404.html", status);
+	} else {
+		while (std::getline(inFile, line)) {
+			body.append(line);
+		}
+		inFile.close();
+	}
+	
+	return body;
 }

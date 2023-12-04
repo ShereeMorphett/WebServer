@@ -9,10 +9,9 @@
 #include <fcntl.h>
 #include <cerrno>
 #include <map>
-#include <fstream>
 
 #include "api_helpers.hpp"
-// #include "constants.hpp"
+#include "constants.hpp"
 
 void WebServ::addSocketToPoll(int socket, int event)
 {
@@ -59,31 +58,21 @@ void WebServ::sendResponse(int clientSocket)
 	// const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Closed\r\nContent-Type: text/plain\r\n\r\nHello, World!";
 	int	status = 200;
 	int size = 0;
+
 	std::string body;
-	std::string line;
+	std::string path;
 
 
 	std::map<std::string, std::string> mp;
 	mp["method"] = "GET";
-	mp["path"] = "." + extractPath(_request);
+	mp["path"] = extractPath(_request);
+
 	
+	// TODO --> add check if path and method is allowed. Can be done after merge of parsing
 
-
-	// Check config file before this to check permissions
-	std::string path = "";
 	path.append(mp["path"]);
-	std::ifstream inFile;
-	inFile.open(path);
-	if (!inFile) {
-		// If file was not found
-		std::cerr << "Error opening file \n";
-		status = NOT_FOUND;
-	}
-	while (std::getline(inFile, line)) {
-		body.append(line);
-	}
-	inFile.close();
-
+	body = readFile(path, &status);
+	std::cout << body;
 
 	// use int status here and check config + read file before assigning status code
 	_response.append("HTTP/1.1 ");
@@ -94,13 +83,13 @@ void WebServ::sendResponse(int clientSocket)
 		break;
 	case 404:
 		_response.append(" Not Found");
-	
 	default:
 		break;
 	}
 	_response.append("\r\n");
 
-	// todo -> read content and use its length here
+	// HANDLE ERROR HERE
+
 	_response.append("Content-Length: ");
 	size = body.size();
 	_response.append(std::to_string(size));
@@ -113,26 +102,19 @@ void WebServ::sendResponse(int clientSocket)
 	// will need to change this based on what we will return
 	// TYPE WILL HAVE TO BE DETECTED
 	_response.append("Content-type: ");
-	FileType type = getFileType(getFileExtension(mp["path"]));
-	switch (type)
-	{
-	case HTML:
+	std::string type = getFileExtension(mp["path"]);
+	std::cout << "type: " << type << "\n";
+	if (type == ".html") {
 		_response.append(TYPE_HTML);
-		break;
-	case CSS:
-		_response.append(TYPE_CSS);
-		break;
-	
-	default:
-		break;
 	}
-
+	else if (type == ".css") {
+		_response.append(TYPE_CSS);
+	}
+	// 
 	_response.append(END_HEADER);
 
 	// use read content here
-	if (status == 200) {
-		_response.append(body);
-	}
+	_response.append(body);
 
 	int bytes_sent = send(clientSocket, _response.c_str(), strlen(_response.c_str()), 0);
 	if (bytes_sent < 0)
