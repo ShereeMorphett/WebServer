@@ -22,10 +22,17 @@ struct server
 {
 	int port;
 	int socketFD;
+	// _request
+	//_response //pending 
 	std::string serverName;
     std::map<int, std::string> errorPages;
     std::vector<location> locations; 
     int clientMaxBodySize;
+};
+
+struct clientData
+{
+	std::multimap<std::string, std::string> requestData;
 };
 
 
@@ -37,14 +44,18 @@ class WebServerProg
 		size_t serverCount;
 		std::string defaultFileName;
 		
+		std::map<int, struct clientData> m_clientDataMap;
+		std::string	_response; //this needs to be decided on, is it okay??
+		std::string	_request;  //this needs to be decided on, is it okay??
+
 	public:
 
 		void addSocketToPoll(int socket, int event);
 		void startProgram();
 		void initServers();
 		void sendResponse(int clientSocket);
-		void receiveRequest(int clientSocket);
-		int acceptConnection(int listenSocket);
+		bool receiveRequest(int clientSocket);
+		int  acceptConnection(int listenSocket);
 		void runPoll();
 		WebServerProg();
 		WebServerProg(std::string fileName);

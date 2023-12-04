@@ -10,6 +10,9 @@
 #include <string.h>
 #include <fcntl.h>
 #include "../Color.hpp"
+#include "api_helpers.hpp"
+#include "api_helpers.hpp"
+
 # define MAXSOCKET 10
 
 struct server;
@@ -29,7 +32,7 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 	m_pollSocketsVec.push_back(fd);
 }
 
-void  WebServerProg::receiveRequest(int clientSocket) //server
+bool  WebServerProg::receiveRequest(int clientSocket) //server
 {
 	char buffer[1024];
 	std::memset(buffer, 0, 1024);
@@ -38,9 +41,9 @@ void  WebServerProg::receiveRequest(int clientSocket) //server
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
-			return ;
+			return false;
 		errnoPrinting("recv", errno);
-		return ;
+		return false;
 	}
 	else if (bytes_received == 0)
 	{
@@ -54,20 +57,130 @@ void  WebServerProg::receiveRequest(int clientSocket) //server
 		str += '\0';
 		std::cout << str << std::endl;
 	}
+	return true;
 }
 
-void  WebServerProg::sendResponse(int clientSocket)
+
+
+// bool WebServ::receiveRequest(int clientSocket) //tuomo's addition, not connected
+// {
+// 	if (m_clientDataMap.find(clientSocket) == m_clientDataMap.end())
+// 	{
+// 		clientData data;
+// 		m_clientDataMap.insert(std::make_pair(clientSocket, data));
+// 	}
+// 	char buffer[1024];
+
+// 	_request.clear();
+// 	memset(buffer, 0, 1024);
+// 	int bytes_received = recv(clientSocket, buffer, 1024, 0);
+// 	if (bytes_received < 0)
+// 	{
+// 		if (errno == EAGAIN || errno == EWOULDBLOCK)
+// 		{
+// 			return 1;
+// 		}
+// 		std::cout << "Error! recv" << std::endl;
+// 		exit (1);
+// 	}
+// 	else if (bytes_received == 0)
+// 	{
+// 		std::cout << "Closing client socket" << std::endl;
+// 		close(clientSocket);
+// 		return 1;
+// 	}
+// 	else
+// 	{
+// 		std::string request = buffer;
+// 		parseRequest(clientSocket, request);
+// 	}
+// 	return 0;
+// }
+
+void WebServerProg::sendResponse(int clientSocket)
 {
-	const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Closed\r\nContent-Type: text/plain\r\n\r\nHello, World!";
+	//const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Closed\r\nContent-Type: text/plain\r\n\r\nHello, World!";
+	int	status = 200;
+	int size = 0;
+
+	std::string body;
+	std::string path;
+
+
+	std::map<std::string, std::string> mp;
+	mp["method"] = "GET";
+	mp["path"] = extractPath(_request);
+
 	
-	std::cout << COLOR_CYAN << "sending response..." << COLOR_RESET << std:: endl;
-	int bytes_sent = send(clientSocket, response, strlen(response), 0);
+	// TODO --> add check if path and method is allowed. Can be done after merge of parsing
+
+	path.append(mp["path"]);
+	body = readFile(path, &status);
+	std::cout << body;
+
+	// use int status here and check config + read file before assigning status code
+	_response.append("HTTP/1.1 ");
+	_response.append(std::to_string(status));
+	switch (status) {
+	case 200:
+		_response.append(" OK");
+		break;
+	case 404:
+		_response.append(" Not Found");
+	default:
+		break;
+	}
+	_response.append("\r\n");
+
+	// HANDLE ERROR HERE
+
+	_response.append("Content-Length: ");
+	size = body.size();
+	_response.append(std::to_string(size));
+	_response.append("\r\n");
+
+	// This might be sent anyways
+	_response.append("Connection: Closed");
+	_response.append("\r\n");
+
+	// will need to change this based on what we will return
+	// TYPE WILL HAVE TO BE DETECTED
+	_response.append("Content-type: ");
+	std::string type = getFileExtension(mp["path"]);
+	std::cout << "type: " << type << "\n";
+	if (type == ".html") {
+		_response.append(TYPE_HTML);
+	}
+	else if (type == ".css") {
+		_response.append(TYPE_CSS);
+	}
+	// 
+	_response.append(END_HEADER);
+
+	// use read content here
+	_response.append(body);
+
+	int bytes_sent = send(clientSocket, _response.c_str(), strlen(_response.c_str()), 0);
 	if (bytes_sent < 0)
 	{
-		errnoPrinting("Response did not send", errno);
-		return ;
+		std::cout << "Error! send" << std::endl;
+		exit(EXIT_FAILURE);
 	}
+	_response.clear();
 }
+
+// void  WebServerProg::sendResponse(int clientSocket)
+// {
+// 	const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Closed\r\nContent-Type: text/plain\r\n\r\nHello, World!";
+	
+// 	std::cout << COLOR_CYAN << "sending response..." << COLOR_RESET << std:: endl;
+// 	int bytes_sent = send(clientSocket, response, strlen(response), 0);
+// 	if (bytes_sent < 0)
+// 	{
+// 		errnoPrinting("Response did not send", errno);
+// 		return ;
+// 	}
+// }
 
 void WebServerProg::initServers()
 {
@@ -125,8 +238,8 @@ int WebServerProg::acceptConnection(int listenSocket)
     }
     if (fcntl(clientSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
     {
-        	errnoPrinting("fcntl", errno);
-        close(clientSocket);
+        errnoPrinting("fcntl", errno);
+        //close(clientSocket);  
         return -1;
     }
     addSocketToPoll(clientSocket, POLLIN);
@@ -141,29 +254,66 @@ void WebServerProg::runPoll()
 		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 100);
 		if (pollResult < 0)
 		{
-			errnoPrinting("Poll not created", errno);
-			return ;
-		}
+			std::cout << "Error! poll" << std::endl;
+			exit (1);
+		}	 
 		if (pollResult == 0)
 			continue;
-		for (size_t i  = 0; i < m_pollSocketsVec.size() ; i++)
+		for (size_t i  = 0; i < m_pollSocketsVec.size(); i++)
 		{
-			if (m_pollSocketsVec[i].revents & POLLIN) 
+			if (m_pollSocketsVec[i].revents & POLLIN)
 			{
-				int fd = 0;
 				if (i < serverCount)
-					fd = acceptConnection(m_pollSocketsVec[i].fd); 
+				{
+					addSocketToPoll(accept(m_pollSocketsVec[i].fd, NULL, NULL), POLLIN);
+					int flags = fcntl(m_pollSocketsVec.back().fd, F_GETFL, 0);
+					fcntl(m_pollSocketsVec.back().fd, F_SETFL, flags | O_NONBLOCK);
+					std::cout << "New connection accepted on client socket" << std::endl;
+				}
 				else
-					fd = m_pollSocketsVec[i].fd;
-				std::cout << "Request: " << std::endl;
-				std::cout << fd << std::endl;
-				receiveRequest(fd);
-				sendResponse(fd);
-				std::cout << COLOR_GREEN << "sent!!" << COLOR_RESET << std::endl;
-				close(fd);
+				{
+					std::cout << "Request: " << std::endl;
+					receiveRequest(m_pollSocketsVec[i].fd);
+					// if (receiveRequest(m_pollSocketsVec[i].fd))
+					// 	continue;
+					sendResponse(m_pollSocketsVec[i].fd);
+					std::cout << "sent!!" << std::endl;
+					// close(m_pollSocketsVec[i].fd);
+					// m_clientDataMap.erase(m_pollSocketsVec[i].fd);
+					// m_pollSocketsVec.erase(m_pollSocketsVec.begin() + i);
+				}
 			}
 		}
 	}
+
+	// while (true)
+	// {
+	// 	int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 100);
+	// 	if (pollResult < 0)
+	// 	{
+	// 		errnoPrinting("Poll not created", errno);
+	// 		return ;
+	// 	}
+	// 	if (pollResult == 0)
+	// 		continue;
+	// 	for (size_t i  = 0; i < m_pollSocketsVec.size() ; i++)
+	// 	{
+	// 		if (m_pollSocketsVec[i].revents & POLLIN) 
+	// 		{
+	// 			int fd = 0;
+	// 			if (i < serverCount)
+	// 				fd = acceptConnection(m_pollSocketsVec[i].fd); 
+	// 			else
+	// 				fd = m_pollSocketsVec[i].fd;
+	// 			std::cout << "Request: " << std::endl;
+	// 			std::cout << fd << std::endl;
+	// 			receiveRequest(fd);
+	// 			sendResponse(fd);
+	// 			std::cout << COLOR_GREEN << "sent!!" << COLOR_RESET << std::endl;
+	// 			close(fd);
+	// 		}
+	// 	}
+	// }
 }
 
 void WebServerProg::startProgram()
