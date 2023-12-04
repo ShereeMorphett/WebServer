@@ -33,36 +33,6 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 	m_pollSocketsVec.push_back(fd);
 }
 
-// bool  WebServerProg::receiveRequest(int clientSocket) //server
-// {
-// 	char buffer[1024];
-// 	_request.clear(); // dummy data
-// 	std::memset(buffer, 0, 1024);
-// 	int bytes_received = recv(clientSocket, buffer, 1024, 0);
-// 	std::cout << "in received Request" << bytes_received << " " << clientSocket << std::endl;
-// 	if (bytes_received < 0)
-// 	{
-// 		if (errno == EAGAIN || errno == EWOULDBLOCK)
-// 			return false;
-// 		errnoPrinting("recv", errno);
-// 		return false;
-// 	}
-// 	else if (bytes_received == 0)
-// 	{
-// 		std::cout << "Closing client socket" << std::endl;
-// 		close(clientSocket);
-// 		m_pollSocketsVec.pop_back();
-// 	}
-// 	else
-// 	{
-// 		std::string str = buffer;
-// 		str += '\0';
-// 		_request.append(buffer); // dummy data
-// 		std::cout << str << std::endl;
-// 	}
-// 	return true;
-// }
-
 void WebServerProg::parseRequest(int clientSocket, std::string request)
 {
 	std::multimap<std::string, std::string>& clientRequestMap = m_clientDataMap.find(clientSocket)->second.requestData;
@@ -139,7 +109,6 @@ bool WebServerProg::receiveRequest(int clientSocket) //tuomo's addition, not con
 
 void WebServerProg::sendResponse(int clientSocket)
 {
-	//const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Closed\r\nContent-Type: text/plain\r\n\r\nHello, World!";
 	int	status = 200;
 	int size = 0;
 
