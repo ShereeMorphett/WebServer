@@ -16,6 +16,9 @@ class WebServ
 private:
 	std::vector<struct pollfd> m_pollSocketsVec;
 	std::map<int, struct clientData> m_clientDataMap;
+	std::string	_response;
+	std::string	_request;
+
 	
 	void initListenSocket();
 	void addSocketToPoll(int socket, int event);

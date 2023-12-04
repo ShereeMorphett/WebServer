@@ -9,7 +9,9 @@
 #include <sstream>
 #include <fcntl.h>
 #include <cerrno>
+
 #include <errno.h>
+
 
 void WebServ::addSocketToPoll(int socket, int event) 
 {
@@ -69,6 +71,8 @@ bool WebServ::receiveRequest(int clientSocket)
 		m_clientDataMap.insert(std::make_pair(clientSocket, data));
 	}
 	char buffer[1024];
+
+	_request.clear();
 	memset(buffer, 0, 1024);
 	int bytes_received = recv(clientSocket, buffer, 1024, 0);
 	if (bytes_received < 0)
@@ -90,22 +94,81 @@ bool WebServ::receiveRequest(int clientSocket)
 	{
 		std::string request = buffer;
 
-		parseRequest(clientSocket, request);
+		parseRequest(clientSocket, request)
 	}
 	return 0;
 }
 
 void WebServ::sendResponse(int clientSocket)
 {
-	const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Closed\r\nContent-Type: text/plain\r\n\r\nHello, World!";
+	// const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Closed\r\nContent-Type: text/plain\r\n\r\nHello, World!";
+	int	status = 200;
+	int size = 0;
+
+	std::string body;
+	std::string path;
+
+
+	std::map<std::string, std::string> mp;
+	mp["method"] = "GET";
+	mp["path"] = extractPath(_request);
+
 	
-	std::cout << "sending response..." << std:: endl;
-	int bytes_sent = send(clientSocket, response, strlen(response), 0);
+	// TODO --> add check if path and method is allowed. Can be done after merge of parsing
+
+	path.append(mp["path"]);
+	body = readFile(path, &status);
+	std::cout << body;
+
+	// use int status here and check config + read file before assigning status code
+	_response.append("HTTP/1.1 ");
+	_response.append(std::to_string(status));
+	switch (status) {
+	case 200:
+		_response.append(" OK");
+		break;
+	case 404:
+		_response.append(" Not Found");
+	default:
+		break;
+	}
+	_response.append("\r\n");
+
+	// HANDLE ERROR HERE
+
+	_response.append("Content-Length: ");
+	size = body.size();
+	_response.append(std::to_string(size));
+	_response.append("\r\n");
+
+	// This might be sent anyways
+	_response.append("Connection: Closed");
+	_response.append("\r\n");
+
+	// will need to change this based on what we will return
+	// TYPE WILL HAVE TO BE DETECTED
+	_response.append("Content-type: ");
+	std::string type = getFileExtension(mp["path"]);
+	std::cout << "type: " << type << "\n";
+	if (type == ".html") {
+		_response.append(TYPE_HTML);
+	}
+	else if (type == ".css") {
+		_response.append(TYPE_CSS);
+	}
+	// 
+	_response.append(END_HEADER);
+
+	// use read content here
+	_response.append(body);
+
+	int bytes_sent = send(clientSocket, _response.c_str(), strlen(_response.c_str()), 0);
 	if (bytes_sent < 0)
 	{
 		std::cout << "Error! send" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	_response.clear();
 }
 
 void WebServ::initListenSocket()
