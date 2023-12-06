@@ -7,9 +7,9 @@
 # include <string>
 
 // General
-std::string	readFile(const std::string& path, int* status);
-std::string getFileExtension(const std::string& fileName);
-std::string extractPath(const std::string& request);
+std::string	readFile(std::string const & path, int* status);
+std::string getFileExtension(std::string const  & fileName);
+std::string extractPath(std::string const & request);
 
 // Check permissions
 
