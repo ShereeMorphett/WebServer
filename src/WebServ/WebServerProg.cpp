@@ -5,14 +5,16 @@
 #include <iostream>
 #include <netinet/in.h>
 #include <cerrno>
-#include <cstring>
+#include <cstring>//
+#include <cstdlib> //
+#include <string>
 #include <unistd.h>
 #include <string.h>
 #include <sstream>
 #include <fcntl.h>
 #include "../Color.hpp"
 #include "api_helpers.hpp"
-#include "api_helpers.hpp"
+#include "utils.hpp"
 
 # define MAXSOCKET 10
 
@@ -146,7 +148,7 @@ void WebServerProg::sendResponse(int clientSocket)
 
 	// use int status here and check config + read file before assigning status code
 	_response.append("HTTP/1.1 ");
-	_response.append(std::to_string(status));
+	_response.append(toString(status));
 	switch (status) {
 	case 200:
 		_response.append(" OK");
@@ -162,7 +164,7 @@ void WebServerProg::sendResponse(int clientSocket)
 
 	_response.append("Content-Length: ");
 	size = body.size();
-	_response.append(std::to_string(size));
+	_response.append(toString(size));
 	_response.append("\r\n");
 
 	// This might be sent anyways

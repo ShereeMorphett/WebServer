@@ -35,7 +35,7 @@ std::string	readFile(const std::string& path, int* status) {
 	std::string		line;
 	std::string		body;
 
-	inFile.open("." + path);
+	inFile.open(("." + path).c_str()); //I had to change this as "open takes const char* as its argument, we were giving it std::string object. and my compiler wont allow it"
 	if (!inFile) {
 		if (*status == 404) {
 			return body;
