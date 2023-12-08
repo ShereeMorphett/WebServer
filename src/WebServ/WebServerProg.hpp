@@ -68,4 +68,6 @@ class WebServerProg
 std::vector<struct server> parseConfigFile(const std::string& fileName);
 void validateServers(const std::vector<struct server> &servers);
 
+std::string runCgi();
+
 #endif

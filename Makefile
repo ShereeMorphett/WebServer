@@ -14,7 +14,7 @@ INCS := $(wildcard $(addsuffix /*.hpp, $(VPATH)))
 INCLUDE = $(addprefix -I, $(VPATH))
 
 # src files
-SRC := main.cpp WebServerProg.cpp api_helpers.cpp api_get.cpp parser.cpp validateServers.cpp utils.cpp
+SRC := main.cpp WebServerProg.cpp api_helpers.cpp api_get.cpp parser.cpp validateServers.cpp utils.cpp #cgiHandler.cpp
 
 # obj files and path for them
 OBJ_DIR = ./obj

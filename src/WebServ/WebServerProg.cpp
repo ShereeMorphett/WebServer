@@ -22,6 +22,7 @@ struct server;
 void printServer(server &server);
 
 
+
 template <typename KeyType, typename ValueType>
 void printMultimap(const std::multimap<KeyType, ValueType>& myMultimap) {
     typename std::multimap<KeyType, ValueType>::const_iterator it;
@@ -137,26 +138,25 @@ void WebServerProg::sendResponse(int clientSocket)
 	
 	mp["path"] = extractPath(_request); //this is the working one
 	//std::cout << COLOR_MAGENTA <<  path << COLOR_RESET << std::endl;
-
 	
 	// TODO --> add check if path and method is allowed. Can be done after merge of parsing
 	// dummy data 
 	path.append(mp["path"]);
 	body = readFile(path, &status);
 	
-//	std::cout << body;
-
+	//	std::cout << body;
 	// use int status here and check config + read file before assigning status code
 	_response.append("HTTP/1.1 ");
 	_response.append(toString(status));
-	switch (status) {
-	case 200:
-		_response.append(" OK");
-		break;
-	case 404:
-		_response.append(" Not Found");
-	default:
-		break;
+	switch (status)
+	{
+		case 200:
+			_response.append(" OK");
+			break;
+		case 404:
+			_response.append(" Not Found");
+		default:
+			break;
 	}
 	_response.append("\r\n");
 
@@ -187,7 +187,11 @@ void WebServerProg::sendResponse(int clientSocket)
 
 	// use read content here
 	_response.append(body);
-
+	///cgi output would be sent from here
+	std::string check = runCgi();
+	std::cout << COLOR_RED << "checking: " << check << COLOR_RESET << std::endl;
+	_response.append(check); // this will check if it returns something, if so appends
+	std::cout << _response << std::endl;
 	int bytes_sent = send(clientSocket, _response.c_str(), strlen(_response.c_str()), 0);
 	if (bytes_sent < 0)
 	{
@@ -299,35 +303,6 @@ void WebServerProg::runPoll()
 			}
 		}
 	}
-
-	// while (true)
-	// {
-	// 	int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 100);
-	// 	if (pollResult < 0)
-	// 	{
-	// 		errnoPrinting("Poll not created", errno);
-	// 		return ;
-	// 	}
-	// 	if (pollResult == 0)
-	// 		continue;
-	// 	for (size_t i  = 0; i < m_pollSocketsVec.size() ; i++)
-	// 	{
-	// 		if (m_pollSocketsVec[i].revents & POLLIN) 
-	// 		{
-	// 			int fd = 0;
-	// 			if (i < serverCount)
-	// 				fd = acceptConnection(m_pollSocketsVec[i].fd); 
-	// 			else
-	// 				fd = m_pollSocketsVec[i].fd;
-	// 			std::cout << "Request: " << std::endl;
-	// 			std::cout << fd << std::endl;
-	// 			receiveRequest(fd);
-	// 			sendResponse(fd);
-	// 			std::cout << COLOR_GREEN << "sent!!" << COLOR_RESET << std::endl;
-	// 			close(fd);
-	// 		}
-	// 	}
-	// }
 }
 
 void WebServerProg::startProgram()
@@ -338,11 +313,11 @@ void WebServerProg::startProgram()
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
 		std::cout << COLOR_GREEN << "servers valid" << COLOR_RESET << std::endl;
-	for (size_t i = 0; i < servers.size(); i++)
-    {
-        printServer(servers[i]);
-    }
-		initServers();
+	// for (size_t i = 0; i < servers.size(); i++)
+    // {
+    //     printServer(servers[i]);
+    // }
+	initServers();
 	}
 	catch (const std::exception& e)
 	{
