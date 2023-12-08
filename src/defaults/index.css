@@ -1,0 +1,17 @@
+body {
+	justify-content: center;
+	background: #000000;
+	align-items: center;
+	display: flex;
+	height: 90vh;
+}
+
+h1 {
+	color:#ffffff;
+	font-size: 25vh;
+}
+
+h2 {
+	color:#ffffff;
+	font-size: 25vh;
+}

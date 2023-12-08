@@ -20,6 +20,12 @@ void	appendStatus(std::string& _res, int status) {
 	_res.append(NEW_VALUE);
 }
 
+// Append all other headers
+void	appendMisc(std::string& _res) {
+	_res.append("Connection: Closed");
+	_res.append(NEW_VALUE);
+}
+
 // Append content type, length and actual body
 void	appendBody(std::string& _res, std::string& body, std::string const & path) {
 	_res.append("Content-Length: ");
@@ -27,7 +33,6 @@ void	appendBody(std::string& _res, std::string& body, std::string const & path) 
 	_res.append(NEW_VALUE);
 	_res.append("Content-type: ");
 	std::string type = getFileExtension(path);
-	std::cout << "type: " << type << "\n";
 	if (type == ".html") {
 		_res.append(TYPE_HTML);
 	}
@@ -35,8 +40,17 @@ void	appendBody(std::string& _res, std::string& body, std::string const & path) 
 		_res.append(TYPE_CSS);
 	}
 	_res.append(END_HEADER);
-
 	_res.append(body);
+}
+
+// Check permissions and adjust status accordingly
+void	checkPermissions(int* status) {
+	// check method permissions
+	if (*status) {
+		return ;
+	}
+	// check path permissions
+
 }
 
 void	WebServerProg::getResponse(int clientSocket) {
@@ -46,13 +60,13 @@ void	WebServerProg::getResponse(int clientSocket) {
 
 	path = accessDataInMap(clientSocket, "Path");
 	_response.append(HTTP_HEADER);
+	_response.append(NEW_VALUE);
+	checkPermissions(&status);
+	if (status >= ERRORS) {
+		path = chooseErrorPage(status);
+	}
 	body = readFile(path, &status);
 	appendStatus(_response, status);
-
-	// This might be sent anyways
-	// TODO: check if this is required etc needed and in what scenarios
-	_response.append("Connection: Closed");
-	_response.append(NEW_VALUE);
-
+	appendMisc(_response);
 	appendBody(_response, body, path);
 }

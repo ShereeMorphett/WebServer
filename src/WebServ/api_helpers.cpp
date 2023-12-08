@@ -40,7 +40,7 @@ std::string	readFile(std::string const & path, int* status) {
 			return body;
 		}
 		*status = NOT_FOUND;
-		body = readFile(ERROR_PAGE, status);
+		body = readFile(NOT_FOUND_PAGE, status);
 	} else {
 		while (std::getline(inFile, line)) {
 			body.append(line);
@@ -49,4 +49,18 @@ std::string	readFile(std::string const & path, int* status) {
 	}
 	
 	return body;
+}
+
+std::string	chooseErrorPage(int status) {
+	switch (status) {
+		case FORBIDDEN:
+			return FORBIDDEN_PAGE;
+		
+		case UNAUTHORIZED:
+			return UNAUTHORIZED_PAGE;
+
+		default:
+			break;
+	}
+	return SERVER_PAGE;
 }
