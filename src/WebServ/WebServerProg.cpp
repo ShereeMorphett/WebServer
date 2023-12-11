@@ -7,11 +7,10 @@
 #include <cerrno>
 #include <cstring>
 #include <unistd.h>
-#include <string.h>
+#include <stdlib.h>
 #include <sstream>
 #include <fcntl.h>
 #include "../Color.hpp"
-#include "api_helpers.hpp"
 #include "api_helpers.hpp"
 
 # define MAXSOCKET 10
@@ -247,35 +246,6 @@ void WebServerProg::runPoll()
 			}
 		}
 	}
-
-	// while (true)
-	// {
-	// 	int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 100);
-	// 	if (pollResult < 0)
-	// 	{
-	// 		errnoPrinting("Poll not created", errno);
-	// 		return ;
-	// 	}
-	// 	if (pollResult == 0)
-	// 		continue;
-	// 	for (size_t i  = 0; i < m_pollSocketsVec.size() ; i++)
-	// 	{
-	// 		if (m_pollSocketsVec[i].revents & POLLIN) 
-	// 		{
-	// 			int fd = 0;
-	// 			if (i < serverCount)
-	// 				fd = acceptConnection(m_pollSocketsVec[i].fd); 
-	// 			else
-	// 				fd = m_pollSocketsVec[i].fd;
-	// 			std::cout << "Request: " << std::endl;
-	// 			std::cout << fd << std::endl;
-	// 			receiveRequest(fd);
-	// 			sendResponse(fd);
-	// 			std::cout << COLOR_GREEN << "sent!!" << COLOR_RESET << std::endl;
-	// 			close(fd);
-	// 		}
-	// 	}
-	// }
 }
 
 void WebServerProg::startProgram()
@@ -286,10 +256,10 @@ void WebServerProg::startProgram()
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
 		std::cout << COLOR_GREEN << "servers valid" << COLOR_RESET << std::endl;
-	for (size_t i = 0; i < servers.size(); i++)
-    {
-        printServer(servers[i]);
-    }
+	// for (size_t i = 0; i < servers.size(); i++)
+    // {
+    //     printServer(servers[i]);
+    // }
 		initServers();
 	}
 	catch (const std::exception& e)

@@ -35,7 +35,7 @@ std::string	readFile(std::string const & path) {
 	std::string		line;
 	std::string		body;
 
-	inFile.open("." + path);
+	inFile.open((std::string(".") + path).c_str()); 
 	// while (std::getline(inFile, line)) {
 	// 	body.append(line);
 	// }

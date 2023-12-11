@@ -1,10 +1,11 @@
 #include "WebServerProg.hpp"
 #include "api_helpers.hpp"
 #include "Color.hpp"
+#include "utils.hpp"
 
 // Function to append status code to response based on what readFile() returned
 void	appendStatus(std::string& _res, int status) {
-	_res.append(std::to_string(status)); // TODO will be changed to c++98 compitable
+	_res.append(toString(status)); // TODO will be changed to c++98 compitable
 	switch (status) {
 		case OK:
 			_res.append(" OK");
@@ -35,7 +36,7 @@ void	appendMisc(std::string& _res) {
 // Append content type, length and actual body
 void	appendBody(std::string& _res, std::string& body, std::string const & path) {
 	_res.append("Content-Length: ");
-	_res.append(std::to_string(body.size()));
+	_res.append(toString(body.size()));
 	_res.append(NEW_VALUE);
 	_res.append("Content-type: ");
 	std::string type = getFileExtension(path);
@@ -61,7 +62,9 @@ void	checkRequest(int* status, std::string const & path) {
 	// check path permissions
 
 	// check if file exists or not
-	std::ifstream	file("." + path);
+
+	std::ifstream	file((std::string(".") + path).c_str());
+	// std::ifstream	file("." + path);
 	if (file.good()) {
 		*status = OK;
 	} else {
