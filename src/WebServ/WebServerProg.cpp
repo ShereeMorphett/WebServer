@@ -79,6 +79,11 @@ std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
 	return m_clientDataMap.find(clientSocket)->second.requestData.find(header)->second;
 }
 
+void	WebServerProg::deleteDataInMap(int clientSocket)
+{
+	m_clientDataMap.erase(m_clientDataMap.find(clientSocket));
+}
+
 
 bool WebServerProg::receiveRequest(int clientSocket)
 {
@@ -118,73 +123,16 @@ bool WebServerProg::receiveRequest(int clientSocket)
 
 void WebServerProg::sendResponse(int clientSocket)
 {
-	int	status = 200;
-	int size = 0;
+	char method = accessDataInMap(clientSocket, "Method")[0];
 
-	std::string body;
-	std::string path;
-	// std::cout << COLOR_MAGENTA;
-	// printMultimap(m_clientDataMap.find(clientSocket)->second.requestData);
-	// std::cout << COLOR_RESET;
-
-	//dummy data
-	std::map<std::string, std::string> mp;
-	mp["method"] = accessDataInMap(clientSocket, "Method");
-	//mp["path"] = accessDataInMap(clientSocket, "Path");
-	std::cout << COLOR_MAGENTA <<  mp["path"] << COLOR_RESET << std::endl;
-	
-	mp["path"] = extractPath(_request); //this is the working one
-	//std::cout << COLOR_MAGENTA <<  path << COLOR_RESET << std::endl;
-
-	
-	// TODO --> add check if path and method is allowed. Can be done after merge of parsing
-	// dummy data 
-	path.append(mp["path"]);
-	body = readFile(path, &status);
-	
-//	std::cout << body;
-
-	// use int status here and check config + read file before assigning status code
-	_response.append("HTTP/1.1 ");
-	_response.append(std::to_string(status));
-	switch (status) {
-	case 200:
-		_response.append(" OK");
-		break;
-	case 404:
-		_response.append(" Not Found");
-	default:
-		break;
+	switch (method) {
+		case GET:
+			getResponse(clientSocket);
+			break;
+		
+		default:
+			break;
 	}
-	_response.append("\r\n");
-
-	// HANDLE ERROR HERE
-
-	_response.append("Content-Length: ");
-	size = body.size();
-	_response.append(std::to_string(size));
-	_response.append("\r\n");
-
-	// This might be sent anyways
-	_response.append("Connection: Closed");
-	_response.append("\r\n");
-
-	// will need to change this based on what we will return
-	// TYPE WILL HAVE TO BE DETECTED 
-	_response.append("Content-type: ");
-	std::string type = getFileExtension(mp["path"]);
-	std::cout << "type: " << type << "\n";
-	if (type == ".html") {
-		_response.append(TYPE_HTML);
-	}
-	else if (type == ".css") {
-		_response.append(TYPE_CSS);
-	}
-	// 
-	_response.append(END_HEADER);
-
-	// use read content here
-	_response.append(body);
 
 	int bytes_sent = send(clientSocket, _response.c_str(), strlen(_response.c_str()), 0);
 	if (bytes_sent < 0)
@@ -192,6 +140,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		std::cout << "Error! send" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	deleteDataInMap(clientSocket);
 	_response.clear();
 }
 
@@ -286,6 +235,7 @@ void WebServerProg::runPoll()
 				{
 					std::cout << "Request: " << std::endl;
 					receiveRequest(m_pollSocketsVec[i].fd);
+					std::cout << _request << "\n";
 					// if (receiveRequest(m_pollSocketsVec[i].fd))
 					// 	continue;
 					sendResponse(m_pollSocketsVec[i].fd);
