@@ -235,6 +235,7 @@ void WebServerProg::runPoll()
 				{
 					std::cout << "Request: " << std::endl;
 					receiveRequest(m_pollSocketsVec[i].fd);
+					std::cout << _request << "\n";
 					// if (receiveRequest(m_pollSocketsVec[i].fd))
 					// 	continue;
 					sendResponse(m_pollSocketsVec[i].fd);

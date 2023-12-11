@@ -1,7 +1,8 @@
 body {
 	justify-content: center;
-	background: #000000;
+	flex-direction: column;
 	align-items: center;
+	background: #000000;
 	display: flex;
 	height: 90vh;
 }
@@ -9,9 +10,13 @@ body {
 h1 {
 	color:#ffffff;
 	font-size: 25vh;
+	padding: 0;
+	margin: 0;
 }
 
 h2 {
 	color:#ffffff;
-	font-size: 25vh;
+	font-size: 15vh;
+	padding: 0;
+	margin: 0;
 }

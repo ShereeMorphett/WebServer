@@ -6,16 +6,16 @@
 void	appendStatus(std::string& _res, int status) {
 	_res.append(std::to_string(status)); // TODO will be changed to c++98 compitable
 	switch (status) {
-	case 200:
-		_res.append(" OK");
-		break;
+		case 200:
+			_res.append(" OK");
+			break;
 
-	case 404:
-		_res.append(" Not Found");
-		break;
+		case 404:
+			_res.append(" Not Found");
+			break;
 
-	default:
-		break;
+		default:
+			break;
 	}
 	_res.append(NEW_VALUE);
 }
@@ -44,13 +44,18 @@ void	appendBody(std::string& _res, std::string& body, std::string const & path) 
 }
 
 // Check permissions and adjust status accordingly
-void	checkPermissions(int* status) {
+void	checkRequest(int* status, std::string const & path) {
 	// check method permissions
-	if (*status) {
-		return ;
-	}
+
 	// check path permissions
 
+	// Check path file
+	std::ifstream	file("." + path);
+	if (file.good()) {
+		*status = OK;
+	} else {
+		*status = NOT_FOUND;
+	}
 }
 
 void	WebServerProg::getResponse(int clientSocket) {
@@ -61,11 +66,11 @@ void	WebServerProg::getResponse(int clientSocket) {
 	path = accessDataInMap(clientSocket, "Path");
 	_response.append(HTTP_HEADER);
 	_response.append(NEW_VALUE);
-	checkPermissions(&status);
+	checkRequest(&status, path);
 	if (status >= ERRORS) {
 		path = chooseErrorPage(status);
 	}
-	body = readFile(path, &status);
+	body = readFile(path);
 	appendStatus(_response, status);
 	appendMisc(_response);
 	appendBody(_response, body, path);

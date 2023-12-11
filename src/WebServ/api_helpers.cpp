@@ -29,25 +29,16 @@ std::string getFileExtension(std::string const & fileName) {
 }
 
 // Will read a file based on path given
-std::string	readFile(std::string const & path, int* status) {
+std::string	readFile(std::string const & path) {
 	std::ifstream	inFile;
 	std::string		line;
 	std::string		body;
 
 	inFile.open("." + path);
-	if (!inFile) {
-		if (*status == 404) {
-			return body;
-		}
-		*status = NOT_FOUND;
-		body = readFile(NOT_FOUND_PAGE, status);
-	} else {
-		while (std::getline(inFile, line)) {
-			body.append(line);
-		}
-		inFile.close();
+	while (std::getline(inFile, line)) {
+		body.append(line);
 	}
-	
+	inFile.close();
 	return body;
 }
 
@@ -59,8 +50,11 @@ std::string	chooseErrorPage(int status) {
 		case UNAUTHORIZED:
 			return UNAUTHORIZED_PAGE;
 
+		case NOT_FOUND:
+			return NOT_FOUND_PAGE;
+
 		default:
-			break;
+			break; 
 	}
 	return SERVER_PAGE;
 }

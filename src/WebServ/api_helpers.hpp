@@ -7,9 +7,9 @@
 # include <string>
 
 // General
-std::string	readFile(std::string const & path, int* status);
 std::string getFileExtension(std::string const  & fileName);
 std::string extractPath(std::string const & request);
+std::string	readFile(std::string const & path);
 std::string	chooseErrorPage(int status);
 
 // Check permissions
