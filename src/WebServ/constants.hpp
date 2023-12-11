@@ -17,9 +17,13 @@
 // Should include all possible files for GET
 # define 	TYPE_HTML	"text/html"
 # define 	TYPE_CSS	"text/css"
+# define	TYPE_PNG	"image/png"
+# define	TYPE_JPEG	"image/jpeg"
 
-# define	EXT_HTML	".html"
-# define	EXT_CSS		".css"
+# define	EXT_HTML	"html"
+# define	EXT_CSS		"css"
+# define	EXT_PNG		"png"
+# define	EXT_JPEG	"jpeg"
 
 // Default file paths
 # define	NOT_FOUND_PAGE		"/src/defaults/404.html"

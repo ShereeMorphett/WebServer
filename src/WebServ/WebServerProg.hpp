@@ -66,7 +66,7 @@ class WebServerProg
 
 		// response methods
 		// void	deleteResponse(int clientSocket);
-		// void	postResponse(int clientSocket);
+		void	postResponse(int clientSocket);
 		void	getResponse(int clientSocket);
 
 };

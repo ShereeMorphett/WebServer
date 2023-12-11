@@ -1,4 +1,5 @@
 #include "api_helpers.hpp"
+#include <sstream>
 
 // Get path out of request string
 std::string extractPath(std::string const & request)
@@ -35,11 +36,20 @@ std::string	readFile(std::string const & path) {
 	std::string		body;
 
 	inFile.open("." + path);
-	while (std::getline(inFile, line)) {
-		body.append(line);
-	}
-	inFile.close();
-	return body;
+	// while (std::getline(inFile, line)) {
+	// 	body.append(line);
+	// }
+	// inFile.close();
+
+    std::stringstream buffer;
+    buffer << inFile.rdbuf();
+
+    // The string now contains the file data
+    std::string fileContent = buffer.str();
+
+    inFile.close();
+
+	return fileContent;
 }
 
 std::string	chooseErrorPage(int status) {

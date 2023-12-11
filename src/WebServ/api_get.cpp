@@ -6,13 +6,19 @@
 void	appendStatus(std::string& _res, int status) {
 	_res.append(std::to_string(status)); // TODO will be changed to c++98 compitable
 	switch (status) {
-		case 200:
+		case OK:
 			_res.append(" OK");
 			break;
 
-		case 404:
+		case NOT_FOUND:
 			_res.append(" Not Found");
 			break;
+
+		case UNAUTHORIZED:
+			_res.append(" Unauthorized");
+		
+		case FORBIDDEN:
+			_res.append(" Forbidden");
 
 		default:
 			break;
@@ -33,12 +39,17 @@ void	appendBody(std::string& _res, std::string& body, std::string const & path) 
 	_res.append(NEW_VALUE);
 	_res.append("Content-type: ");
 	std::string type = getFileExtension(path);
-	if (type == ".html") {
+	if (type == EXT_HTML) {
 		_res.append(TYPE_HTML);
 	}
-	else if (type == ".css") {
+	else if (type == EXT_CSS) {
 		_res.append(TYPE_CSS);
 	}
+	else if (type == EXT_PNG) {
+		_res.append(TYPE_PNG);
+	}
+	std::cout << "type: " << type << " ext: " << EXT_PNG << "\n";
+	std::cout << "RES: " << _res << "\n\n";
 	_res.append(END_HEADER);
 	_res.append(body);
 }
@@ -49,7 +60,7 @@ void	checkRequest(int* status, std::string const & path) {
 
 	// check path permissions
 
-	// Check path file
+	// check if file exists or not
 	std::ifstream	file("." + path);
 	if (file.good()) {
 		*status = OK;
@@ -74,4 +85,5 @@ void	WebServerProg::getResponse(int clientSocket) {
 	appendStatus(_response, status);
 	appendMisc(_response);
 	appendBody(_response, body, path);
+
 }
