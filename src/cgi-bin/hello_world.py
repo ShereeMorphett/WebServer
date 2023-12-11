@@ -9,14 +9,14 @@ import sys
 import os
 
 # Create instance of FieldStorage
-form = cgi.FieldStorage()
+form = cgi.FieldStorage() #huh?
 
 # Get data from fields
 first_name = form.getvalue('first_name')
 last_name = form.getvalue('last_name')
-# query_string = os.environ.get('QUERY_STRING', 'No QUERY_STRING provided')
-# print(os.environ["QUERY_STRING"], file=sys.stderr)
-# print("HTTP/1.1 200 OK")
+query_string = os.environ.get('QUERY_STRING', 'No QUERY_STRING provided')
+print(os.environ["QUERY_STRING"], file=sys.stderr)
+print("HTTP/1.1 200 OK")
 print("Content-type: text/html\r\n\r\n")
 print("<html>")
 print("<head>")
