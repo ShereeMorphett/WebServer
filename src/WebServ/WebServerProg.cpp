@@ -12,25 +12,13 @@
 #include <fcntl.h>
 #include "../Color.hpp"
 #include "api_helpers.hpp"
+#include "utils.hpp"
 
 # define MAXSOCKET 10
 
-struct server;
-void printServer(server &server);
-
-
-template <typename KeyType, typename ValueType>
-void printMultimap(const std::multimap<KeyType, ValueType>& myMultimap) {
-    typename std::multimap<KeyType, ValueType>::const_iterator it;
-
-    for (it = myMultimap.begin(); it != myMultimap.end(); ++it) {
-        std::cout << "Key: " << it->first << " | Value: " << it->second << std::endl;
-    }
-}
-
 static void errnoPrinting(std::string message, int error) 
 {
-	std::cerr << COLOR_RED << "Error! " << message << ": " << strerror(error) << COLOR_RESET << std::endl; //would errno segfault if unset?
+	std::cerr << COLOR_RED << "Error! " << message << ": " << strerror(error) << COLOR_RESET << std::endl;
 }
 
 void WebServerProg::addSocketToPoll(int socket, int event)
@@ -132,7 +120,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		default:
 			break;
 	}
-
+	std::cout << COLOR_CYAN << _response << COLOR_RESET << std::endl;
 	int bytes_sent = send(clientSocket, _response.c_str(), strlen(_response.c_str()), 0);
 	if (bytes_sent < 0)
 	{
@@ -199,7 +187,7 @@ int WebServerProg::acceptConnection(int listenSocket)
     if (fcntl(clientSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
     {
         errnoPrinting("fcntl", errno);
-        //close(clientSocket);  
+        close(clientSocket);  
         return -1;
     }
     addSocketToPoll(clientSocket, POLLIN);
@@ -233,12 +221,21 @@ void WebServerProg::runPoll()
 				else
 				{
 					std::cout << "Request: " << std::endl;
-					receiveRequest(m_pollSocketsVec[i].fd);
-					std::cout << _request << "\n";
-					// if (receiveRequest(m_pollSocketsVec[i].fd))
-					// 	continue;
-					sendResponse(m_pollSocketsVec[i].fd);
-					std::cout << "sent!!" << std::endl;
+					int check = 0;
+					check = receiveRequest(m_pollSocketsVec[i].fd); //one line once debugging sorted
+					if (check == 1)
+					{
+						std::cout << COLOR_CYAN << "check = " << check << COLOR_RESET <<"\n";
+						std::cout << COLOR_CYAN << "|" << _request << "|" << COLOR_RESET <<"\n";
+						check = 0;
+						continue;
+					}
+					else
+					{
+						std::cout << _request << "\n";
+						sendResponse(m_pollSocketsVec[i].fd);
+						std::cout << "sent!!" << std::endl;
+					}
 					// close(m_pollSocketsVec[i].fd);
 					// m_clientDataMap.erase(m_pollSocketsVec[i].fd);
 					// m_pollSocketsVec.erase(m_pollSocketsVec.begin() + i);

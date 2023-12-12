@@ -5,7 +5,7 @@
 
 // Function to append status code to response based on what readFile() returned
 void	appendStatus(std::string& _res, int status) {
-	_res.append(toString(status)); // TODO will be changed to c++98 compitable
+	_res.append(toString(status));
 	switch (status) {
 		case OK:
 			_res.append(" OK");
@@ -17,9 +17,11 @@ void	appendStatus(std::string& _res, int status) {
 
 		case UNAUTHORIZED:
 			_res.append(" Unauthorized");
+			break;
 		
 		case FORBIDDEN:
 			_res.append(" Forbidden");
+			break;
 
 		default:
 			break;
