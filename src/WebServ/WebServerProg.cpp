@@ -120,7 +120,6 @@ void WebServerProg::sendResponse(int clientSocket)
 		default:
 			break;
 	}
-	std::cout << COLOR_CYAN << _response << COLOR_RESET << std::endl;
 	int bytes_sent = send(clientSocket, _response.c_str(), strlen(_response.c_str()), 0);
 	if (bytes_sent < 0)
 	{
@@ -221,24 +220,11 @@ void WebServerProg::runPoll()
 				else
 				{
 					std::cout << "Request: " << std::endl;
-					int check = 0;
-					check = receiveRequest(m_pollSocketsVec[i].fd); //one line once debugging sorted
-					if (check == 1)
-					{
-						std::cout << COLOR_CYAN << "check = " << check << COLOR_RESET <<"\n";
-						std::cout << COLOR_CYAN << "|" << _request << "|" << COLOR_RESET <<"\n";
-						check = 0;
+					if (receiveRequest(m_pollSocketsVec[i].fd))
 						continue;
-					}
-					else
-					{
-						std::cout << _request << "\n";
-						sendResponse(m_pollSocketsVec[i].fd);
-						std::cout << "sent!!" << std::endl;
-					}
-					// close(m_pollSocketsVec[i].fd);
-					// m_clientDataMap.erase(m_pollSocketsVec[i].fd);
-					// m_pollSocketsVec.erase(m_pollSocketsVec.begin() + i);
+					std::cout << _request << "\n";
+					sendResponse(m_pollSocketsVec[i].fd);
+					std::cout << "sent!!" << std::endl;
 				}
 			}
 		}
@@ -253,10 +239,6 @@ void WebServerProg::startProgram()
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
 		std::cout << COLOR_GREEN << "servers valid" << COLOR_RESET << std::endl;
-	// for (size_t i = 0; i < servers.size(); i++)
-    // {
-    //     printServer(servers[i]);
-    // }
 		initServers();
 	}
 	catch (const std::exception& e)
