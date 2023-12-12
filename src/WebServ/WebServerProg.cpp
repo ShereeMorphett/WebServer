@@ -72,8 +72,9 @@ void	WebServerProg::deleteDataInMap(int clientSocket)
 }
 
 
-bool WebServerProg::receiveRequest(int clientSocket)
+bool WebServerProg::receiveRequest(int clientSocket, int serverIndex)
 {
+	static_cast<void>(serverIndex);
 	if (m_clientDataMap.find(clientSocket) == m_clientDataMap.end())
 	{
 		clientData data;
@@ -220,7 +221,7 @@ void WebServerProg::runPoll()
 				else
 				{
 					std::cout << "Request: " << std::endl;
-					if (receiveRequest(m_pollSocketsVec[i].fd))
+					if (receiveRequest(m_pollSocketsVec[i].fd, i))
 						continue;
 					std::cout << _request << "\n";
 					sendResponse(m_pollSocketsVec[i].fd);
