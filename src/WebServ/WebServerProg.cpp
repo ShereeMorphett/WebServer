@@ -9,7 +9,7 @@
 #include <cstdlib> //
 #include <string>
 #include <unistd.h>
-#include <string.h>
+#include <stdlib.h>
 #include <sstream>
 #include <fcntl.h>
 #include "../Color.hpp"
@@ -18,23 +18,9 @@
 
 # define MAXSOCKET 10
 
-struct server;
-void printServer(server &server);
-
-
-
-template <typename KeyType, typename ValueType>
-void printMultimap(const std::multimap<KeyType, ValueType>& myMultimap) {
-    typename std::multimap<KeyType, ValueType>::const_iterator it;
-
-    for (it = myMultimap.begin(); it != myMultimap.end(); ++it) {
-        std::cout << "Key: " << it->first << " | Value: " << it->second << std::endl;
-    }
-}
-
 static void errnoPrinting(std::string message, int error) 
 {
-	std::cerr << COLOR_RED << "Error! " << message << ": " << strerror(error) << COLOR_RESET << std::endl; //would errno segfault if unset?
+	std::cerr << COLOR_RED << "Error! " << message << ": " << strerror(error) << COLOR_RESET << std::endl;
 }
 
 void WebServerProg::addSocketToPoll(int socket, int event)
@@ -82,9 +68,15 @@ std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
 	return m_clientDataMap.find(clientSocket)->second.requestData.find(header)->second;
 }
 
-
-bool WebServerProg::receiveRequest(int clientSocket)
+void	WebServerProg::deleteDataInMap(int clientSocket)
 {
+	m_clientDataMap.erase(m_clientDataMap.find(clientSocket));
+}
+
+
+bool WebServerProg::receiveRequest(int clientSocket, int serverIndex)
+{
+	static_cast<void>(serverIndex);
 	if (m_clientDataMap.find(clientSocket) == m_clientDataMap.end())
 	{
 		clientData data;
@@ -121,83 +113,23 @@ bool WebServerProg::receiveRequest(int clientSocket)
 
 void WebServerProg::sendResponse(int clientSocket)
 {
-	int	status = 200;
-	int size = 0;
+	char method = accessDataInMap(clientSocket, "Method")[0];
 
-	std::string body;
-	std::string path;
-	// std::cout << COLOR_MAGENTA;
-	// printMultimap(m_clientDataMap.find(clientSocket)->second.requestData);
-	// std::cout << COLOR_RESET;
-
-	//dummy data
-	std::map<std::string, std::string> mp;
-	mp["method"] = accessDataInMap(clientSocket, "Method");
-	//mp["path"] = accessDataInMap(clientSocket, "Path");
-	std::cout << COLOR_MAGENTA <<  mp["path"] << COLOR_RESET << std::endl;
-	
-	mp["path"] = extractPath(_request); //this is the working one
-	//std::cout << COLOR_MAGENTA <<  path << COLOR_RESET << std::endl;
-	
-	// TODO --> add check if path and method is allowed. Can be done after merge of parsing
-	// dummy data 
-	path.append(mp["path"]);
-	body = readFile(path, &status);
-	
-	//	std::cout << body;
-	// use int status here and check config + read file before assigning status code
-	_response.append("HTTP/1.1 ");
-	_response.append(toString(status));
-	switch (status)
-	{
-		case 200:
-			_response.append(" OK");
+	switch (method) {
+		case GET:
+			getResponse(clientSocket);
 			break;
-		case 404:
-			_response.append(" Not Found");
+		
 		default:
 			break;
 	}
-	_response.append("\r\n");
-
-	// HANDLE ERROR HERE
-
-	_response.append("Content-Length: ");
-	size = body.size();
-	_response.append(toString(size));
-	_response.append("\r\n");
-
-	// This might be sent anyways
-	_response.append("Connection: Closed");
-	_response.append("\r\n");
-
-	// will need to change this based on what we will return
-	// TYPE WILL HAVE TO BE DETECTED 
-	_response.append("Content-type: ");
-	std::string type = getFileExtension(mp["path"]);
-	std::cout << "type: " << type << "\n";
-	if (type == ".html") {
-		_response.append(TYPE_HTML);
-	}
-	else if (type == ".css") {
-		_response.append(TYPE_CSS);
-	}
-	// 
-	_response.append(END_HEADER);
-
-	// use read content here
-	_response.append(body);
-	///cgi output would be sent from here
-	std::string check = runCgi();
-	std::cout << COLOR_RED << "checking: " << check << COLOR_RESET << std::endl;
-	_response.append(check); // this will check if it returns something, if so appends
-	std::cout << _response << std::endl;
 	int bytes_sent = send(clientSocket, _response.c_str(), strlen(_response.c_str()), 0);
 	if (bytes_sent < 0)
 	{
 		std::cout << "Error! send" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	deleteDataInMap(clientSocket);
 	_response.clear();
 }
 
@@ -257,7 +189,7 @@ int WebServerProg::acceptConnection(int listenSocket)
     if (fcntl(clientSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
     {
         errnoPrinting("fcntl", errno);
-        //close(clientSocket);  
+        close(clientSocket);  
         return -1;
     }
     addSocketToPoll(clientSocket, POLLIN);
@@ -291,14 +223,11 @@ void WebServerProg::runPoll()
 				else
 				{
 					std::cout << "Request: " << std::endl;
-					receiveRequest(m_pollSocketsVec[i].fd);
-					// if (receiveRequest(m_pollSocketsVec[i].fd))
-					// 	continue;
+					if (receiveRequest(m_pollSocketsVec[i].fd, i))
+						continue;
+					std::cout << _request << "\n";
 					sendResponse(m_pollSocketsVec[i].fd);
 					std::cout << "sent!!" << std::endl;
-					// close(m_pollSocketsVec[i].fd);
-					// m_clientDataMap.erase(m_pollSocketsVec[i].fd);
-					// m_pollSocketsVec.erase(m_pollSocketsVec.begin() + i);
 				}
 			}
 		}
@@ -313,11 +242,7 @@ void WebServerProg::startProgram()
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
 		std::cout << COLOR_GREEN << "servers valid" << COLOR_RESET << std::endl;
-	// for (size_t i = 0; i < servers.size(); i++)
-    // {
-    //     printServer(servers[i]);
-    // }
-	initServers();
+		initServers();
 	}
 	catch (const std::exception& e)
 	{
