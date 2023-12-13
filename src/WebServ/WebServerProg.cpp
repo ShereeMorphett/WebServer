@@ -30,6 +30,13 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 	m_pollSocketsVec.push_back(fd);
 }
 
+void WebServerProg::initClientData(int clientSocket, int serverIndex)
+{
+	clientData data;
+	data.serverIndex = serverIndex;
+	m_clientDataMap.insert(std::make_pair(clientSocket, data));
+}
+
 std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
 {
 	return m_clientDataMap.find(clientSocket)->second.requestData.find(header)->second;
@@ -37,45 +44,10 @@ std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
 
 void	WebServerProg::deleteDataInMap(int clientSocket)
 {
-	m_clientDataMap.erase(m_clientDataMap.find(clientSocket));
-}
-
-
-bool WebServerProg::receiveRequest(int clientSocket, int serverIndex)
-{
-	static_cast<void>(serverIndex);
-	if (m_clientDataMap.find(clientSocket) == m_clientDataMap.end())
-	{
-		clientData data;
-		m_clientDataMap.insert(std::make_pair(clientSocket, data));
-	}
-	char buffer[1024];
-
-	_request.clear();
-	memset(buffer, 0, 1024);
-	int bytes_received = recv(clientSocket, buffer, 1024, 0);
-	if (bytes_received < 0)
-	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-		{
-			return 1;
-		}
-		std::cout << "Error! recv" << std::endl;
-		exit (1);
-	}
-	else if (bytes_received == 0)
-	{
-		std::cout << "Closing client socket" << std::endl;
-		close(clientSocket);
-		return 1;
-	}
-	else
-	{
-		std::string request = buffer;
-		_request = buffer;
-		parseRequest(clientSocket, request);
-	}
-	return 0;
+	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
+	if (it == m_clientDataMap.end())
+		return;
+	it->second.requestData.clear();
 }
 
 void WebServerProg::sendResponse(int clientSocket)
@@ -181,9 +153,14 @@ void WebServerProg::runPoll()
 			{
 				if (i < serverCount)
 				{
+					
+
 					addSocketToPoll(accept(m_pollSocketsVec[i].fd, NULL, NULL), POLLIN);
+					
 					int flags = fcntl(m_pollSocketsVec.back().fd, F_GETFL, 0);
+
 					fcntl(m_pollSocketsVec.back().fd, F_SETFL, flags | O_NONBLOCK);
+					initClientData(m_pollSocketsVec.back().fd, i);
 					std::cout << "New connection accepted on client socket" << std::endl;
 				}
 				else

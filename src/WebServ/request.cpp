@@ -1,4 +1,5 @@
-#include "../WebServerProg.hpp"
+#include "WebServerProg.hpp"
+#include "utils.hpp"
 #include <cstring>
 #include <sstream>
 #include <sys/socket.h>
@@ -6,18 +7,23 @@
 #include <cerrno>
 #include <stdlib.h>
 
-template <typename KeyType, typename ValueType>
-void printMultimap(const std::multimap<KeyType, ValueType>& myMultimap) {
-    typename std::multimap<KeyType, ValueType>::const_iterator it;
-
-    for (it = myMultimap.begin(); it != myMultimap.end(); ++it) {
-        std::cout << "Key: " << it->first << " | Value: " << it->second << std::endl;
-    }
+int WebServerProg::getClientServer(int clientSocket)
+{
+	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
+	if (it == m_clientDataMap.end())
+		return 0;
+	return it->second.serverIndex;	
 }
+
 
 void WebServerProg::parseRequest(int clientSocket, std::string request)
 {
-	std::multimap<std::string, std::string>& clientRequestMap = m_clientDataMap.find(clientSocket)->second.requestData;
+
+	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
+	if (it == m_clientDataMap.end())
+		return;
+	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
+
 	std::istringstream	ss(request);
 	std::string			token;
 
@@ -46,13 +52,8 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	}
 }
 
-bool WebServerProg::receiveRequest(int clientSocket)
+bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
-	if (m_clientDataMap.find(clientSocket) == m_clientDataMap.end())
-	{
-		clientData data;
-		m_clientDataMap.insert(std::make_pair(clientSocket, data));
-	}
 	char buffer[1024];
 
 	_request.clear();
@@ -71,6 +72,8 @@ bool WebServerProg::receiveRequest(int clientSocket)
 	{
 		std::cout << "Closing client socket" << std::endl;
 		close(clientSocket);
+		m_pollSocketsVec.erase(m_pollSocketsVec.begin() + pollIndex);
+		m_clientDataMap.erase(m_clientDataMap.find(clientSocket));
 		return 1;
 	}
 	else

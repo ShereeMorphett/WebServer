@@ -92,3 +92,5 @@ void	WebServerProg::getResponse(int clientSocket) {
 	appendBody(_response, body, path);
 
 }
+
+
