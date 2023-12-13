@@ -53,13 +53,19 @@ class WebServerProg
 		void initServers();
 		void sendResponse(int clientSocket);
 		std::string accessDataInMap(int clientSocket, std::string header);
+		void deleteDataInMap(int clientSocket);
 		void parseRequest(int clientSocket, std::string request);
-		bool receiveRequest(int clientSocket);
+		bool receiveRequest(int clientSocket, int serverIndex);
 		int  acceptConnection(int listenSocket);
 		void runPoll();
 		WebServerProg();
 		WebServerProg(std::string fileName);
 		~WebServerProg();
+
+		// response methods
+		// void	deleteResponse(int clientSocket);
+		void	postResponse(int clientSocket);
+		void	getResponse(int clientSocket);
 
 };
 
