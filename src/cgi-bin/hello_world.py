@@ -1,29 +1,35 @@
-#!/usr/bin/env python
-
-
-#this is a test case, from an example 
+#!/usr/bin/env python3
 
 from __future__ import print_function
 import cgi
 import sys
 import os
 
-# Create instance of FieldStorage
-form = cgi.FieldStorage() #huh?
-
-# Get data from fields
-first_name = form.getvalue('first_name')
-last_name = form.getvalue('last_name')
-query_string = os.environ.get('QUERY_STRING', 'No QUERY_STRING provided')
-print(os.environ["QUERY_STRING"], file=sys.stderr)
 print("HTTP/1.1 200 OK")
 print("Content-type: text/html\r\n\r\n")
 print("<html>")
 print("<head>")
-print("<title>Hello - Second CGI Program</title>")
-print("<html>")
-print("<head>")
+print("<title>Hello - First CGI Program</title>")
+print("</head>")
 print("<body>")
-print("<h2>Hello %s %s</h2>" % (first_name, last_name))
+print("<h1>CGI Form Example</h1>")
+print("<form method='post' action='hello_world.py'>") 
+print("  <label for='first_name'>First Name:</label>")
+print("  <input type='text' id='first_name' name='first_name' required>")
+print("  <br>")
+print("  <label for='last_name'>Last Name:</label>")
+print("  <input type='text' id='last_name' name='last_name' required>")
+print("  <br>")
+print("  <input type='submit' value='Submit'>")
+print("</form>")
+
+
+form = cgi.FieldStorage()
+if "first_name" in form and "last_name" in form:
+    first_name = form["first_name"].value
+    last_name = form["last_name"].value
+    print("<p>Submitted First Name: {}</p>".format(first_name))
+    print("<p>Submitted Last Name: {}</p>".format(last_name))
+
 print("</body>")
 print("</html>")
