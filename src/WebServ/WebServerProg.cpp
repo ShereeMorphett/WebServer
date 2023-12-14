@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <sstream>
 #include <fcntl.h>
+#include <vector>
 #include "../Color.hpp"
 #include "api_helpers.hpp"
 #include "utils.hpp"
@@ -112,6 +113,7 @@ bool WebServerProg::receiveRequest(int clientSocket, int serverIndex)
 	return 0;
 }
 
+
 void WebServerProg::sendResponse(int clientSocket)
 {
 	char method = accessDataInMap(clientSocket, "Method")[0];
@@ -124,14 +126,17 @@ void WebServerProg::sendResponse(int clientSocket)
 		default:
 			break;
 	}
-	//cgi running here?? check if its needed?
-	CgiHandler cgi;
-	std::string check = cgi.runCgi("/home/sheree/Desktop/WebServer/src/cgi-bin/", "hello_world.py"); //this will get replaced with the server/locaiton cgi path etc
-	if (check.size() != 0)
-	{
-		_response.clear();
-		_response.append(check); // this will check if it returns something, if so appends
-	}
+
+	// if (serverIndex <= static_cast<int>(serverCount) && getLocations(getServer(serverIndex))[0].cgiPath.size() > 0)
+	// {
+		CgiHandler cgi;
+		std::string check = cgi.runCgi("/home/sheree/Desktop/WebServer/src/cgi-bin/hello_world.py"); //this will get replaced with the server/locaiton cgi path etc
+		if (check.size() != 0)
+		{
+			_response.clear();
+			_response.append(check);
+		}
+	// }
 	std::cout << COLOR_CYAN << _response << COLOR_RESET << std::endl;
 	int bytes_sent = send(clientSocket, _response.c_str(), strlen(_response.c_str()), 0);
 	if (bytes_sent < 0)

@@ -73,7 +73,7 @@ void CgiHandler::executeCgi(const std::string& scriptName)
         envArray[i++] = strdup((it->first + "=" + it->second).c_str());
     }
     envArray[i] = NULL;
-     if (execve(scriptName.c_str(), const_cast<char* const*>(envArray), NULL) == -1)
+    if (execve(scriptName.c_str(), const_cast<char* const*>(envArray), NULL) == -1)
     {
         std::cout << COLOR_RED << "|" << scriptName << "|" << COLOR_RESET << std::endl;
         perror("execve");
@@ -100,7 +100,7 @@ std::string CgiHandler::readCgiOutput(int pipesOut[2])
     return output;
 }
 
-std::string CgiHandler::runCgi(const std::string& scriptPath, const std::string& scriptName)
+std::string CgiHandler::runCgi(const std::string& scriptPath)
 {
     setupEnvironment();
 
@@ -122,9 +122,7 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, const std::string&
         close(pipesOut[0]);
         close(pipesIn[1]);
 
-        const char* dataToSend = "first_name=John&last_name=Doe";
-        write(STDIN_FILENO, dataToSend, strlen(dataToSend)); //this will work with post? i think
-        executeCgi(scriptPath + scriptName);
+        executeCgi(scriptPath);
     }
     else
     {

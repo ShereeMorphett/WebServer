@@ -28,6 +28,7 @@ struct server
     std::map<int, std::string> errorPages;
     std::vector<location> locations; 
     int clientMaxBodySize;
+
 };
 
 struct clientData

@@ -15,5 +15,5 @@ class CgiHandler
         CgiHandler(); //probably dont need defaults
         ~CgiHandler();
 
-        std::string runCgi(const std::string& scriptPath, const std::string& scriptName);
+        std::string runCgi(const std::string& scriptPath);
 };
