@@ -7,30 +7,59 @@
 #include <cerrno>
 #include <stdlib.h>
 
-int WebServerProg::getClientServer(int clientSocket)
+server& WebServerProg::getClientServer(int clientSocket)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
 	if (it == m_clientDataMap.end())
-		return 0;
-	return it->second.serverIndex;	
+	{
+		;//!throw?
+	}
+	return servers[it->second.serverIndex];
 }
 
 
+static void createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path)
+{
+	for (std::vector<location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
+	{
+		if (path == it->locationPath)
+		{
+			char buffer[1024];
+			memset(buffer, 0, sizeof(buffer));
+			if (it->redirection.size() > 1)
+			{
+				clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->redirection));
+				break;
+			}
+			else
+			{
+				clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->locationPath));
+				break;
+			}
+		}
+		else if (it == server.locations.end() - 1)
+		{
+			char buffer[1024];
+			memset(buffer, 0, sizeof(buffer));
+			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + path));
+		}
+	}
+}
+
 void WebServerProg::parseRequest(int clientSocket, std::string request)
 {
-
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
 	if (it == m_clientDataMap.end())
 		return;
-	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
 
+	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
 	std::istringstream	ss(request);
 	std::string			token;
 
 	ss >> token;
 	clientRequestMap.insert(std::make_pair("Method", token));
 	ss >> token;
-	clientRequestMap.insert(std::make_pair("Path", token));
+	createPath(getClientServer(clientSocket), clientRequestMap, token);
 	ss >> token;
 	clientRequestMap.insert(std::make_pair("HTTP-version", token));
 

@@ -2,6 +2,7 @@
 #include "api_helpers.hpp"
 #include "Color.hpp"
 #include "utils.hpp"
+#include <unistd.h>
 
 // Function to append status code to response based on what readFile() returned
 void	appendStatus(std::string& _res, int status) {
@@ -65,7 +66,7 @@ void	checkRequest(int* status, std::string const & path) {
 
 	// check if file exists or not
 
-	std::ifstream	file((std::string(".") + path).c_str());
+	std::ifstream	file(path.c_str());
 	// std::ifstream	file("." + path);
 	if (file.good()) {
 		*status = OK;
@@ -84,7 +85,9 @@ void	WebServerProg::getResponse(int clientSocket) {
 	_response.append(NEW_VALUE);
 	checkRequest(&status, path);
 	if (status >= ERRORS) {
+		char buffer[1024] = {};
 		path = chooseErrorPage(status);
+		path = getcwd(buffer, sizeof(buffer)) + path;
 	}
 	body = readFile(path);
 	appendStatus(_response, status);
@@ -92,5 +95,3 @@ void	WebServerProg::getResponse(int clientSocket) {
 	appendBody(_response, body, path);
 
 }
-
-

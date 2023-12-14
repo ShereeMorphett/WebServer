@@ -153,8 +153,6 @@ void WebServerProg::runPoll()
 			{
 				if (i < serverCount)
 				{
-					
-
 					addSocketToPoll(accept(m_pollSocketsVec[i].fd, NULL, NULL), POLLIN);
 					
 					int flags = fcntl(m_pollSocketsVec.back().fd, F_GETFL, 0);
@@ -168,7 +166,7 @@ void WebServerProg::runPoll()
 					std::cout << "Request: " << std::endl;
 					if (receiveRequest(m_pollSocketsVec[i].fd, i))
 						continue;
-					std::cout << _request << "\n";
+					// std::cout << _request << "\n";
 					sendResponse(m_pollSocketsVec[i].fd);
 					std::cout << "sent!!" << std::endl;
 				}

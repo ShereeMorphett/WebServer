@@ -31,7 +31,7 @@ struct server
 
 struct clientData
 {
-	int 							serverIndex;
+	int 									serverIndex;
 	std::multimap<std::string, std::string> requestData;
 };
 
@@ -70,7 +70,7 @@ class WebServerProg
 		void	postResponse(int clientSocket);
 		void	getResponse(int clientSocket);
 
-		int		getClientServer(int clientSocket);
+		server&	getClientServer(int clientSocket);
 
 };
 
