@@ -42,8 +42,6 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	clientRequestMap.insert(std::make_pair("Path", token));
 	ss >> token;
 	clientRequestMap.insert(std::make_pair("HTTP-version", token));
-	ss >> token;
-	clientRequestMap.insert(std::make_pair("Body", token));
 
 	std::string line;
 	while (std::getline(ss, line))
