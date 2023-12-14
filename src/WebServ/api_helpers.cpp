@@ -32,24 +32,20 @@ std::string getFileExtension(std::string const & fileName) {
 // Will read a file based on path given
 std::string	readFile(std::string const & path) {
 	std::ifstream	inFile;
-	std::string		line;
-	std::string		body;
 
-	inFile.open((std::string(".") + path).c_str()); 
-	// while (std::getline(inFile, line)) {
-	// 	body.append(line);
-	// }
-	// inFile.close();
+	inFile.open((std::string(".") + path).c_str(), std::ios::binary | std::ios::ate);
+	if (!inFile) {
+		std::cerr << "Error with infile\n";
+		return "";
+	}
+	std::streamsize	size = inFile.tellg();
+	inFile.seekg(0, std::ios::beg);
+	std::vector<char>	buffer(size);
+	inFile.read(&buffer[0], size);
+	inFile.close();
 
-    std::stringstream buffer;
-    buffer << inFile.rdbuf();
-
-    // The string now contains the file data
-    std::string fileContent = buffer.str();
-
-    inFile.close();
-
-	return fileContent;
+	std::string body(buffer.begin(), buffer.end());
+	return body;
 }
 
 std::string	chooseErrorPage(int status) {
