@@ -34,6 +34,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 {
 	std::multimap<std::string, std::string>& clientRequestMap = m_clientDataMap.find(clientSocket)->second.requestData;
 	std::istringstream	ss(request);
+	size_t 				bodyLen;
 	std::string			token;
 
 	ss >> token;
@@ -59,6 +60,14 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 		if (key.size() != 1)
 			clientRequestMap.insert(std::make_pair(key, value));
 	}
+
+	// Handle body of the request
+	std::string contentLenght = accessDataInMap(clientSocket, "Content-Length");
+	std::istringstream iss(contentLenght);
+	iss >> bodyLen;
+	size_t valueStart = request.length() - bodyLen;
+	std::string body = request.substr(valueStart, request.length());
+	clientRequestMap.insert(std::make_pair("Body", body));
 }
 
 std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
@@ -117,11 +126,18 @@ void WebServerProg::sendResponse(int clientSocket)
 		case GET:
 			getResponse(clientSocket);
 			break;
+
+		case POST:
+			postResponse(clientSocket);
+			break;
 		
 		default:
 			break;
 	}
-	int bytes_sent = send(clientSocket, _response.c_str(), strlen(_response.c_str()), 0);
+	// TODO: removed c_str() functions to be able to work with binary files
+	// strlen etc require '\0' and now when my data is binary format, there are
+	// no terminating characters. If this triggers compilers, lets figure out something
+	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{
 		std::cout << "Error! send" << std::endl;
