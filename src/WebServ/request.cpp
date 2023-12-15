@@ -26,16 +26,7 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 		{
 			char buffer[1024];
 			memset(buffer, 0, sizeof(buffer));
-			if (it->redirection.size() > 1)
-			{
-				clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->redirection));
-				break;
-			}
-			else
-			{
-				clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->locationPath));
-				break;
-			}
+			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->locationPath));
 		}
 		else if (it == server.locations.end() - 1)
 		{
