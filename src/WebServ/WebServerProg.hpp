@@ -61,6 +61,8 @@ class WebServerProg
 		bool receiveRequest(int clientSocket, int serverIndex);
 		int  acceptConnection(int listenSocket);
 		void runPoll();
+		server& getClientServer(int clientSocket);
+
 		WebServerProg();
 		WebServerProg(std::string fileName);
 		~WebServerProg();

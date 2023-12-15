@@ -65,6 +65,16 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	}
 }
 
+server& WebServerProg::getClientServer(int clientSocket)
+{
+	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
+	if (it == m_clientDataMap.end())
+	{
+		;//!throw?
+	}
+	return servers[it->second.serverIndex];
+}
+
 std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
 {
 	return m_clientDataMap.find(clientSocket)->second.requestData.find(header)->second;
