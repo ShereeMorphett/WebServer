@@ -1,5 +1,6 @@
 #include "api_helpers.hpp"
 #include <sstream>
+#include <vector>
 
 // Get path out of request string
 std::string extractPath(std::string const & request)
@@ -33,7 +34,7 @@ std::string getFileExtension(std::string const & fileName) {
 std::string	readFile(std::string const & path) {
 	std::ifstream	inFile;
 
-	inFile.open((std::string(".") + path).c_str(), std::ios::binary | std::ios::ate);
+	inFile.open(path.c_str(), std::ios::binary | std::ios::ate);
 	if (!inFile) {
 		std::cerr << "Error with infile\n";
 		return "";
