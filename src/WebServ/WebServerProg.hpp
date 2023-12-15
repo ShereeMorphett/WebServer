@@ -1,11 +1,11 @@
-
-
 #ifndef WEBSERVERPROG_H
 #define WEBSERVERPROG_H
 
 # include <iostream>
+# include <fstream>
 # include <vector>
 # include <map>
+# include <poll.h>
 
 struct location
 {
@@ -33,6 +33,7 @@ struct server
 
 struct clientData
 {
+	int 									serverIndex;
 	std::multimap<std::string, std::string> requestData;
 };
 
@@ -52,13 +53,14 @@ class WebServerProg
 	public:
 
 		void addSocketToPoll(int socket, int event);
+		void initClientData(int clientSocket, int serverIndex);
 		void startProgram();
 		void initServers();
 		void sendResponse(int clientSocket);
 		std::string accessDataInMap(int clientSocket, std::string header);
 		void deleteDataInMap(int clientSocket);
 		void parseRequest(int clientSocket, std::string request);
-		bool receiveRequest(int clientSocket, int serverIndex);
+		bool receiveRequest(int clientSocket, int pollIndex);
 		int  acceptConnection(int listenSocket);
 		void runPoll();
 		server& getClientServer(int clientSocket);
@@ -71,6 +73,8 @@ class WebServerProg
 		// void	deleteResponse(int clientSocket);
 		void	postResponse(int clientSocket);
 		void	getResponse(int clientSocket);
+
+		server&	getClientServer(int clientSocket);
 
 };
 

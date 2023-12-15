@@ -34,45 +34,11 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 	m_pollSocketsVec.push_back(fd);
 }
 
-void WebServerProg::parseRequest(int clientSocket, std::string request)
+void WebServerProg::initClientData(int clientSocket, int serverIndex)
 {
-	std::multimap<std::string, std::string>& clientRequestMap = m_clientDataMap.find(clientSocket)->second.requestData;
-	std::istringstream	ss(request);
-	std::string			token;
-
-	ss >> token;
-	clientRequestMap.insert(std::make_pair("Method", token));
-	ss >> token;
-	clientRequestMap.insert(std::make_pair("Path", token));
-	ss >> token;
-	clientRequestMap.insert(std::make_pair("HTTP-version", token));
-
-	std::string line;
-	while (std::getline(ss, line))
-	{
-		std::string key;
-		std::string value;
-
-		size_t pos = line.find(":");
-		key = line.substr(0, pos);
-		value = line.substr(pos + 1);
-
-		size_t valueStart = value.find_first_not_of(" \t");
-		value = value.substr(valueStart);
-
-		if (key.size() != 1)
-			clientRequestMap.insert(std::make_pair(key, value));
-	}
-}
-
-server& WebServerProg::getClientServer(int clientSocket)
-{
-	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
-	if (it == m_clientDataMap.end())
-	{
-		;//!throw?
-	}
-	return servers[it->second.serverIndex];
+	clientData data;
+	data.serverIndex = serverIndex;
+	m_clientDataMap.insert(std::make_pair(clientSocket, data));
 }
 
 std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
@@ -82,47 +48,11 @@ std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
 
 void	WebServerProg::deleteDataInMap(int clientSocket)
 {
-	m_clientDataMap.erase(m_clientDataMap.find(clientSocket));
+	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
+	if (it == m_clientDataMap.end())
+		return;
+	it->second.requestData.clear();
 }
-
-
-bool WebServerProg::receiveRequest(int clientSocket, int serverIndex)
-{
-	static_cast<void>(serverIndex);
-	if (m_clientDataMap.find(clientSocket) == m_clientDataMap.end())
-	{
-		clientData data;
-		m_clientDataMap.insert(std::make_pair(clientSocket, data));
-	}
-	char buffer[1024];
-
-	_request.clear();
-	memset(buffer, 0, 1024);
-	int bytes_received = recv(clientSocket, buffer, 1024, 0);
-	if (bytes_received < 0)
-	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-		{
-			return 1;
-		}
-		std::cout << "Error! recv" << std::endl;
-		exit (1);
-	}
-	else if (bytes_received == 0)
-	{
-		std::cout << "Closing client socket" << std::endl;
-		close(clientSocket);
-		return 1;
-	}
-	else
-	{
-		std::string request = buffer;
-		_request = buffer;
-		parseRequest(clientSocket, request);
-	}
-	return 0;
-}
-
 
 void WebServerProg::sendResponse(int clientSocket)
 {
@@ -132,10 +62,17 @@ void WebServerProg::sendResponse(int clientSocket)
 		case GET:
 			getResponse(clientSocket);
 			break;
+
+		case POST:
+			postResponse(clientSocket);
+			break;
 		
 		default:
 			break;
 	}
+	// TODO: removed c_str() functions to be able to work with binary files
+	// strlen etc require '\0' and now when my data is binary format, there are
+	// no terminating characters. If this triggers compilers, lets figure out something
 
 	// if (serverIndex <= static_cast<int>(serverCount) && getLocations(getServer(serverIndex))[0].cgiPath.size() > 0)
 	// {
@@ -148,7 +85,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		}
 	// }
 	std::cout << COLOR_CYAN << _response << COLOR_RESET << std::endl;
-	int bytes_sent = send(clientSocket, _response.c_str(), strlen(_response.c_str()), 0);
+	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{
 		std::cout << "Error! send" << std::endl;
@@ -200,7 +137,6 @@ void WebServerProg::initServers()
 	return ;
 }
 
-
 int WebServerProg::acceptConnection(int listenSocket)
 {
     int clientSocket = accept(listenSocket, NULL, NULL);
@@ -241,8 +177,11 @@ void WebServerProg::runPoll()
 				if (i < serverCount)
 				{
 					addSocketToPoll(accept(m_pollSocketsVec[i].fd, NULL, NULL), POLLIN);
+					
 					int flags = fcntl(m_pollSocketsVec.back().fd, F_GETFL, 0);
+
 					fcntl(m_pollSocketsVec.back().fd, F_SETFL, flags | O_NONBLOCK);
+					initClientData(m_pollSocketsVec.back().fd, i);
 					std::cout << "New connection accepted on client socket" << std::endl;
 				}
 				else
@@ -250,7 +189,7 @@ void WebServerProg::runPoll()
 					std::cout << "Request: " << std::endl;
 					if (receiveRequest(m_pollSocketsVec[i].fd, i))
 						continue;
-					std::cout << _request << "\n";
+					// std::cout << _request << "\n";
 					sendResponse(m_pollSocketsVec[i].fd);
 					std::cout << "sent!!" << std::endl;
 				}
