@@ -74,7 +74,6 @@ class WebServerProg
 		void	postResponse(int clientSocket);
 		void	getResponse(int clientSocket);
 
-		server&	getClientServer(int clientSocket);
 
 };
 

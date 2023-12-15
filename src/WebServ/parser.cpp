@@ -16,76 +16,6 @@ enum Listing
     OFF
 };
 
-// void skipNonPrintable(std::istream& stream)
-// {
-//     while (stream)
-//     {
-//         char c = stream.peek();
-//         if (std::isprint(c))
-//             return ;
-//         stream.get();
-//     }
-// }
-
-// void skipWhitespace(std::istream& stream)
-// {
-//     while (stream)
-//     {
-//         char c = stream.peek();
-//         switch (c)
-//         {
-//             case ' ':
-//             case '\t':
-//             case '\n':
-//             case '\r':
-//             case '\f':
-//             case '\v':
-//                 stream.get();
-//                 break;
-//             default:
-//                 return;
-//         }
-//     }
-// }
-
-// template <typename Type,typename T>
-// void printMap(typename std::map<Type, T> theMap)
-// {
-// 	for (typename std::map<Type, T>::iterator it = theMap.begin(); it != theMap.end(); ++it)
-// 	{
-//         std::cout << it->first << ": " << it->second << std::endl;
-//     }
-// }
-
-// void printLocation(location &location)
-// {
-// 	std::cout << "\n_______________________________________" << std::endl;
-// 	std::cout << "LocationPath:		"<< location.locationPath << std::endl;
-// 	std::cout << "redirection:		"<< location.redirection << std::endl;
-// 	std::cout << "root:		" << location.root << std::endl;
-// 	std::cout << "listing:		" << location.listing << std::endl;
-// 	std::cout << "defaultFile:		"<< location.defaultFile << std::endl;
-// 	std::cout << "cgiPath:		"<< location.cgiPath << std::endl;
-// 	std::cout << COLOR_CYAN << "Allowed methods (0 = POST, 1 =GET, 2 =  DELETE):"  << COLOR_RESET << std::endl;
-// 	for (size_t i = 0; i < location.allowedMethods.size(); i++)
-// 	{
-// 		std::cout << location.allowedMethods[i] << "	";
-// 	}
-// 	std::cout << "\n_______________________________________" << std::endl;
-// }
-
-// void printServer(server &server)
-// {
-//         std::cout << server.serverName << ":    port: " << server.port << std::endl;
-//         std::cout << "client body max size: " << server.clientMaxBodySize << std::endl;
-//         std::cout << COLOR_CYAN << "Error pages map <number, page>" << COLOR_RESET << std::endl;
-//         printMap(server.errorPages);
-//         std::cout << COLOR_CYAN <<"printing server locations:	" << server.locations.size() << COLOR_RESET << std::endl; 
-//         for (size_t i = 0; i < server.locations.size(); i++)
-// 			printLocation(server.locations[i]);
-// 		std::cout << std::endl;
-// }
-
 static location parseLocation(std::istream &stream, std::string extValue)
 {
     char c;
@@ -120,8 +50,8 @@ static location parseLocation(std::istream &stream, std::string extValue)
 		}
 		else if (key == "default_file")
 			temp.defaultFile = value;
-		else if (key == "cgi_Path")
-			temp.cgiPath = "PLACEHOLDER TEXT";
+		else if (key == "cgi_path")
+        	temp.cgiPath = value; 
 		line.clear();
     }
 	return temp;

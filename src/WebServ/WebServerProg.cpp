@@ -20,6 +20,7 @@
 
 # define MAXSOCKET 10
 
+
 static void errnoPrinting(std::string message, int error) 
 {
 	std::cerr << COLOR_RED << "Error! " << message << ": " << strerror(error) << COLOR_RESET << std::endl;
@@ -74,16 +75,16 @@ void WebServerProg::sendResponse(int clientSocket)
 	// strlen etc require '\0' and now when my data is binary format, there are
 	// no terminating characters. If this triggers compilers, lets figure out something
 
-	// if (serverIndex <= static_cast<int>(serverCount) && getLocations(getServer(serverIndex))[0].cgiPath.size() > 0)
-	// {
+	if (!getClientServer(clientSocket).locations[0].cgiPath.empty())
+	{
 		CgiHandler cgi;
-		std::string check = cgi.runCgi("/home/sheree/Desktop/WebServer/src/cgi-bin/hello_world.py"); //this will get replaced with the server/locaiton cgi path etc
+		std::string check = cgi.runCgi(getClientServer(clientSocket).locations[0].cgiPath); //this will get replaced with the server/locaiton cgi path etc
 		if (check.size() != 0)
 		{
 			_response.clear();
 			_response.append(check);
 		}
-	// }
+	}
 	std::cout << COLOR_CYAN << _response << COLOR_RESET << std::endl;
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
