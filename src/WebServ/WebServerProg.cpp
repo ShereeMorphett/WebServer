@@ -34,6 +34,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 {
 	std::multimap<std::string, std::string>& clientRequestMap = m_clientDataMap.find(clientSocket)->second.requestData;
 	std::istringstream	ss(request);
+	size_t 				bodyLen;
 	std::string			token;
 
 	ss >> token;
@@ -59,6 +60,14 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 		if (key.size() != 1)
 			clientRequestMap.insert(std::make_pair(key, value));
 	}
+
+	// Handle body of the request
+	std::string contentLenght = accessDataInMap(clientSocket, "Content-Length");
+	std::istringstream iss(contentLenght);
+	iss >> bodyLen;
+	size_t valueStart = request.length() - bodyLen;
+	std::string body = request.substr(valueStart, request.length());
+	clientRequestMap.insert(std::make_pair("Body", body));
 }
 
 std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
