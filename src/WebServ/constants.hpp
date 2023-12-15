@@ -5,9 +5,11 @@
 # define	ERRORS			400
 
 # define	OK 				200
+# define	CREATED			201
 # define	UNAUTHORIZED	401
 # define	FORBIDDEN		403
 # define	NOT_FOUND		404
+# define	INT_ERROR		500
 
 // Response formatting lines
 # define	HTTP_HEADER	"HTTP/1.1 "

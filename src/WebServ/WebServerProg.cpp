@@ -58,11 +58,18 @@ void WebServerProg::sendResponse(int clientSocket)
 		case GET:
 			getResponse(clientSocket);
 			break;
+
+		case POST:
+			postResponse(clientSocket);
+			break;
 		
 		default:
 			break;
 	}
-	int bytes_sent = send(clientSocket, _response.c_str(), strlen(_response.c_str()), 0);
+	// TODO: removed c_str() functions to be able to work with binary files
+	// strlen etc require '\0' and now when my data is binary format, there are
+	// no terminating characters. If this triggers compilers, lets figure out something
+	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{
 		std::cout << "Error! send" << std::endl;

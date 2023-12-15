@@ -6,6 +6,7 @@
 
 // Function to append status code to response based on what readFile() returned
 void	appendStatus(std::string& _res, int status) {
+	_res.append(HTTP_HEADER);
 	_res.append(toString(status));
 	switch (status) {
 		case OK:
@@ -30,17 +31,11 @@ void	appendStatus(std::string& _res, int status) {
 	_res.append(NEW_VALUE);
 }
 
-// Append all other headers
-void	appendMisc(std::string& _res) {
-	_res.append("Connection: Closed");
-	_res.append(NEW_VALUE);
-}
-
 // Append content type, length and actual body
 void	appendBody(std::string& _res, std::string& body, std::string const & path) {
 	_res.append("Content-Length: ");
 	_res.append(toString(body.size()));
-	_res.append(NEW_VALUE);
+ 	_res.append(NEW_VALUE);
 	_res.append("Content-type: ");
 	std::string type = getFileExtension(path);
 	if (type == EXT_HTML) {
@@ -52,8 +47,6 @@ void	appendBody(std::string& _res, std::string& body, std::string const & path) 
 	else if (type == EXT_PNG) {
 		_res.append(TYPE_PNG);
 	}
-	std::cout << "type: " << type << " ext: " << EXT_PNG << "\n";
-	std::cout << "RES: " << _res << "\n\n";
 	_res.append(END_HEADER);
 	_res.append(body);
 }
@@ -70,7 +63,8 @@ void	checkRequest(int* status, std::string const & path) {
 	// std::ifstream	file("." + path);
 	if (file.good()) {
 		*status = OK;
-	} else {
+	}
+	else {
 		*status = NOT_FOUND;
 	}
 }
@@ -81,8 +75,6 @@ void	WebServerProg::getResponse(int clientSocket) {
 	int	status = 200;
 
 	path = accessDataInMap(clientSocket, "Path");
-	_response.append(HTTP_HEADER);
-	_response.append(NEW_VALUE);
 	checkRequest(&status, path);
 	if (status >= ERRORS) {
 		char buffer[1024] = {};
@@ -90,8 +82,9 @@ void	WebServerProg::getResponse(int clientSocket) {
 		path = getcwd(buffer, sizeof(buffer)) + path;
 	}
 	body = readFile(path);
+
 	appendStatus(_response, status);
-	appendMisc(_response);
 	appendBody(_response, body, path);
 
+	// std::cout << _response << std::endl;
 }
