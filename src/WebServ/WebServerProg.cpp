@@ -58,7 +58,6 @@ void	WebServerProg::deleteDataInMap(int clientSocket)
 void WebServerProg::sendResponse(int clientSocket)
 {
 	char method = accessDataInMap(clientSocket, "Method")[0];
-
 	switch (method) {
 		case GET:
 			getResponse(clientSocket);
@@ -74,7 +73,6 @@ void WebServerProg::sendResponse(int clientSocket)
 	// TODO: removed c_str() functions to be able to work with binary files
 	// strlen etc require '\0' and now when my data is binary format, there are
 	// no terminating characters. If this triggers compilers, lets figure out something
-
 	if (!getClientServer(clientSocket).locations[0].cgiPath.empty())
 	{
 		CgiHandler cgi;
@@ -85,8 +83,8 @@ void WebServerProg::sendResponse(int clientSocket)
 			_response.append(check);
 		}
 	}
-	std::cout << COLOR_CYAN << _response << COLOR_RESET << std::endl;
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
+	std::cout << COLOR_RED << "ABORT CHECK- send " << COLOR_RESET << std::endl;
 	if (bytes_sent < 0)
 	{
 		std::cout << "Error! send" << std::endl;

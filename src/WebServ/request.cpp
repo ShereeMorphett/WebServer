@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <cerrno>
 #include <stdlib.h>
+#include "../Color.hpp"
 
 server& WebServerProg::getClientServer(int clientSocket)
 {
@@ -53,7 +54,6 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	createPath(getClientServer(clientSocket), clientRequestMap, token);
 	ss >> token;
 	clientRequestMap.insert(std::make_pair("HTTP-version", token));
-
 	std::string line;
 	while (std::getline(ss, line))
 	{
@@ -69,7 +69,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 
 		if (key.size() != 1)
 			clientRequestMap.insert(std::make_pair(key, value));
-	}
+	}	
 }
 
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
@@ -79,6 +79,8 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	_request.clear();
 	memset(buffer, 0, 1024);
 	int bytes_received = recv(clientSocket, buffer, 1024, 0);
+
+	
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -98,8 +100,9 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	}
 	else
 	{
-		std::string request = buffer;
+		std::string request = buffer;	
 		_request = buffer;
+		_request += '\0';
 		parseRequest(clientSocket, request);
 	}
 	return 0;
