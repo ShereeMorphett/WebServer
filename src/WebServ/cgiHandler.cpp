@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include "../Color.hpp"
 #include "CgiHandler.hpp"
+#include "constants.hpp"
 
 // These strings represent environment variables that are commonly used in the context of CGI (Common Gateway Interface) when building web servers.
 //     COMSPEC: The command processor for the Windows operating system.
@@ -53,9 +54,32 @@ const char* serverEnviroment[24] =
    "SERVER_SIGNATURE","SERVER_SOFTWARE" 
 };
 
+unsigned int fromHexToDec(const std::string& nb)
+{
+	unsigned int x;
+	std::stringstream ss;
+	ss << nb;
+	ss >> std::hex >> x;
+	return (x);
+}
 
 
-void CgiHandler::setupEnvironment()
+/* Translation of parameters for QUERY_STRING environment variable */
+std::string decode(std::string &path)
+{
+	size_t token = path.find("%");
+	while (token != std::string::npos)
+	{
+		if (path.length() < token + 2)
+			break ;
+		char decimal = fromHexToDec(path.substr(token + 1, 2));
+		path.replace(token, 3, toString(decimal));
+		token = path.find("%");
+	}
+	return (path);
+}
+
+void CgiHandler::setupEnvironment(std::string _request, char method, const std::string& scriptPath)
 {
     for (int i = 0; i < 24; ++i)
     {
@@ -63,7 +87,24 @@ void CgiHandler::setupEnvironment()
         if (value != NULL)
             cgiEnvironment[serverEnviroment[i]] = value;
     }
+    cgiEnvironment["GATEWAY_INTERFACE"] = std::string("CGI/1.1");
+    cgiEnvironment["SCRIPT_FILENAME"] = scriptPath;
+    cgiEnvironment["PATH_INFO"] = scriptPath;
+    cgiEnvironment["PATH_TRANSLATED"] = scriptPath;
+    cgiEnvironment["REQUEST_URI"] = scriptPath;
+    cgiEnvironment["SERVER_PORT"] = "8080"; //needs a better way
+    cgiEnvironment["REQUEST_METHOD"] = method;
+    cgiEnvironment["SERVER_PROTOCOL"] = "HTTP/1.1";
+
+   	if(method == POST)
+	{
+        std::cout << COLOR_RED << _request << std::endl;
+		std::stringstream out;
+		out << _request.length();
+		cgiEnvironment["CONTENT_LENGTH"] = out.str();
+	}
 }
+
 void CgiHandler::executeCgi(const std::string& scriptName)
 {
     char* envArray[cgiEnvironment.size() + 1];
@@ -75,7 +116,6 @@ void CgiHandler::executeCgi(const std::string& scriptName)
     envArray[i] = NULL;
     if (execve(scriptName.c_str(), const_cast<char* const*>(envArray), NULL) == -1)
     {
-        std::cout << COLOR_RED << "|" << scriptName << "|" << COLOR_RESET << std::endl;
         perror("execve");
     }
     exit(EXIT_FAILURE);
@@ -100,9 +140,9 @@ std::string CgiHandler::readCgiOutput(int pipesOut[2])
     return output;
 }
 
-std::string CgiHandler::runCgi(const std::string& scriptPath)
+std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _request, char method) // i think something here needs to happen with the request stuff???
 {
-    setupEnvironment();
+    setupEnvironment(_request, method, scriptPath);
 
     int pipesIn[2];
     int pipesOut[2];

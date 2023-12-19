@@ -44,8 +44,22 @@ void WebServerProg::initClientData(int clientSocket, int serverIndex)
 
 std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
 {
-	return m_clientDataMap.find(clientSocket)->second.requestData.find(header)->second;
+    std::map<int, clientData>::iterator clientIt = m_clientDataMap.find(clientSocket);
+
+    if (clientIt != m_clientDataMap.end())
+    {
+        std::map<std::string, std::string>::iterator headerIt = clientIt->second.requestData.find(header);
+
+        if (headerIt != clientIt->second.requestData.end())
+        {
+            return headerIt->second;
+        }
+    }
+    std::cout << COLOR_RED << "Not found- error issues" << COLOR_RESET << std::endl;
+	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl; //header is body after CGI form
+    return NULL;
 }
+
 
 void	WebServerProg::deleteDataInMap(int clientSocket)
 {
@@ -66,7 +80,6 @@ void WebServerProg::sendResponse(int clientSocket)
 		case POST:
 			postResponse(clientSocket);
 			break;
-		
 		default:
 			break;
 	}
@@ -76,15 +89,14 @@ void WebServerProg::sendResponse(int clientSocket)
 	if (!getClientServer(clientSocket).locations[0].cgiPath.empty())
 	{
 		CgiHandler cgi;
-		std::string check = cgi.runCgi(getClientServer(clientSocket).locations[0].cgiPath); //this will get replaced with the server/locaiton cgi path etc
+		std::string check = cgi.runCgi(getClientServer(clientSocket).locations[0].cgiPath, _request, method); //this will get replaced with the server/locaiton cgi path etc
 		if (check.size() != 0)
 		{
-			_response.clear();
+			// _response.clear();
 			_response.append(check);
 		}
 	}
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
-	std::cout << COLOR_RED << "ABORT CHECK- send " << COLOR_RESET << std::endl;
 	if (bytes_sent < 0)
 	{
 		std::cout << "Error! send" << std::endl;
@@ -185,11 +197,12 @@ void WebServerProg::runPoll()
 				}
 				else
 				{
-					std::cout << "Request: " << std::endl;
+					std::cout << COLOR_MAGENTA << "Request: " << COLOR_RESET << std::endl; //the issue is with how its been returned some how....
+					std::cout << COLOR_MAGENTA << _request << COLOR_RESET << std::endl; //the issue is with how its been returned some how....
 					if (receiveRequest(m_pollSocketsVec[i].fd, i))
 						continue;
-					// std::cout << _request << "\n";
-					sendResponse(m_pollSocketsVec[i].fd);
+					std::cout << _request << "\n";
+					sendResponse(m_pollSocketsVec[i].fd); //
 					std::cout << "sent!!" << std::endl;
 				}
 			}

@@ -55,23 +55,52 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	ss >> token;
 	clientRequestMap.insert(std::make_pair("HTTP-version", token));
 	std::string line;
-	while (std::getline(ss, line))
-	{
-		std::string key;
-		std::string value;
+    while (std::getline(ss, line))
+    {
+        std::string key;
+        std::string value;
 
-		size_t pos = line.find(":");
-		key = line.substr(0, pos);
-		value = line.substr(pos + 1);
+        size_t pos = line.find(":");
+        if (pos != std::string::npos)
+		{
+            key = line.substr(0, pos);
+            value = line.substr(pos + 1);
 
-		size_t valueStart = value.find_first_not_of(" \t");
-		value = value.substr(valueStart);
+            size_t valueStart = value.find_first_not_of(" \t");
+            value = value.substr(valueStart);
 
-		if (key.size() != 1)
-			clientRequestMap.insert(std::make_pair(key, value));
-	}	
+            clientRequestMap.insert(std::make_pair(key, value));
+            std::cout << COLOR_MAGENTA << key << COLOR_RESET << std::endl;
+            std::cout << COLOR_CYAN << value << COLOR_RESET << std::endl;
+        }
+        else
+		{
+			key = "Body";
+			value = line;
+            clientRequestMap.insert(std::make_pair(key, value));
+			std::cout << COLOR_MAGENTA << key << COLOR_RESET << std::endl;
+            std::cout << COLOR_CYAN << value << COLOR_RESET << std::endl;
+
+    }
+	// while (std::getline(ss, line))
+	// {
+	// 	std::string key;
+	// 	std::string value;
+
+	// 	size_t pos = line.find(":");
+	// 	key = line.substr(0, pos);
+	// 	value = line.substr(pos + 1);
+		
+	// 	size_t valueStart = value.find_first_not_of(" \t");
+	// 	value = value.substr(valueStart);
+
+	// 	if (key.size() != 1)
+	// 		clientRequestMap.insert(std::make_pair(key, value));
+	// 	std::cout << COLOR_MAGENTA << key << COLOR_RESET << std::endl;
+	// 	std::cout << COLOR_CYAN << value << COLOR_RESET << std::endl;
+	// }	
+	}
 }
-
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
 	char buffer[1024];
@@ -80,7 +109,6 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	memset(buffer, 0, 1024);
 	int bytes_received = recv(clientSocket, buffer, 1024, 0);
 
-	
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -100,6 +128,7 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	}
 	else
 	{
+		std::cout << "Closing client socket" << std::endl;
 		std::string request = buffer;	
 		_request = buffer;
 		_request += '\0';

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 from __future__ import print_function
 import cgi
@@ -27,6 +27,10 @@ print("</form>")
 # print("<img src='/home/sheree/Desktop/WebServer/src/cgi-bin/penguinPlaceholder.jpg' alt='Image Description'>")
 
 form = cgi.FieldStorage()
+print(" PRINTING THE FORM FORMAT")
+for key in form.keys():
+    print("{}: {}".format(key, form[key].value))
+
 if "first_name" in form and "last_name" in form:
     first_name = form["first_name"].value
     last_name = form["last_name"].value
