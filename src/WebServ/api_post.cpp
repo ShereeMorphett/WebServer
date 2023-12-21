@@ -7,10 +7,10 @@ void	WebServerProg::postResponse(int clientSocket) {
 
 	// TODO: check for permissions
 	std::string 	body = accessDataInMap(clientSocket, "Body"); //cgi query string is breaking here, returning null
-		std::cout << COLOR_RED << "|" << body << "|" << COLOR_RESET << std::endl;
 	if (!body.empty())
 	{
 		std::cout << COLOR_RED << body << COLOR_RESET << std::endl;
+		std::cout << COLOR_RESET << std::endl;
 		std::ofstream	outFile("test.txt", std::ios::binary);
 		if (!outFile) {
 			// status = INT_ERROR;

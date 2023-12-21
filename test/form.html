@@ -1,10 +1,8 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Registration Form</title>
+    <title>Practice Form</title>
     <style>
-
         h1 {
             color: rgb(0, 128, 128);
         }
@@ -21,8 +19,8 @@
         }
  
         input[type="text"],
-        input[type="email"],
-        input[type="password"] {
+        input[type="file"],
+        textarea {
             width: 30%;
             padding: 10px;
             margin-bottom: 15px;
@@ -38,6 +36,14 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        /* Add space between form elements */
+        input[type="text"],
+        input[type="file"],
+        textarea,
+        input[type="submit"] {
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -46,20 +52,32 @@
         <h2>Registration Form</h2>
         <form action="../src/cgi-bin/form.py" method="post">
             <label for="First">Name:</label>
-            <input type="text" name="name" required><br><br>
+            <input type="text" name="name" required><br>
  
-            <label for="Last Name">lastName:</label>
-            <input type="text"  name="lastName" required><br><br>
+            <label for="Last Name">Last Name:</label>
+            <input type="text" name="lastName" required><br>
  
             <input type="submit" name="submit">
         </form>
         <h1>File Upload Form</h1>
         <form enctype="multipart/form-data" action="../src/cgi-bin/fileUpload.py" method="post">
             <label for="file">Choose a file:</label>
-            <input type="file" name="file" id="file" required>
-            <br>
+            <input type="file" name="file" id="file" required><br>
             <input type="submit" value="Upload">
         </form>
+        <form action="../src/cgi-bin/form.py" method="post" target="_blank">
+            <label for="textcontent">Text Content:</label>
+            <textarea name="textcontent" id="textcontent" cols="40" rows="4" oninput="handleInput(this)">Type your text here...</textarea><br>
+            <input type="submit" value="Submit">
+         </form>
     </div>
+
+    <script>
+        function handleInput(element) {
+            if (element.value === 'Type your text here...') {
+                element.value = '';
+            }
+        }
+    </script>
 </body>
 </html>

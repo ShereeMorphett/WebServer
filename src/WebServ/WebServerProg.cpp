@@ -83,16 +83,13 @@ void WebServerProg::sendResponse(int clientSocket)
 		default:
 			break;
 	}
-	// TODO: removed c_str() functions to be able to work with binary files
-	// strlen etc require '\0' and now when my data is binary format, there are
-	// no terminating characters. If this triggers compilers, lets figure out something
 	if (!getClientServer(clientSocket).locations[0].cgiPath.empty())
 	{
 		CgiHandler cgi;
 		std::string check = cgi.runCgi(getClientServer(clientSocket).locations[0].cgiPath, _request, method); //this will get replaced with the server/locaiton cgi path etc
 		if (check.size() != 0)
 		{
-			// _response.clear();
+			 _response.clear();
 			_response.append(check);
 		}
 	}

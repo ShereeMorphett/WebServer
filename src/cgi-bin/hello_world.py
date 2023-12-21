@@ -23,8 +23,8 @@ print("  <br>")
 print("  <input type='submit' value='Submit'>")
 print("</form>")
 
-# # Embedding an image
-# print("<img src='/home/sheree/Desktop/WebServer/src/cgi-bin/penguinPlaceholder.jpg' alt='Image Description'>")
+# Embedding an image
+print("<img src='/home/sheree/Desktop/WebServer/src/cgi-bin/penguinPlaceholder.jpg' alt='Image Description'>")
 
 form = cgi.FieldStorage()
 print(" PRINTING THE FORM FORMAT")

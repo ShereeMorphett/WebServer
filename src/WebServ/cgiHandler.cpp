@@ -54,30 +54,6 @@ const char* serverEnviroment[24] =
    "SERVER_SIGNATURE","SERVER_SOFTWARE" 
 };
 
-unsigned int fromHexToDec(const std::string& nb)
-{
-	unsigned int x;
-	std::stringstream ss;
-	ss << nb;
-	ss >> std::hex >> x;
-	return (x);
-}
-
-
-/* Translation of parameters for QUERY_STRING environment variable */
-std::string decode(std::string &path)
-{
-	size_t token = path.find("%");
-	while (token != std::string::npos)
-	{
-		if (path.length() < token + 2)
-			break ;
-		char decimal = fromHexToDec(path.substr(token + 1, 2));
-		path.replace(token, 3, toString(decimal));
-		token = path.find("%");
-	}
-	return (path);
-}
 
 void CgiHandler::setupEnvironment(std::string _request, char method, const std::string& scriptPath)
 {

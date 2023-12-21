@@ -53,6 +53,7 @@ void	appendBody(std::string& _res, std::string& body, std::string const & path) 
 
 // Check permissions and adjust status accordingly
 void	checkRequest(int* status, std::string const & path) {
+	// make a helper functions for these
 	// check method permissions
 
 	// check path permissions
@@ -85,6 +86,4 @@ void	WebServerProg::getResponse(int clientSocket) {
 
 	appendStatus(_response, status);
 	appendBody(_response, body, path);
-
-	// std::cout << _response << std::endl;
 }

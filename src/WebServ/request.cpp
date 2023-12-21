@@ -45,62 +45,67 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 		return;
 
 	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
-	std::istringstream	ss(request);
+	std::istringstream	requestStream(request);
 	std::string			token;
 
-	ss >> token;
+	if (!(requestStream >> token))
+		std::runtime_error("Request parsing error!");
 	clientRequestMap.insert(std::make_pair("Method", token));
-	ss >> token;
+
+	if (!(requestStream >> token))
+		std::runtime_error("Request parsing error!");
 	createPath(getClientServer(clientSocket), clientRequestMap, token);
-	ss >> token;
+
+	if (!(requestStream >> token))
+		std::runtime_error("Request parsing error!");
 	clientRequestMap.insert(std::make_pair("HTTP-version", token));
 	std::string line;
-    while (std::getline(ss, line))
-    {
-        std::string key;
-        std::string value;
+	requestStream.ignore();
+	requestStream.ignore();// Ignore /r and /n
+	while (std::getline(requestStream, line, '\r'))
+	{
+		std::string key;
+		std::string value;
 
-        size_t pos = line.find(":");
-        if (pos != std::string::npos)
-		{
-            key = line.substr(0, pos);
-            value = line.substr(pos + 1);
+		size_t pos = line.find(":");
+		if (pos == std::string::npos)
+			std::runtime_error("Request parsing error!");
+		key = line.substr(0, pos);
+		value = line.substr(pos + 1);
 
             size_t valueStart = value.find_first_not_of(" \t");
             value = value.substr(valueStart);
 
-            clientRequestMap.insert(std::make_pair(key, value));
-            std::cout << COLOR_MAGENTA << key << COLOR_RESET << std::endl;
-            std::cout << COLOR_CYAN << value << COLOR_RESET << std::endl;
-        }
-        else
+		if (key.size() != 1)
+			clientRequestMap.insert(std::make_pair(key, value));
+
+		if (requestStream.peek() == '\n')
 		{
-			key = "Body";
-			value = line;
-            clientRequestMap.insert(std::make_pair(key, value));
-			std::cout << COLOR_MAGENTA << key << COLOR_RESET << std::endl;
-            std::cout << COLOR_CYAN << value << COLOR_RESET << std::endl;
-
-    }
-	// while (std::getline(ss, line))
-	// {
-	// 	std::string key;
-	// 	std::string value;
-
-	// 	size_t pos = line.find(":");
-	// 	key = line.substr(0, pos);
-	// 	value = line.substr(pos + 1);
-		
-	// 	size_t valueStart = value.find_first_not_of(" \t");
-	// 	value = value.substr(valueStart);
-
-	// 	if (key.size() != 1)
-	// 		clientRequestMap.insert(std::make_pair(key, value));
-	// 	std::cout << COLOR_MAGENTA << key << COLOR_RESET << std::endl;
-	// 	std::cout << COLOR_CYAN << value << COLOR_RESET << std::endl;
-	// }	
+			requestStream.ignore();
+			if (requestStream.peek() == '\r')
+			{
+				requestStream.ignore();
+				requestStream.ignore();
+				break;
+			}
+		}
 	}
+
+	if (clientRequestMap.find("Content-Length") != clientRequestMap.end())
+	{
+		char buffer[1024] = {};
+		std::istringstream bodyLengthStream(clientRequestMap.find("Content-Length")->second);
+		int bodyLength;
+
+		if (bodyLengthStream >> bodyLength)
+			std::runtime_error("Request parsing error!");
+		requestStream.read(buffer, bodyLength);
+		clientRequestMap.insert(std::make_pair("Body", buffer));
+	}
+	
+	printMultimap(clientRequestMap);
 }
+
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
 	char buffer[1024];

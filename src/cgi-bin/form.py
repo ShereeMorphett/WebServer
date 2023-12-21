@@ -1,18 +1,16 @@
 #!/usr/bin/python3
- 
+
 print("Content-type: text/html\n\n")
 import cgi
- 
+
 # Get form data
 form = cgi.FieldStorage()
 
-for key in form.keys():
-    print(key, form.getvalue(key))
 # Retrieve values from the form
 name = form.getvalue('name')
 lastName = form.getvalue('lastName')
+textcontent = form.getvalue('textcontent')  # Add this line to retrieve textcontent
 
- 
 # HTML response
 print("<html>")
 print("<head>")
@@ -32,17 +30,21 @@ print("</head>")
 print("<body>")
 print("<div class='card'>")
 print("<h2>Registration Confirmation</h2>")
-# Check if the 'name' field has a value
+
 if name is not None:
     print("<p>Name: " + name + "</p>")
 else:
     print("<p>Name not provided</p>")
 
-# Check if the 'lastName' field has a value
 if lastName is not None:
     print("<p>Last Name: " + lastName + "</p>")
 else:
     print("<p>Last Name not provided</p>")
+
+if textcontent is not None:
+    print("<p>Text Content: " + textcontent + "</p>")
+else:
+    print("<p>Text Content not provided</p>")
 print("</div>")
 print("</body>")
 print("</html>")
