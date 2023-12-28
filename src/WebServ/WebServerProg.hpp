@@ -22,8 +22,6 @@ struct server
 {
 	int port;
 	int socketFD;
-	// _request
-	//_response //pending 
 	std::string serverName;
     std::map<int, std::string> errorPages;
     std::vector<location> locations; 
@@ -65,8 +63,6 @@ class WebServerProg
 		WebServerProg();
 		WebServerProg(std::string fileName);
 		~WebServerProg();
-
-		// response methods
 		// void	deleteResponse(int clientSocket);
 		void	postResponse(int clientSocket);
 		void	getResponse(int clientSocket);

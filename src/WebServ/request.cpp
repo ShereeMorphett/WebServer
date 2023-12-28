@@ -1,5 +1,6 @@
 #include "WebServerProg.hpp"
 #include "utils.hpp"
+#include "Color.hpp"
 #include <cstring>
 #include <sstream>
 #include <sys/socket.h>
@@ -50,7 +51,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
 	clientRequestMap.insert(std::make_pair("Method", token));
-
+	//////we should check methods permissions here but im unsure how 
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
 	createPath(getClientServer(clientSocket), clientRequestMap, token);
@@ -90,7 +91,6 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 			}
 		}
 	}
-
 	if (clientRequestMap.find("Content-Length") != clientRequestMap.end())
 	{
 		char buffer[1024] = {};
