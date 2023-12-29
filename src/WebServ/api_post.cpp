@@ -3,11 +3,22 @@
 #include "constants.hpp"
 #include "utils.hpp"
 
+// Cases to consider:
+// malicious filename
+// already exists
+
+static void	appendMisc(std::string& _res) {
+	_res.append("Content-Type: text/plain");
+	_res.append(NEW_VALUE);
+	_res.append("Content-length: 0");
+	_res.append(END_HEADER);
+}
+
 void	WebServerProg::postResponse(int clientSocket) {
 	int	status = OK;
 
 	std::string 	body = accessDataInMap(clientSocket, "Body");
-	std::ofstream	outFile("test.jpg", std::ios::binary);
+	std::ofstream	outFile("test.txt", std::ios::binary);
 	if (!outFile) {
 		status = INT_ERROR;
 		std::cerr << "Error: ofstream\n";
@@ -17,5 +28,5 @@ void	WebServerProg::postResponse(int clientSocket) {
 	outFile.close();
 
 	appendStatus(_response, status);
-	_response.append(END_HEADER);
+	appendMisc(_response);
 }
