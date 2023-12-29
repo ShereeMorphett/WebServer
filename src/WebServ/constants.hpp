@@ -1,6 +1,8 @@
 #ifndef CONSTANTS_HPP
 # define CONSTANTS_HPP
 
+# define	BUFFER_SIZE		10240
+
 // Status codes
 # define	ERRORS			400
 # define 	REQUEST_TIMEOUT 408
@@ -9,6 +11,7 @@
 # define	UNAUTHORIZED	401
 # define	FORBIDDEN		403
 # define	NOT_FOUND		404
+# define	TOO_LARGE		413
 # define	INT_ERROR		500
 # define	ACCEPTED		202
 # define	NO_CONTENT		204

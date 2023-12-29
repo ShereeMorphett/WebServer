@@ -3,7 +3,6 @@
 #include "utils.hpp"
 #include <unistd.h>
 
-
 void	WebServerProg::getResponse(int clientSocket) {
 	std::string body;
 	std::string	path;
@@ -18,6 +17,6 @@ void	WebServerProg::getResponse(int clientSocket) {
 	}
 	body = readFile(path);
 
-	appendStatus(_response, status);
+	appendGetStatus(_response, status);
 	appendBody(_response, body, path);
 }
