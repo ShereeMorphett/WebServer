@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <cerrno>
 #include <stdlib.h>
+#include "constants.hpp"
 
 server& WebServerProg::getClientServer(int clientSocket)
 {
@@ -93,7 +94,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 
 	if (clientRequestMap.find("Content-Length") != clientRequestMap.end())
 	{
-		char buffer[1024] = {};
+		char buffer[10000] = {};
 		std::istringstream bodyLengthStream(clientRequestMap.find("Content-Length")->second);
 		int bodyLength;
 
@@ -108,11 +109,11 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
-	char buffer[1024];
+	char buffer[BUFFER_SIZE];
 
 	_request.clear();
-	memset(buffer, 0, 1024);
-	int bytes_received = recv(clientSocket, buffer, 1024, 0);
+	memset(buffer, 0, BUFFER_SIZE);
+	int bytes_received = recv(clientSocket, buffer, BUFFER_SIZE, 0);
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)

@@ -8,6 +8,7 @@
 
 // General
 std::string getFileExtension(std::string const  & fileName);
+void		appendStatus(std::string& _res, int status);
 std::string extractPath(std::string const & request);
 std::string	readFile(std::string const & path);
 std::string	chooseErrorPage(int status);

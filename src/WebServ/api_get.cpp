@@ -4,35 +4,8 @@
 #include "utils.hpp"
 #include <unistd.h>
 
-// Function to append status code to response based on what readFile() returned
-void	appendStatus(std::string& _res, int status) {
-	_res.append(HTTP_HEADER);
-	_res.append(toString(status));
-	switch (status) {
-		case OK:
-			_res.append(" OK");
-			break;
-
-		case NOT_FOUND:
-			_res.append(" Not Found");
-			break;
-
-		case UNAUTHORIZED:
-			_res.append(" Unauthorized");
-			break;
-		
-		case FORBIDDEN:
-			_res.append(" Forbidden");
-			break;
-
-		default:
-			break;
-	}
-	_res.append(NEW_VALUE);
-}
-
 // Append content type, length and actual body
-void	appendBody(std::string& _res, std::string& body, std::string const & path) {
+static void	appendBody(std::string& _res, std::string& body, std::string const & path) {
 	_res.append("Content-Length: ");
 	_res.append(toString(body.size()));
  	_res.append(NEW_VALUE);
@@ -52,15 +25,8 @@ void	appendBody(std::string& _res, std::string& body, std::string const & path) 
 }
 
 // Check permissions and adjust status accordingly
-void	checkRequest(int* status, std::string const & path) {
-	// check method permissions
-
-	// check path permissions
-
-	// check if file exists or not
-
+static void	checkRequest(int* status, std::string const & path) {
 	std::ifstream	file(path.c_str());
-	// std::ifstream	file("." + path);
 	if (file.good()) {
 		*status = OK;
 	}
@@ -83,7 +49,7 @@ void	WebServerProg::getResponse(int clientSocket) {
 	}
 	body = readFile(path);
 
-	appendStatus(_response, status);
+	appendGetStatus(_response, status);
 	appendBody(_response, body, path);
 
 	// std::cout << _response << std::endl;

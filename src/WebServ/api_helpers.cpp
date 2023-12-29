@@ -1,4 +1,5 @@
 #include "api_helpers.hpp"
+#include "utils.hpp"
 #include <sstream>
 #include <vector>
 
@@ -64,4 +65,34 @@ std::string	chooseErrorPage(int status) {
 			break; 
 	}
 	return SERVER_PAGE;
+}
+
+void	appendStatus(std::string& _res, int status) {
+	_res.append(HTTP_HEADER);
+	_res.append(toString(status));
+	switch (status) {
+		case OK:
+			_res.append(" OK");
+			break;
+		
+		case CREATED:
+			_res.append(" Created");
+			break;
+
+		case NOT_FOUND:
+			_res.append(" Not Found");
+			break;
+
+		case UNAUTHORIZED:
+			_res.append(" Unauthorized");
+			break;
+		
+		case FORBIDDEN:
+			_res.append(" Forbidden");
+			break;
+
+		default:
+			break;
+	}
+	_res.append(NEW_VALUE);
 }
