@@ -17,6 +17,6 @@ void	WebServerProg::getResponse(int clientSocket) {
 	}
 	body = readFile(path);
 
-	appendGetStatus(_response, status);
+	appendStatus(_response, status);
 	appendBody(_response, body, path);
 }

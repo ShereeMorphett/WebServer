@@ -75,6 +75,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		std::cout << "Error! send" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	std::cout << "Response sent: " << _response << std::endl;
 	deleteDataInMap(clientSocket);
 	_response.clear();
 }
@@ -173,9 +174,7 @@ void WebServerProg::runPoll()
 					std::cout << "Request: " << std::endl;
 					if (receiveRequest(m_pollSocketsVec[i].fd, i))
 						continue;
-					// std::cout << _request << "\n";
 					sendResponse(m_pollSocketsVec[i].fd);
-					std::cout << "sent!!" << std::endl;
 				}
 			}
 		}
