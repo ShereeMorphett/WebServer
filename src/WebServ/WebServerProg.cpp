@@ -66,9 +66,6 @@ void WebServerProg::sendResponse(int clientSocket)
 		default:
 			break;
 	}
-	// TODO: removed c_str() functions to be able to work with binary files
-	// strlen etc require '\0' and now when my data is binary format, there are
-	// no terminating characters. If this triggers compilers, lets figure out something
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{

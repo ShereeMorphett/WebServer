@@ -52,19 +52,19 @@ void	appendBody(std::string& _res, std::string& body, std::string const & path) 
 }
 
 // Check permissions and adjust status accordingly
-void	checkRequest(int* status, std::string const & path) {
-	// check method permissions
-
-	// check path permissions
-
-	// check if file exists or not
-
+void	checkRequest(int* status, std::string const & path)
+{
 	std::ifstream	file(path.c_str());
-	// std::ifstream	file("." + path);
-	if (file.good()) {
-		*status = OK;
+	if (file.is_open())
+	{
+		if (file.good())
+			*status = OK;
+		else
+			*status = NOT_FOUND;
 	}
-	else {
+	else
+	{	
+		std::cerr << COLOR_RED << "Error opening file: " << path << COLOR_RESET << std::endl;
 		*status = NOT_FOUND;
 	}
 }
@@ -85,6 +85,4 @@ void	WebServerProg::getResponse(int clientSocket) {
 
 	appendStatus(_response, status);
 	appendBody(_response, body, path);
-
-	// std::cout << _response << std::endl;
 }
