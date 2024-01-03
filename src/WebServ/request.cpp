@@ -93,14 +93,15 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	}
 	if (clientRequestMap.find("Content-Length") != clientRequestMap.end())
 	{
-		char buffer[1024] = {};
+		char buffer[16384] = {};
 		std::istringstream bodyLengthStream(clientRequestMap.find("Content-Length")->second);
 		int bodyLength;
 
 		if (bodyLengthStream >> bodyLength)
 			std::runtime_error("Request parsing error!");
 		requestStream.read(buffer, bodyLength);
-		clientRequestMap.insert(std::make_pair("Body", buffer));
+		std::string bodyStr(buffer, buffer + bodyLength);
+		clientRequestMap.insert(std::make_pair("Body", bodyStr));
 	}
 	
 	printMultimap(clientRequestMap);
@@ -108,11 +109,10 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
-	char buffer[1024];
+	char buffer[16384] = {};
 
 	_request.clear();
-	memset(buffer, 0, 1024);
-	int bytes_received = recv(clientSocket, buffer, 1024, 0);
+	int bytes_received = recv(clientSocket, buffer, sizeof(buffer), 0);
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -132,9 +132,10 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	}
 	else
 	{
-		std::string request = buffer;
+		std::string request(buffer, buffer + bytes_received);
 		_request = buffer;
 		parseRequest(clientSocket, request);
+
 	}
 	return 0;
 }
