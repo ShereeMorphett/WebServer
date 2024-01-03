@@ -7,7 +7,7 @@ void	WebServerProg::postResponse(int clientSocket) {
 	// TODO: check for permissions
 
 	std::string 	body = accessDataInMap(clientSocket, "Body");
-	std::ofstream	outFile("test.txt", std::ios::binary);
+	std::ofstream	outFile("test.png", std::ios::binary);
 
 	if (!outFile) {
 		// status = INT_ERROR;
