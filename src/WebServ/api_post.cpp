@@ -31,9 +31,25 @@ static void	appendMisc(std::string& _res) {
 	_res.append(END_HEADER);
 }
 
-// Cases to consider:
-// malicious filename
-// already exists
+static std::string	fetchName(std::string& body) {
+	std::string	target = "filename=\"";
+
+	size_t	startPos = body.find(target);
+	if (startPos == std::string::npos) {
+		return "error";
+	}
+
+	startPos += target.length();
+	size_t	endPos = body.find("\"", startPos);
+	if (endPos == std::string::npos) {
+		return "error";
+	}
+
+	size_t len = endPos - startPos;
+	std::string	name = body.substr(startPos, len);
+
+	return name;
+}
 
 static void	appendMisc(std::string& _res) {
 	_res.append("Content-Type: text/plain");

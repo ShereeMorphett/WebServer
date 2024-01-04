@@ -22,7 +22,7 @@ void printMultimap(const std::multimap<KeyType, ValueType>& myMultimap) {
     typename std::multimap<KeyType, ValueType>::const_iterator it;
 
     for (it = myMultimap.begin(); it != myMultimap.end(); ++it) {
-        std::cout << "Key: " << it->first << "   Value: " << it->second << std::endl;
+        // std::cout << "Key: " << it->first << "   Value: " << it->second << std::endl;
     }
 }
 
