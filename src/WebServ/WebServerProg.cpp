@@ -83,16 +83,6 @@ void WebServerProg::sendResponse(int clientSocket)
 		default:
 			break;
 	}
-	if (!getClientServer(clientSocket).locations[0].cgiPath.empty())
-	{
-		CgiHandler cgi;
-		std::string check = cgi.runCgi(getClientServer(clientSocket).locations[0].cgiPath, _request, method); //this will get replaced with the server/locaiton cgi path etc
-		if (check.size() != 0)
-		{
-			 _response.clear();
-			_response.append(check);
-		}
-	}
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{

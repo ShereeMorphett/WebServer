@@ -1,7 +1,7 @@
 
 #include <vector>
 #include <map>
-#include <string> // check if needed
+#include <string>
 #include <iostream>
 #include "WebServerProg.hpp"
 #include "../Color.hpp"
@@ -39,8 +39,6 @@ static int validateErrorPage(const server &servers)
     }
     return 0;
 }
-
-
 
 /*
     Port numbers 1024 - 65535 are available for the following user applications:
