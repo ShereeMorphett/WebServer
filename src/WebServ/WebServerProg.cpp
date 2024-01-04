@@ -62,6 +62,9 @@ void WebServerProg::sendResponse(int clientSocket)
 		case POST:
 			postResponse(clientSocket);
 			break;
+		case DELETE:
+			deleteResponse(clientSocket);
+			break;
 		
 		default:
 			break;
