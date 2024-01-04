@@ -24,7 +24,12 @@ void	appendStatus(std::string& _res, int status) {
 		case FORBIDDEN:
 			_res.append(" Forbidden");
 			break;
-
+		case ACCEPTED:
+			_res.append(" Accepted");
+			break;
+		case NO_CONTENT:
+			_res.append(" No Content");
+			break;
 		default:
 			break;
 	}
