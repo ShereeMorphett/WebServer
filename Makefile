@@ -5,7 +5,7 @@ NAME = WebServ
 CC = c++
 
 # compiler flags
-CFLAGS =  -std=c++11 -Wall -Werror -Wextra -MMD -fsanitize=address
+CFLAGS = -std=c++14 -Wall -Werror -Wextra -MMD -fsanitize=address
 DEBUG_FLAGS = -g
 
 # src files and path for them
@@ -14,7 +14,7 @@ INCS := $(wildcard $(addsuffix /*.hpp, $(VPATH)))
 INCLUDE = $(addprefix -I, $(VPATH))
 
 # src files
-SRC := main.cpp WebServerProg.cpp api_helpers.cpp api_get.cpp parser.cpp validateServers.cpp api_post.cpp utils.cpp request.cpp
+SRC := main.cpp WebServerProg.cpp api_helpers.cpp api_get.cpp api_delete.cpp parser.cpp validateServers.cpp api_post.cpp utils.cpp request.cpp
 
 # obj files and path for them
 OBJ_DIR = ./obj

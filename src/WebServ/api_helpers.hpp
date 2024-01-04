@@ -11,6 +11,10 @@ std::string getFileExtension(std::string const  & fileName);
 std::string extractPath(std::string const & request);
 std::string	readFile(std::string const & path);
 std::string	chooseErrorPage(int status);
+void	checkRequest(int* status, std::string const & path);
+void	appendBody(std::string& _res, std::string& body, std::string const & path);
+void	appendStatus(std::string& _res, int status);
+
 
 // Check permissions
 
