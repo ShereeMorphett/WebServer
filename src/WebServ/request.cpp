@@ -18,7 +18,6 @@ server& WebServerProg::getClientServer(int clientSocket)
 	return servers[it->second.serverIndex];
 }
 
-
 static void createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path)
 {
 	for (std::vector<location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
@@ -94,11 +93,11 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 
 	if (clientRequestMap.find("Content-Length") != clientRequestMap.end())
 	{
-		char buffer[10000] = {};
+		char buffer[BUFFER_SIZE] = {};
 		std::istringstream bodyLengthStream(clientRequestMap.find("Content-Length")->second);
 		int bodyLength;
 
-		if (bodyLengthStream >> bodyLength)
+		if (!(bodyLengthStream >> bodyLength))
 			std::runtime_error("Request parsing error!");
 		requestStream.read(buffer, bodyLength);
 		clientRequestMap.insert(std::make_pair("Body", buffer));
@@ -135,6 +134,8 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	{
 		std::string request = buffer;
 		_request = buffer;
+		// std::cout << "Request: " << "\n";
+		// std::cout << _request << std::endl;
 		parseRequest(clientSocket, request);
 	}
 	return 0;
