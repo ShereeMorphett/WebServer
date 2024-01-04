@@ -14,7 +14,9 @@ textcontent = form.getvalue('textcontent')  # Add this line to retrieve textcont
 # HTML response
 print("<html>")
 print("<head>")
+print("<img src='/Users/smorphet/Desktop/WebServer/src/cgi-bin/penguinPlaceholder.jpg' alt='Image Description'>")
 print("<title>Registration Confirmation</title>")
+# Embedding an image
 print("<style>")
 print("  /* Style for the card container */")
 print("  .card {")
