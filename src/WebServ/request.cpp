@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <cerrno>
 #include <stdlib.h>
+#include "constants.hpp"
 
 server& WebServerProg::getClientServer(int clientSocket)
 {
@@ -17,7 +18,6 @@ server& WebServerProg::getClientServer(int clientSocket)
 	}
 	return servers[it->second.serverIndex];
 }
-
 
 static void createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path)
 {
@@ -97,7 +97,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 		std::istringstream bodyLengthStream(clientRequestMap.find("Content-Length")->second);
 		int bodyLength;
 
-		if (bodyLengthStream >> bodyLength)
+		if (!(bodyLengthStream >> bodyLength))
 			std::runtime_error("Request parsing error!");
 		requestStream.read(buffer, bodyLength);
 		std::string bodyStr(buffer, buffer + bodyLength);
@@ -109,10 +109,18 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
+<<<<<<< HEAD
 	char buffer[16384] = {};
 
 	_request.clear();
 	int bytes_received = recv(clientSocket, buffer, sizeof(buffer), 0);
+=======
+	char buffer[BUFFER_SIZE];
+
+	_request.clear();
+	memset(buffer, 0, BUFFER_SIZE);
+	int bytes_received = recv(clientSocket, buffer, BUFFER_SIZE, 0);
+>>>>>>> 4c302b2085e8e9628c94ab3645bc421eedb4f73b
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -134,6 +142,8 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	{
 		std::string request(buffer, buffer + bytes_received);
 		_request = buffer;
+		// std::cout << "Request: " << "\n";
+		// std::cout << _request << std::endl;
 		parseRequest(clientSocket, request);
 
 	}
