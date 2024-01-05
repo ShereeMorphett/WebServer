@@ -93,15 +93,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	}
 	if (clientRequestMap.find("Content-Length") != clientRequestMap.end())
 	{
-<<<<<<< HEAD
-<<<<<<< HEAD
 		char buffer[16384] = {};
-=======
-		char buffer[10000] = {};
->>>>>>> 2ca6ceb (started to create proper response for post method)
-=======
-		char buffer[BUFFER_SIZE] = {};
->>>>>>> 4c302b2 (having problems with body, checking main status)
 		std::istringstream bodyLengthStream(clientRequestMap.find("Content-Length")->second);
 		int bodyLength;
 
