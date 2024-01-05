@@ -45,8 +45,9 @@ class WebServerProg
 		std::string defaultFileName;
 		
 		std::map<int, struct clientData> m_clientDataMap;
-		std::string	_response; //this needs to be decided on, is it okay??
-		std::string	_request;  //this needs to be decided on, is it okay??
+		std::string	_response;
+		std::string	_request; 
+		size_t		bodySize; 
 
 	public:
 

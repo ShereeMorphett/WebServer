@@ -46,9 +46,7 @@ bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string,
 		{
 			for (const auto& methods : location.allowedMethods)
 			{
-				std::cout << COLOR_CYAN << methods << std::endl;
-				std::cout << COLOR_CYAN << clientRequestMap.find("Method")->second << COLOR_RESET << std::endl;
-				if (methods == clientRequestMap.find("Method")->second)
+					if (methods == clientRequestMap.find("Method")->second)
 					return true;
 			}
 		}
@@ -115,11 +113,24 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 		char buffer[16384] = {};
 		std::istringstream bodyLengthStream(clientRequestMap.find("Content-Length")->second);
 		int bodyLength;
-
 		if (!(bodyLengthStream >> bodyLength))
 			std::runtime_error("Request parsing error!");
-		requestStream.read(buffer, bodyLength);
-		std::string bodyStr(buffer, buffer + bodyLength);
+		bodySize = bodyLength;
+
+		std::ostringstream bodyStream;
+		while (bodyLength > 0)
+		{
+			int bytesRead = requestStream.readsome(buffer, std::min(static_cast<std::streamsize>(sizeof(buffer)), static_cast<std::streamsize>(bodyLength)));
+			std::cout << COLOR_GREEN << "bytesRead:	" << bytesRead  << COLOR_RESET << std::endl;
+			if (bytesRead <= 0)
+			{
+				std::runtime_error("Failed to read the entire body!");
+				break;
+			}
+			bodyStream.write(buffer, bytesRead);
+			bodyLength -= bytesRead;
+		}
+		std::string bodyStr = bodyStream.str();
 		clientRequestMap.insert(std::make_pair("Body", bodyStr));
 	}
 	
@@ -130,17 +141,14 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
 	char buffer[BUFFER_SIZE];
 
-	_request.clear();
 	memset(buffer, 0, BUFFER_SIZE);
 	int bytes_received = recv(clientSocket, buffer, BUFFER_SIZE, 0);
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
-		{
 			return 1;
-		}
 		std::cout << "Error! recv" << std::endl;
-		exit (1);
+		return 2;
 	}
 	else if (bytes_received == 0)
 	{
@@ -154,10 +162,9 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	{
 		std::string request(buffer, buffer + bytes_received);
 		_request = buffer;
-		// std::cout << "Request: " << "\n";
-		// std::cout << _request << std::endl;
+		std::cout << COLOR_RED << "Request: " << "\n";
+		std::cout << COLOR_RED << _request << COLOR_RESET << std::endl;
 		parseRequest(clientSocket, request);
-
 	}
 	return 0;
 }

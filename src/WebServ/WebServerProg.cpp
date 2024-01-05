@@ -93,7 +93,6 @@ void WebServerProg::sendResponse(int clientSocket)
 		std::cout << "Error! send" << "\n";
 		exit(EXIT_FAILURE);
 	}
-	std::cout << "Response sent\n";
 	// std::cout << "Response sent: " << _response << "\n";
 	deleteDataInMap(clientSocket);
 	_response.clear();
@@ -166,7 +165,7 @@ void WebServerProg::runPoll()
 {
 	while (true)
 	{
-		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 500);
+		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 5000);
 		if (pollResult < 0)
 		{
 			std::cout << "Error! poll" << std::endl;
@@ -189,9 +188,19 @@ void WebServerProg::runPoll()
 				}
 				else
 				{
-					if (receiveRequest(m_pollSocketsVec[i].fd, i))
+					int check = receiveRequest(m_pollSocketsVec[i].fd, i);
+					std::cout << COLOR_GREEN << "Check:	" << check  << "BodySize:	" << bodySize <<  "		_request.size()	" << _request.size() << COLOR_RESET << std::endl;
+					if (check)
+					{
+						if (check == 2)
+							return;
 						continue;
-					sendResponse(m_pollSocketsVec[i].fd);
+					}
+					if (_request.size() >= bodySize)
+					{
+						sendResponse(m_pollSocketsVec[i].fd);
+						_request.clear();
+					}
 				}
 			}
 		}
