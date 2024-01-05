@@ -99,7 +99,7 @@ void WebServerProg::initServers()
 		server_addr.sin_port = htons(servers[i].port);
 		server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		int enable = 1;
-		if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+		if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int)) < 0)
 		{
 			errnoPrinting("setsockopt(SO_REUSEADDR)", errno);
 			return ;
@@ -163,7 +163,6 @@ void WebServerProg::runPoll()
 					addSocketToPoll(accept(m_pollSocketsVec[i].fd, NULL, NULL), POLLIN);
 					
 					int flags = fcntl(m_pollSocketsVec.back().fd, F_GETFL, 0);
-
 					fcntl(m_pollSocketsVec.back().fd, F_SETFL, flags | O_NONBLOCK);
 					initClientData(m_pollSocketsVec.back().fd, i);
 					std::cout << "New connection accepted on client socket" << std::endl;
@@ -173,7 +172,6 @@ void WebServerProg::runPoll()
 					std::cout << "Request: " << std::endl;
 					if (receiveRequest(m_pollSocketsVec[i].fd, i))
 						continue;
-					// std::cout << _request << "\n";
 					sendResponse(m_pollSocketsVec[i].fd);
 					std::cout << "sent!!" << std::endl;
 				}
@@ -189,7 +187,10 @@ void WebServerProg::startProgram()
 		servers = parseConfigFile(defaultFileName);
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
-		std::cout << COLOR_GREEN << "servers valid" << COLOR_RESET << std::endl;
+		for (auto it = servers.begin(); it != servers.end(); it++)
+		{
+			printServer(*it);
+		}
 		initServers();
 	}
 	catch (const std::exception& e)
