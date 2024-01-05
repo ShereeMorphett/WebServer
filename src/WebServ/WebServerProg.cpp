@@ -90,9 +90,11 @@ void WebServerProg::sendResponse(int clientSocket)
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{
-		std::cout << "Error! send" << std::endl;
+		std::cout << "Error! send" << "\n";
 		exit(EXIT_FAILURE);
 	}
+	std::cout << "Response sent\n";
+	// std::cout << "Response sent: " << _response << "\n";
 	deleteDataInMap(clientSocket);
 	_response.clear();
 }
@@ -190,7 +192,6 @@ void WebServerProg::runPoll()
 					if (receiveRequest(m_pollSocketsVec[i].fd, i))
 						continue;
 					sendResponse(m_pollSocketsVec[i].fd);
-					std::cout << "sent!!" << std::endl;
 				}
 			}
 		}

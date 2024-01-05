@@ -3,6 +3,36 @@
 #include "utils.hpp"
 #include <unistd.h>
 
+// Append content type, length and actual body
+void	appendBody(std::string& _res, std::string& body, std::string const & path) {
+	_res.append("Content-Length: ");
+	_res.append(toString(body.size()));
+ 	_res.append(NEW_VALUE);
+	_res.append("Content-type: ");
+	std::string type = getFileExtension(path);
+	if (type == EXT_HTML) {
+		_res.append(TYPE_HTML);
+	}
+	else if (type == EXT_CSS) {
+		_res.append(TYPE_CSS);
+	}
+	else if (type == EXT_PNG) {
+		_res.append(TYPE_PNG);
+	}
+	_res.append(END_HEADER);
+	_res.append(body);
+}
+
+// Check permissions and adjust status accordingly
+void	checkRequest(int* status, std::string const & path) {
+	std::ifstream	file(path.c_str());
+	if (file.good()) {
+		*status = OK;
+	}
+	else {
+		*status = NOT_FOUND;
+	}
+}
 
 void	WebServerProg::getResponse(int clientSocket) {
 	std::string body;
