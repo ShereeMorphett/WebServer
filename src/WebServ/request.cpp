@@ -39,6 +39,24 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 	}
 }
 
+bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
+{
+	for (const auto& location : getClientServer(clientSocket).locations)
+	{
+		if (location.locationPath == clientRequestMap.find("Path")->second)
+		{
+			for (const auto& methods : location.allowedMethods)
+			{
+				std::cout << COLOR_CYAN << methods << std::endl;
+				std::cout << COLOR_CYAN << clientRequestMap.find("Method")->second << COLOR_RESET << std::endl;
+				if (methods == clientRequestMap.find("Method")->second)
+					return true;
+			}
+		}
+	}
+	return false;
+}
+
 void WebServerProg::parseRequest(int clientSocket, std::string request)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
@@ -52,7 +70,6 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
 	clientRequestMap.insert(std::make_pair("Method", token));
-	//////we should check methods permissions here but im unsure how 
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
 	createPath(getClientServer(clientSocket), clientRequestMap, token);
@@ -91,6 +108,9 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 			}
 		}
 	}
+	if (validateRequest(clientSocket, clientRequestMap) == false)
+		std::runtime_error("Invalid request error!");
+
 	if (clientRequestMap.find("Content-Length") != clientRequestMap.end())
 	{
 		char buffer[16384] = {};

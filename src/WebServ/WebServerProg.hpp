@@ -69,6 +69,7 @@ class WebServerProg
 		// void	deleteResponse(int clientSocket);
 		void	postResponse(int clientSocket);
 		void	getResponse(int clientSocket);
+		bool validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap);
 
 
 };
