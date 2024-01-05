@@ -70,8 +70,11 @@ std::string	chooseErrorPage(int status) {
 	return SERVER_PAGE;
 }
 
+<<<<<<< HEAD
 
 // Function to append status code to response based on what readFile() returned
+=======
+>>>>>>> 4c302b2085e8e9628c94ab3645bc421eedb4f73b
 void	appendStatus(std::string& _res, int status) {
 	_res.append(HTTP_HEADER);
 	_res.append(toString(status));
@@ -79,6 +82,13 @@ void	appendStatus(std::string& _res, int status) {
 		case OK:
 			_res.append(" OK");
 			break;
+<<<<<<< HEAD
+=======
+		
+		case CREATED:
+			_res.append(" Created");
+			break;
+>>>>>>> 4c302b2085e8e9628c94ab3645bc421eedb4f73b
 
 		case NOT_FOUND:
 			_res.append(" Not Found");
@@ -91,16 +101,21 @@ void	appendStatus(std::string& _res, int status) {
 		case FORBIDDEN:
 			_res.append(" Forbidden");
 			break;
+<<<<<<< HEAD
 		case ACCEPTED:
 			_res.append(" Accepted");
 			break;
 		case NO_CONTENT:
 			_res.append(" No Content");
 			break;
+=======
+
+>>>>>>> 4c302b2085e8e9628c94ab3645bc421eedb4f73b
 		default:
 			break;
 	}
 	_res.append(NEW_VALUE);
+<<<<<<< HEAD
 }
 
 // Append content type, length and actual body
@@ -139,4 +154,6 @@ void	checkRequest(int* status, std::string const & path)
 		std::cerr << COLOR_RED << "Error opening file: " << path << COLOR_RESET << std::endl;
 		*status = NOT_FOUND;
 	}
+=======
+>>>>>>> 4c302b2085e8e9628c94ab3645bc421eedb4f73b
 }
