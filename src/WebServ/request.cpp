@@ -109,18 +109,11 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
-<<<<<<< HEAD
-	char buffer[16384] = {};
-
-	_request.clear();
-	int bytes_received = recv(clientSocket, buffer, sizeof(buffer), 0);
-=======
 	char buffer[BUFFER_SIZE];
 
 	_request.clear();
 	memset(buffer, 0, BUFFER_SIZE);
 	int bytes_received = recv(clientSocket, buffer, BUFFER_SIZE, 0);
->>>>>>> 4c302b2085e8e9628c94ab3645bc421eedb4f73b
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)

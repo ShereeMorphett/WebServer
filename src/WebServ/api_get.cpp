@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 // Append content type, length and actual body
-static void	appendBody(std::string& _res, std::string& body, std::string const & path) {
+void	appendBody(std::string& _res, std::string& body, std::string const & path) {
 	_res.append("Content-Length: ");
 	_res.append(toString(body.size()));
  	_res.append(NEW_VALUE);
@@ -24,7 +24,7 @@ static void	appendBody(std::string& _res, std::string& body, std::string const &
 }
 
 // Check permissions and adjust status accordingly
-static void	checkRequest(int* status, std::string const & path) {
+void	checkRequest(int* status, std::string const & path) {
 	std::ifstream	file(path.c_str());
 	if (file.good()) {
 		*status = OK;
