@@ -164,7 +164,7 @@ void WebServerProg::runPoll()
 {
 	while (true)
 	{
-		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 100);
+		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 500);
 		if (pollResult < 0)
 		{
 			std::cout << "Error! poll" << std::endl;
@@ -187,8 +187,6 @@ void WebServerProg::runPoll()
 				}
 				else
 				{
-					// std::cout << COLOR_MAGENTA << "Request: " << COLOR_RESET << std::endl; //the issue is with how its been returned some how....
-					// std::cout << COLOR_MAGENTA << _request << COLOR_RESET << std::endl; //the issue is with how its been returned some how....
 					if (receiveRequest(m_pollSocketsVec[i].fd, i))
 						continue;
 					sendResponse(m_pollSocketsVec[i].fd);
