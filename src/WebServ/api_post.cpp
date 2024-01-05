@@ -2,6 +2,7 @@
 #include "constants.hpp"
 #include "../Color.hpp"
 
+
 void	WebServerProg::postResponse(int clientSocket) {
 	// int	status = CREATED;
 

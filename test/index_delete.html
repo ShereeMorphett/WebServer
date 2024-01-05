@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="index.css"> 
+    <title>Link CSS to HTML</title>
+</head>
+<body>
+    <h1>Hello world!</h1>
+
+    <!-- Button to trigger the DELETE request -->
+    <button id="deleteButton">Delete Resource</button>
+    <script>
+        document.getElementById('deleteButton').addEventListener('click', function() {
+            // Replace 'your-api-endpoint' with the actual endpoint you want to delete
+            const apiEndpoint = 'hive_copy.png';
+
+            // Send a DELETE request using the Fetch API
+            fetch(apiEndpoint, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json', // Adjust as needed
+                    // Additional headers if required (e.g., authentication token)
+                },
+            
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Resource deleted successfully');
+                } else {
+                    console.error('Failed to delete resource');
+                }
+            })
+            .catch(error => {
+                console.error('Error during the DELETE request:', error);
+            });
+        });
+    </script>
+</body>
+</html>
