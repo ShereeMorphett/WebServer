@@ -5,16 +5,21 @@
 #include <iostream>
 #include <netinet/in.h>
 #include <cerrno>
-#include <cstring>
+#include <cstring>//
+#include <cstdlib> //
+#include <string>
 #include <unistd.h>
 #include <stdlib.h>
 #include <sstream>
 #include <fcntl.h>
+#include <vector>
 #include "../Color.hpp"
 #include "api_helpers.hpp"
 #include "utils.hpp"
+#include "CgiHandler.hpp"
 
 # define MAXSOCKET 10
+
 
 static void errnoPrinting(std::string message, int error) 
 {
@@ -39,8 +44,22 @@ void WebServerProg::initClientData(int clientSocket, int serverIndex)
 
 std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
 {
-	return m_clientDataMap.find(clientSocket)->second.requestData.find(header)->second;
+    std::map<int, clientData>::iterator clientIt = m_clientDataMap.find(clientSocket);
+
+    if (clientIt != m_clientDataMap.end())
+    {
+        std::map<std::string, std::string>::iterator headerIt = clientIt->second.requestData.find(header);
+
+        if (headerIt != clientIt->second.requestData.end())
+        {
+            return headerIt->second;
+        }
+    }
+    std::cout << COLOR_RED << "Not found- error issues" << COLOR_RESET << std::endl;
+	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl; //header is body after CGI form
+    return NULL;
 }
+
 
 void	WebServerProg::deleteDataInMap(int clientSocket)
 {
@@ -53,7 +72,6 @@ void	WebServerProg::deleteDataInMap(int clientSocket)
 void WebServerProg::sendResponse(int clientSocket)
 {
 	char method = accessDataInMap(clientSocket, "Method")[0];
-
 	switch (method) {
 		case GET:
 			getResponse(clientSocket);
@@ -75,7 +93,6 @@ void WebServerProg::sendResponse(int clientSocket)
 		std::cout << "Error! send" << "\n";
 		exit(EXIT_FAILURE);
 	}
-	std::cout << "Response sent\n";
 	// std::cout << "Response sent: " << _response << "\n";
 	deleteDataInMap(clientSocket);
 	_response.clear();
@@ -148,7 +165,7 @@ void WebServerProg::runPoll()
 {
 	while (true)
 	{
-		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 100);
+		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 5000);
 		if (pollResult < 0)
 		{
 			std::cout << "Error! poll" << std::endl;
@@ -171,9 +188,19 @@ void WebServerProg::runPoll()
 				}
 				else
 				{
-					if (receiveRequest(m_pollSocketsVec[i].fd, i))
+					int check = receiveRequest(m_pollSocketsVec[i].fd, i);
+					std::cout << COLOR_GREEN << "Check:	" << check  << "BodySize:	" << bodySize <<  "		_request.size()	" << _request.size() << COLOR_RESET << std::endl;
+					if (check)
+					{
+						if (check == 2)
+							return;
 						continue;
-					sendResponse(m_pollSocketsVec[i].fd);
+					}
+					if (_request.size() >= bodySize)
+					{
+						sendResponse(m_pollSocketsVec[i].fd);
+						_request.clear();
+					}
 				}
 			}
 		}

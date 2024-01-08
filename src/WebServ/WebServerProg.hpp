@@ -26,6 +26,7 @@ struct server
     std::map<int, std::string> errorPages;
     std::vector<location> locations; 
     int clientMaxBodySize;
+
 };
 
 struct clientData
@@ -44,8 +45,9 @@ class WebServerProg
 		std::string defaultFileName;
 		
 		std::map<int, struct clientData> m_clientDataMap;
-		std::string	_response; //this needs to be decided on, is it okay??
-		std::string	_request;  //this needs to be decided on, is it okay??
+		std::string	_response;
+		std::string	_request; 
+		size_t		bodySize; 
 
 	public:
 
@@ -60,6 +62,8 @@ class WebServerProg
 		bool receiveRequest(int clientSocket, int pollIndex);
 		int  acceptConnection(int listenSocket);
 		void runPoll();
+		server& getClientServer(int clientSocket);
+
 		WebServerProg();
 		WebServerProg(std::string fileName);
 		~WebServerProg();
@@ -67,11 +71,13 @@ class WebServerProg
 		void	postResponse(int clientSocket);
 		void	getResponse(int clientSocket);
 		void	deleteResponse(int clientSocket);
-		server&	getClientServer(int clientSocket);
+		bool 	validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap);
 
 };
 
 std::vector<struct server> parseConfigFile(const std::string& fileName);
 void validateServers(const std::vector<struct server> &servers);
+
+std::string runCgi();
 
 #endif
