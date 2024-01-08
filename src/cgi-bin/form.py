@@ -11,6 +11,10 @@ name = form.getvalue('name')
 lastName = form.getvalue('lastName')
 textcontent = form.getvalue('textcontent')  # Add this line to retrieve textcontent
 
+
+for key in form.keys():
+    print(f"{key} = {form[key].value}<br>")
+
 # HTML response
 print("<html>")
 print("<head>")
@@ -50,3 +54,4 @@ else:
 print("</div>")
 print("</body>")
 print("</html>")
+

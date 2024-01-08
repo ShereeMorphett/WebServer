@@ -115,7 +115,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 		int bodyLength;
 		if (!(bodyLengthStream >> bodyLength))
 			std::runtime_error("Request parsing error!");
-		bodySize = bodyLength;
+		expectedBodySize = bodyLength;
 
 		std::ostringstream bodyStream;
 		while (bodyLength > 0)
@@ -132,6 +132,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 		}
 		std::string bodyStr = bodyStream.str();
 		clientRequestMap.insert(std::make_pair("Body", bodyStr));
+		currentBodySize += clientRequestMap.find("Body")->second.size();
 	}
 	
 	printMultimap(clientRequestMap);
@@ -140,7 +141,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
 	char buffer[BUFFER_SIZE];
-
+	
 	memset(buffer, 0, BUFFER_SIZE);
 	int bytes_received = recv(clientSocket, buffer, BUFFER_SIZE, 0);
 	if (bytes_received < 0)
@@ -166,5 +167,8 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 		std::cout << COLOR_RED << _request << COLOR_RESET << std::endl;
 		parseRequest(clientSocket, request);
 	}
+	if (currentBodySize == expectedBodySize) 
+		m_pollSocketsVec[pollIndex].revents = POLLOUT;
+
 	return 0;
 }

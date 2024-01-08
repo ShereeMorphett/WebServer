@@ -93,7 +93,6 @@ void WebServerProg::sendResponse(int clientSocket)
 		std::cout << "Error! send" << "\n";
 		exit(EXIT_FAILURE);
 	}
-	// std::cout << "Response sent: " << _response << "\n";
 	deleteDataInMap(clientSocket);
 	_response.clear();
 }
@@ -179,8 +178,7 @@ void WebServerProg::runPoll()
 			{
 				if (i < serverCount)
 				{
-					addSocketToPoll(accept(m_pollSocketsVec[i].fd, NULL, NULL), POLLIN);
-					
+					addSocketToPoll(accept(m_pollSocketsVec[i].fd, NULL, NULL), POLLIN); //pollout
 					int flags = fcntl(m_pollSocketsVec.back().fd, F_GETFL, 0);
 					fcntl(m_pollSocketsVec.back().fd, F_SETFL, flags | O_NONBLOCK);
 					initClientData(m_pollSocketsVec.back().fd, i);
@@ -188,18 +186,24 @@ void WebServerProg::runPoll()
 				}
 				else
 				{
-					int check = receiveRequest(m_pollSocketsVec[i].fd, i);
-					std::cout << COLOR_GREEN << "Check:	" << check  << "BodySize:	" << bodySize <<  "		_request.size()	" << _request.size() << COLOR_RESET << std::endl;
-					if (check)
+					while (currentBodySize >= expectedBodySize)
 					{
-						if (check == 2)
-							return;
-						continue;
-					}
-					if (_request.size() >= bodySize)
-					{
-						sendResponse(m_pollSocketsVec[i].fd);
-						_request.clear();
+						int check = receiveRequest(m_pollSocketsVec[i].fd, i);
+						if (check)
+						{
+							if (check == 2)
+								return;
+							continue;
+						}
+						if (m_pollSocketsVec[i].revents & POLLOUT)
+						{ // this could be an issue
+							sendResponse(m_pollSocketsVec[i].fd);
+							std::cout << COLOR_CYAN << currentBodySize << COLOR_RESET << std::endl;
+							_request.clear();
+							currentBodySize = 0;
+							expectedBodySize = 0;
+							std::cout << COLOR_CYAN << "SENT THE RESPONSE" << COLOR_RESET << std::endl;
+						}
 					}
 				}
 			}
@@ -214,10 +218,6 @@ void WebServerProg::startProgram()
 		servers = parseConfigFile(defaultFileName);
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
-		for (auto it = servers.begin(); it != servers.end(); it++)
-		{
-			printServer(*it);
-		}
 		initServers();
 	}
 	catch (const std::exception& e)
