@@ -49,7 +49,6 @@ std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
     if (clientIt != m_clientDataMap.end())
     {
         std::map<std::string, std::string>::iterator headerIt = clientIt->second.requestData.find(header);
-
         if (headerIt != clientIt->second.requestData.end())
         {
             return headerIt->second;
@@ -69,9 +68,26 @@ void	WebServerProg::deleteDataInMap(int clientSocket)
 	it->second.requestData.clear();
 }
 
+bool hasCgiExtension(const std::string& filePath) {
+    size_t dotPosition = filePath.find_last_of('.');
+
+    return dotPosition != std::string::npos &&
+           filePath.substr(dotPosition) == ".py";
+}
+
 void WebServerProg::sendResponse(int clientSocket)
 {
 	char method = accessDataInMap(clientSocket, "Method")[0];
+	
+	std::cout << COLOR_GREEN;
+    if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
+	{
+		CgiHandler Cgi;
+		_request.append(Cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request, method));//
+    }
+
+	std::cout << COLOR_RESET;
+
 	switch (method) {
 		case GET:
 			getResponse(clientSocket);
@@ -144,7 +160,7 @@ int WebServerProg::acceptConnection(int listenSocket)
     int clientSocket = accept(listenSocket, NULL, NULL);
     if (clientSocket < 0)
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        if (errno == EAGAIN || errno == EWOULDBLOCK) //this needs to be removed
             return -1;
         errnoPrinting("Accept", errno);
         return -1; 

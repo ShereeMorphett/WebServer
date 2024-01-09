@@ -54,27 +54,35 @@ const char* serverEnviroment[24] =
    "SERVER_SIGNATURE","SERVER_SOFTWARE" 
 };
 
-
 void CgiHandler::setupEnvironment(std::string _request, char method, const std::string& scriptPath, int pipesIn[2])
 {
-	std::cerr << COLOR_GREEN << "in setup Environment" << COLOR_RESET << std::endl;
     for (int i = 0; i < 24; ++i)
     {
         char* value = getenv(serverEnviroment[i]);
         if (value != NULL)
             cgiEnvironment[serverEnviroment[i]] = value;
     }
+
+    std::string fullUri = scriptPath + "?" + _request;  // Append query string
     cgiEnvironment["GATEWAY_INTERFACE"] = std::string("CGI/1.1");
     cgiEnvironment["SCRIPT_FILENAME"] = scriptPath;
     cgiEnvironment["PATH_INFO"] = scriptPath;
     cgiEnvironment["PATH_TRANSLATED"] = scriptPath;
-    cgiEnvironment["REQUEST_URI"] = scriptPath;
+    cgiEnvironment["REQUEST_URI"] = fullUri;  // Set the complete URI
     cgiEnvironment["SERVER_PORT"] = "8080"; //needs a better way
     cgiEnvironment["REQUEST_METHOD"] = method;
     cgiEnvironment["SERVER_PROTOCOL"] = "HTTP/1.1";
-	std::cerr << COLOR_GREEN << method << std::endl;
+    cgiEnvironment["QUERY_STRING"] = _request;
+
     if (method == POST)
     {
+        // Extract parameters from the request body
+        size_t pos = _request.find("\r\n\r\n");
+        if (pos != std::string::npos)
+        {
+            std::string requestBody = _request.substr(pos + 4);
+            cgiEnvironment["QUERY_STRING"] = requestBody;
+        }
         std::stringstream out;
         out << _request.length();
         cgiEnvironment["CONTENT_LENGTH"] = out.str();
@@ -88,7 +96,6 @@ void CgiHandler::setupEnvironment(std::string _request, char method, const std::
 
 void CgiHandler::executeCgi(const std::string& scriptName)
 {
-	std::cerr << COLOR_GREEN << "in execute cgi" << COLOR_RESET << std::endl;
     char* envArray[cgiEnvironment.size() + 1];
     int i = 0;
     for (std::map<std::string, std::string>::const_iterator it = cgiEnvironment.begin(); it != cgiEnvironment.end(); ++it)
@@ -100,12 +107,10 @@ void CgiHandler::executeCgi(const std::string& scriptName)
     {
         perror("execve");
     }
-    exit(EXIT_FAILURE);
 }
 
 std::string CgiHandler::readCgiOutput(int pipesOut[2])
 {
-	std::cerr << COLOR_GREEN << "in readCgiOutput" << COLOR_RESET << std::endl;
     close(pipesOut[1]); // Close write end of the pipe
     char buffer[4096];
     ssize_t bytesRead;
@@ -118,13 +123,13 @@ std::string CgiHandler::readCgiOutput(int pipesOut[2])
     }
 
     close(pipesOut[0]);
-
+    
+	std::cerr << COLOR_MAGENTA << buffer << COLOR_RESET << std::endl;	
     return output;
 }
 
 std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _request, char method)
 {
-	std::cerr << COLOR_GREEN << "in runCgi" << COLOR_RESET << std::endl;
     int pipesIn[2];
     int pipesOut[2];
     setupEnvironment(_request, method, scriptPath, pipesIn);
@@ -158,7 +163,6 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
 	close(pipesOut[1]);
 	dup2(resetStdin, STDIN_FILENO);
 	dup2(resetStdout, STDOUT_FILENO);
-
 	std::cerr << COLOR_GREEN << cgiOutput << COLOR_RESET << std::endl;	
     return cgiOutput; // should this be the buffer?
 }

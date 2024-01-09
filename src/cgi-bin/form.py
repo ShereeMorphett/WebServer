@@ -1,15 +1,28 @@
 #!/usr/bin/python3
+import cgi
+import os
+import sys
 
 print("Content-type: text/html\n\n")
-import cgi
 
 # Get form data
 form = cgi.FieldStorage()
 
+
+# Add these lines to your Python script
+import cgitb
+cgitb.enable()
+
+query_string = form.getvalue("QUERY_STRING")
+print("Content-type: text/html\n\n")
+print(f"Received QUERY_STRING: {query_string}")
+content_length = int(os.environ.get("CONTENT_LENGTH", 0))
+post_data = sys.stdin.read(content_length)
+print(f"Received POST data: {post_data}")
 # Retrieve values from the form
 name = form.getvalue('name')
 lastName = form.getvalue('lastName')
-textcontent = form.getvalue('textcontent')  # Add this line to retrieve textcontent
+textcontent = form.getvalue('textcontent')
 
 
 for key in form.keys():
