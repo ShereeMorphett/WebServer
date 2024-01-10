@@ -68,7 +68,8 @@ void	WebServerProg::deleteDataInMap(int clientSocket)
 	it->second.requestData.clear();
 }
 
-bool hasCgiExtension(const std::string& filePath) {
+bool hasCgiExtension(const std::string& filePath)
+{
     size_t dotPosition = filePath.find_last_of('.');
 
     return dotPosition != std::string::npos &&
@@ -83,23 +84,21 @@ void WebServerProg::sendResponse(int clientSocket)
     if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler Cgi;
-		_request.append(Cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request, method));//
+		_response.append(Cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request, method));//
+		std::cout << _response << std::endl;
     }
-
 	std::cout << COLOR_RESET;
 
 	switch (method) {
 		case GET:
 			getResponse(clientSocket);
 			break;
-
 		case POST:
 			postResponse(clientSocket);
 			break;
 		case DELETE:
 			deleteResponse(clientSocket);
 			break;
-		
 		default:
 			break;
 	}
@@ -146,7 +145,7 @@ void WebServerProg::initServers()
 		if (listen(listenSocket, MAXSOCKET) < 0)
 		{
 			errnoPrinting("Listen", errno);
-			return  ;
+			return ;
 		}
 		servers[i].socketFD = listenSocket;
 		addSocketToPoll(listenSocket, POLLIN);
@@ -212,7 +211,7 @@ void WebServerProg::runPoll()
 							continue;
 						}
 						if (m_pollSocketsVec[i].revents & POLLOUT)
-						{ // this could be an issue
+						{
 							sendResponse(m_pollSocketsVec[i].fd);
 							std::cout << COLOR_CYAN << currentBodySize << COLOR_RESET << std::endl;
 							_request.clear();

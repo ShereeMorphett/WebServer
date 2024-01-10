@@ -3,12 +3,12 @@
 <head>
     <title>Practice Form</title>
     <style>
-              h1 {
+        h1 {
             color: rgb(0, 128, 128);
             display: inline-block; 
             margin-right: 10px; 
         }
-		.form-container {
+        .form-container {
             padding: 20px;
             margin: 20px;
             border: 1px solid #ccc;
@@ -53,15 +53,15 @@
 </head>
 <body>
     <h1>CGI demonstration</h1>
-	<img src="../src/cgi-bin/penguinPlaceholder.jpg" alt="Image Description" class="small-image">
+    <img src="../src/cgi-bin/penguinPlaceholder.jpg" alt="Image Description" class="small-image">
     <div class="form-container">
         <h2>Registration Form</h2>
         <form action="../src/cgi-bin/form.py" method="post">
-            <label for="First">Name:</label>
-            <input type="text" name="name" required><br>
+            <label for="name">Name:</label>
+            <input type="text" name="name" id="name" required><br>
  
-            <label for="Last Name">Last Name:</label>
-            <input type="text" name="lastName" required><br>
+            <label for="lastName">Last Name:</label>
+            <input type="text" name="lastName" id="lastName" required><br>
  
             <input type="submit" name="submit">
         </form>
@@ -71,11 +71,11 @@
             <input type="file" name="file" id="file" required><br>
             <input type="submit" value="Upload">
         </form>
-        <form action="../src/cgi-bin/form.py" method="post" target="post">
+        <form action="../src/cgi-bin/hello_world.py" method="post" target="post">
             <label for="textcontent">Text Content:</label>
             <textarea name="textcontent" id="textcontent" cols="40" rows="4" oninput="handleInput(this)">Type your text here...</textarea><br>
             <input type="submit" value="Submit">
-         </form>
+        </form>
     </div>
 
     <script>

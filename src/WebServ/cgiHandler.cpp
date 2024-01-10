@@ -63,30 +63,32 @@ void CgiHandler::setupEnvironment(std::string _request, char method, const std::
             cgiEnvironment[serverEnviroment[i]] = value;
     }
 
-    std::string fullUri = scriptPath + "?" + _request;  // Append query string
+    
     cgiEnvironment["GATEWAY_INTERFACE"] = std::string("CGI/1.1");
     cgiEnvironment["SCRIPT_FILENAME"] = scriptPath;
     cgiEnvironment["PATH_INFO"] = scriptPath;
     cgiEnvironment["PATH_TRANSLATED"] = scriptPath;
-    cgiEnvironment["REQUEST_URI"] = fullUri;  // Set the complete URI
     cgiEnvironment["SERVER_PORT"] = "8080"; //needs a better way
-    cgiEnvironment["REQUEST_METHOD"] = method;
+    if (method == 'P')
+        cgiEnvironment["REQUEST_METHOD"] = "POST";
+    if (method == 'G')
+        cgiEnvironment["REQUEST_METHOD"] = "GET";
+    if (method == 'D')
+        cgiEnvironment["REQUEST_METHOD"] = "DELETE";
     cgiEnvironment["SERVER_PROTOCOL"] = "HTTP/1.1";
-    cgiEnvironment["QUERY_STRING"] = _request;
-
     if (method == POST)
     {
-        // Extract parameters from the request body
         size_t pos = _request.find("\r\n\r\n");
         if (pos != std::string::npos)
         {
             std::string requestBody = _request.substr(pos + 4);
             cgiEnvironment["QUERY_STRING"] = requestBody;
         }
+        std::string fullUri = scriptPath + "?" + cgiEnvironment["QUERY_STRING"];
+        cgiEnvironment["REQUEST_URI"] = fullUri;
         std::stringstream out;
         out << _request.length();
         cgiEnvironment["CONTENT_LENGTH"] = out.str();
-
         dup2(pipesIn[0], STDIN_FILENO);
         close(pipesIn[1]);
         write(pipesIn[0], _request.c_str(), _request.length());
@@ -96,18 +98,31 @@ void CgiHandler::setupEnvironment(std::string _request, char method, const std::
 
 void CgiHandler::executeCgi(const std::string& scriptName)
 {
-    char* envArray[cgiEnvironment.size() + 1];
+    const char* envArray[cgiEnvironment.size() + 1];
     int i = 0;
-    for (std::map<std::string, std::string>::const_iterator it = cgiEnvironment.begin(); it != cgiEnvironment.end(); ++it)
+            std::cerr << COLOR_MAGENTA << "PRINTING ENV ARRAY \n\n"<< COLOR_RESET << std::endl;
+    for (const auto& entry : cgiEnvironment)
     {
-        envArray[i++] = strdup((it->first + "=" + it->second).c_str());
+        envArray[i++] = strdup((entry.first + "=" + entry.second).c_str());
+        std::cerr << COLOR_MAGENTA << envArray[i - 1] << "\n" << COLOR_RESET << std::endl;
     }
-    envArray[i] = NULL;
-    if (execve(scriptName.c_str(), const_cast<char* const*>(envArray), NULL) == -1)
+    envArray[i] = nullptr;
+
+    const char* scriptArray[3];
+    scriptArray[0] = "/usr/bin/python3";
+    // scriptArray[1] = "src/cgi-bin/form.py";
+    scriptArray[1] = "src/cgi-bin/hello_world.py";
+    scriptArray[2] = nullptr;
+    (void)scriptName;
+    std::cerr << COLOR_GREEN << "In\n" << COLOR_RESET << std::endl;
+    if (execve("/usr/bin/python3", const_cast<char* const*>(scriptArray), const_cast<char* const*>(envArray)) == -1)
     {
         perror("execve");
+        std::cerr << COLOR_RED << "execve" << COLOR_RESET << std::endl;
     }
+    std::cerr << COLOR_GREEN << "OUT\n" << COLOR_RESET << std::endl;
 }
+
 
 std::string CgiHandler::readCgiOutput(int pipesOut[2])
 {
@@ -123,8 +138,6 @@ std::string CgiHandler::readCgiOutput(int pipesOut[2])
     }
 
     close(pipesOut[0]);
-    
-	std::cerr << COLOR_MAGENTA << buffer << COLOR_RESET << std::endl;	
     return output;
 }
 
@@ -146,9 +159,10 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
         // Child process
         dup2(pipesIn[0], STDIN_FILENO);
         dup2(pipesOut[1], STDOUT_FILENO);
-        close(pipesOut[0]);
-        close(pipesIn[1]);
+      
         executeCgi(scriptPath);
+        close(pipesIn[1]);
+        close(pipesOut[0]);
     }
     else
     {
@@ -163,7 +177,6 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
 	close(pipesOut[1]);
 	dup2(resetStdin, STDIN_FILENO);
 	dup2(resetStdout, STDOUT_FILENO);
-	std::cerr << COLOR_GREEN << cgiOutput << COLOR_RESET << std::endl;	
     return cgiOutput; // should this be the buffer?
 }
 
