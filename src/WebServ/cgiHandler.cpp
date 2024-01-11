@@ -63,8 +63,9 @@ void CgiHandler::setupEnvironment(std::string _request, char method, const std::
             cgiEnvironment[serverEnviroment[i]] = value;
     }
 
+	std::cerr << COLOR_CYAN << _request << COLOR_RESET << std::endl;
     
-    cgiEnvironment["GATEWAY_INTERFACE"] = std::string("CGI/1.1");
+	cgiEnvironment["GATEWAY_INTERFACE"] = std::string("CGI/1.1");
     cgiEnvironment["SCRIPT_FILENAME"] = scriptPath;
     cgiEnvironment["PATH_INFO"] = scriptPath;
     cgiEnvironment["PATH_TRANSLATED"] = scriptPath;
@@ -76,8 +77,7 @@ void CgiHandler::setupEnvironment(std::string _request, char method, const std::
     if (method == 'D')
         cgiEnvironment["REQUEST_METHOD"] = "DELETE";
     cgiEnvironment["SERVER_PROTOCOL"] = "HTTP/1.1";
-    if (method == POST)
-    {
+
         size_t pos = _request.find("\r\n\r\n");
         if (pos != std::string::npos)
         {
@@ -93,7 +93,6 @@ void CgiHandler::setupEnvironment(std::string _request, char method, const std::
         close(pipesIn[1]);
         write(pipesIn[0], _request.c_str(), _request.length());
         close(pipesIn[0]);
-    }
 }
 
 void CgiHandler::executeCgi(const std::string& scriptName)
@@ -109,13 +108,12 @@ void CgiHandler::executeCgi(const std::string& scriptName)
     envArray[i] = nullptr;
 
     const char* scriptArray[3];
-    scriptArray[0] = "/usr/bin/python3";
-    // scriptArray[1] = "src/cgi-bin/form.py";
-    scriptArray[1] = "src/cgi-bin/hello_world.py";
+    scriptArray[0] = "/Users/smorphet/.brew/bin/python3";
+//    scriptArray[1] = "src/cgi-bin/form.sh";
+    scriptArray[1] = "src/cgi-bin/form.py";
     scriptArray[2] = nullptr;
     (void)scriptName;
-    std::cerr << COLOR_GREEN << "In\n" << COLOR_RESET << std::endl;
-    if (execve("/usr/bin/python3", const_cast<char* const*>(scriptArray), const_cast<char* const*>(envArray)) == -1)
+    if (execve("/Users/smorphet/.brew/bin/python3", const_cast<char* const*>(scriptArray), const_cast<char* const*>(envArray)) == -1)
     {
         perror("execve");
         std::cerr << COLOR_RED << "execve" << COLOR_RESET << std::endl;
@@ -159,10 +157,9 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
         // Child process
         dup2(pipesIn[0], STDIN_FILENO);
         dup2(pipesOut[1], STDOUT_FILENO);
-      
-        executeCgi(scriptPath);
         close(pipesIn[1]);
         close(pipesOut[0]);
+        executeCgi(scriptPath);
     }
     else
     {
@@ -170,18 +167,16 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
         int status;
         waitpid(cgiPid, &status, 0);
         cgiOutput = readCgiOutput(pipesOut);
+		close(pipesIn[0]);
+		close(pipesIn[1]);
+		close(pipesOut[0]);
+		close(pipesOut[1]);
     }
-	close(pipesIn[0]);
-	close(pipesIn[1]);
-	close(pipesOut[0]);
-	close(pipesOut[1]);
 	dup2(resetStdin, STDIN_FILENO);
 	dup2(resetStdout, STDOUT_FILENO);
     return cgiOutput; // should this be the buffer?
 }
 
+CgiHandler::CgiHandler(){}
 
-
-   CgiHandler::CgiHandler(){}
-
-   CgiHandler::~CgiHandler(){}
+CgiHandler::~CgiHandler(){}

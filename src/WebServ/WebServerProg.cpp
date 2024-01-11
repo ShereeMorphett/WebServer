@@ -72,8 +72,8 @@ bool hasCgiExtension(const std::string& filePath)
 {
     size_t dotPosition = filePath.find_last_of('.');
 
-    return dotPosition != std::string::npos &&
-           filePath.substr(dotPosition) == ".py";
+    return dotPosition != std::string::npos && (filePath.substr(dotPosition) == ".py" ||
+           filePath.substr(dotPosition) == ".sh");
 }
 
 void WebServerProg::sendResponse(int clientSocket)
@@ -201,8 +201,8 @@ void WebServerProg::runPoll()
 				}
 				else
 				{
-					while (currentBodySize >= expectedBodySize)
-					{
+					// while (currentBodySize >= expectedBodySize)
+					// {
 						int check = receiveRequest(m_pollSocketsVec[i].fd, i);
 						if (check)
 						{
@@ -219,7 +219,7 @@ void WebServerProg::runPoll()
 							expectedBodySize = 0;
 							std::cout << COLOR_CYAN << "SENT THE RESPONSE" << COLOR_RESET << std::endl;
 						}
-					}
+					//}
 				}
 			}
 		}
