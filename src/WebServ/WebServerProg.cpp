@@ -84,12 +84,12 @@ void WebServerProg::sendResponse(int clientSocket)
     if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
+		appendStatus(_response, OK); //this needs to be fluid
 		_response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request));
-		std::cout << _response << std::endl;
     }
-	std::cout << COLOR_RESET;
-
-	switch (method) {
+	else
+	{	
+		switch (method) {
 		case GET:
 			getResponse(clientSocket);
 			break;
@@ -101,7 +101,9 @@ void WebServerProg::sendResponse(int clientSocket)
 			break;
 		default:
 			break;
+		}
 	}
+	
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{

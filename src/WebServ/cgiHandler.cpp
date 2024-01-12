@@ -136,7 +136,6 @@ void CgiHandler::executeCgi(const std::string& scriptName)
         perror("execve");
         std::cerr << COLOR_RED << "execve" << COLOR_RESET << std::endl;
     }
-    std::cerr << COLOR_GREEN << "OUT\n" << COLOR_RESET << std::endl;
 }
 
 
