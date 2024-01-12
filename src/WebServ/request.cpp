@@ -161,8 +161,8 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	{
 		std::string request(buffer, buffer + bytes_received);
 		_request = buffer;
-		std::cout << COLOR_RED << "Request: " << "\n";
-		std::cout << COLOR_RED << _request << COLOR_RESET << std::endl;
+		// std::cout << COLOR_RED << "Request: " << "\n";
+		// std::cout << COLOR_RED << _request << COLOR_RESET << std::endl;
 		parseRequest(clientSocket, request);
 	}
 	if (currentBodySize == expectedBodySize) 

@@ -18,7 +18,7 @@
 #include "utils.hpp"
 #include "CgiHandler.hpp"
 
-# define MAXSOCKET 10
+# define MAXSOCKET 20
 
 
 static void errnoPrinting(std::string message, int error) 
@@ -79,8 +79,7 @@ bool hasCgiExtension(const std::string& filePath)
 void WebServerProg::sendResponse(int clientSocket)
 {
 	char method = accessDataInMap(clientSocket, "Method")[0];
-	
-	std::cout << COLOR_GREEN;
+
     if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
@@ -184,8 +183,8 @@ void WebServerProg::runPoll()
 		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 5000);
 		if (pollResult < 0)
 		{
-			std::cout << "Error! poll" << std::endl;
-			exit (1);
+			std::cerr << "Error! poll" << std::endl;
+			return ;
 		}	 
 		if (pollResult == 0)
 			continue;
@@ -213,11 +212,9 @@ void WebServerProg::runPoll()
 						if (m_pollSocketsVec[i].revents & POLLOUT)
 						{
 							sendResponse(m_pollSocketsVec[i].fd);
-							std::cout << COLOR_CYAN << currentBodySize << COLOR_RESET << std::endl;
 							_request.clear();
 							currentBodySize = 0;
 							expectedBodySize = 0;
-							std::cout << COLOR_CYAN << "SENT THE RESPONSE" << COLOR_RESET << std::endl;
 						}
 				}
 			}
