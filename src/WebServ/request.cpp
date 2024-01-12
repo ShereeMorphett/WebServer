@@ -38,6 +38,22 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 	}
 }
 
+bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
+{
+	for (const auto& location : getClientServer(clientSocket).locations)
+	{
+		if (location.locationPath == clientRequestMap.find("Path")->second)
+		{
+			for (const auto& methods : location.allowedMethods)
+			{
+					if (methods == clientRequestMap.find("Method")->second)
+					return true;
+			}
+		}
+	}
+	return false;
+}
+
 void WebServerProg::parseRequest(int clientSocket, std::string request)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
@@ -51,7 +67,6 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
 	clientRequestMap.insert(std::make_pair("Method", token));
-	//////we should check methods permissions here but im unsure how 
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
 	createPath(getClientServer(clientSocket), clientRequestMap, token);
@@ -59,7 +74,6 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
 	clientRequestMap.insert(std::make_pair("HTTP-version", token));
-
 	std::string line;
 	requestStream.ignore();
 	requestStream.ignore();// Ignore /r and /n
@@ -74,8 +88,8 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 		key = line.substr(0, pos);
 		value = line.substr(pos + 1);
 
-		size_t valueStart = value.find_first_not_of(" \t");
-		value = value.substr(valueStart);
+            size_t valueStart = value.find_first_not_of(" \t");
+            value = value.substr(valueStart);
 
 		if (key.size() != 1)
 			clientRequestMap.insert(std::make_pair(key, value));
@@ -91,16 +105,32 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 			}
 		}
 	}
+	if (validateRequest(clientSocket, clientRequestMap) == false)
+		std::runtime_error("Invalid request error!");
+
 	if (clientRequestMap.find("Content-Length") != clientRequestMap.end())
 	{
 		char buffer[16384] = {};
 		std::istringstream bodyLengthStream(clientRequestMap.find("Content-Length")->second);
 		int bodyLength;
-
 		if (!(bodyLengthStream >> bodyLength))
 			std::runtime_error("Request parsing error!");
-		requestStream.read(buffer, bodyLength);
-		std::string bodyStr(buffer, buffer + bodyLength);
+		bodySize = bodyLength;
+
+		std::ostringstream bodyStream;
+		while (bodyLength > 0)
+		{
+			int bytesRead = requestStream.readsome(buffer, std::min(static_cast<std::streamsize>(sizeof(buffer)), static_cast<std::streamsize>(bodyLength)));
+			std::cout << COLOR_GREEN << "bytesRead:	" << bytesRead  << COLOR_RESET << std::endl;
+			if (bytesRead <= 0)
+			{
+				std::runtime_error("Failed to read the entire body!");
+				break;
+			}
+			bodyStream.write(buffer, bytesRead);
+			bodyLength -= bytesRead;
+		}
+		std::string bodyStr = bodyStream.str();
 		clientRequestMap.insert(std::make_pair("Body", bodyStr));
 	}
 	
@@ -116,11 +146,9 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
-		{
 			return 1;
-		}
 		std::cout << "Error! recv" << std::endl;
-		exit (1);
+		return 2;
 	}
 	else if (bytes_received == 0)
 	{
@@ -134,10 +162,9 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	{
 		std::string request(buffer, buffer + bytes_received);
 		_request = buffer;
-		// std::cout << "Request: " << "\n";
-		// std::cout << _request << std::endl;
+		std::cout << COLOR_RED << "Request: " << "\n";
+		std::cout << COLOR_RED << _request << COLOR_RESET << std::endl;
 		parseRequest(clientSocket, request);
-
 	}
 	return 0;
 }

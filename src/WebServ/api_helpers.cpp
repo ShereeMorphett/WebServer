@@ -99,10 +99,12 @@ void	appendStatus(std::string& _res, int status) {
 		case NO_CONTENT:
 			_res.append(" No Content");
 			break;
+ 
 		default:
 			break;
 	}
 	_res.append(NEW_VALUE);
+  
 }
 
 // Append content type, length and actual body

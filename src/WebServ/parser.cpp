@@ -50,8 +50,8 @@ static location parseLocation(std::istream &stream, std::string extValue)
 		}
 		else if (key == "default_file")
 			temp.defaultFile = value;
-		else if (key == "cgi_Path")
-			temp.cgiPath = "PLACEHOLDER TEXT";
+		else if (key == "cgi_path")
+        	temp.cgiPath = value; 
 		line.clear();
     }
 	return temp;
