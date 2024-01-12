@@ -134,8 +134,6 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 		clientRequestMap.insert(std::make_pair("Body", bodyStr));
 		currentBodySize += clientRequestMap.find("Body")->second.size();
 	}
-	
-	printMultimap(clientRequestMap);
 }
 
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)

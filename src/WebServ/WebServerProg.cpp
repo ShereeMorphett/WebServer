@@ -55,7 +55,7 @@ std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
         }
     }
     std::cout << COLOR_RED << "Not found- error issues" << COLOR_RESET << std::endl;
-	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl; //header is body after CGI form
+	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl;
     return NULL;
 }
 
@@ -83,8 +83,8 @@ void WebServerProg::sendResponse(int clientSocket)
 	std::cout << COLOR_GREEN;
     if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
-		CgiHandler Cgi;
-		_response.append(Cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request, method));//
+		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
+		_response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request));
 		std::cout << _response << std::endl;
     }
 	std::cout << COLOR_RESET;
@@ -201,8 +201,6 @@ void WebServerProg::runPoll()
 				}
 				else
 				{
-					// while (currentBodySize >= expectedBodySize)
-					// {
 						int check = receiveRequest(m_pollSocketsVec[i].fd, i);
 						if (check)
 						{
@@ -219,7 +217,6 @@ void WebServerProg::runPoll()
 							expectedBodySize = 0;
 							std::cout << COLOR_CYAN << "SENT THE RESPONSE" << COLOR_RESET << std::endl;
 						}
-					//}
 				}
 			}
 		}
