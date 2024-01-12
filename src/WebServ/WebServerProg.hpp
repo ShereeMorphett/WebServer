@@ -68,7 +68,6 @@ class WebServerProg
 		WebServerProg();
 		WebServerProg(std::string fileName);
 		~WebServerProg();
-		// void	deleteResponse(int clientSocket);
 		void	postResponse(int clientSocket);
 		void	getResponse(int clientSocket);
 		void	deleteResponse(int clientSocket);
