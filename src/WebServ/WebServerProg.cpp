@@ -165,7 +165,7 @@ void WebServerProg::runPoll()
 {
 	while (true)
 	{
-		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 5000);
+		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 2000);
 		if (pollResult < 0)
 		{
 			std::cout << "Error! poll" << std::endl;
@@ -211,7 +211,7 @@ void WebServerProg::startProgram()
 {
 	try
 	{
-		servers = parseConfigFile(defaultFileName);
+		servers = parseConfigFile(configFileName);
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
 		for (auto it = servers.begin(); it != servers.end(); it++)
@@ -231,13 +231,11 @@ void WebServerProg::startProgram()
 
 WebServerProg::WebServerProg() : serverCount(0)
 {	
-	defaultFileName = "DefaultConfig.conf";
+	configFileName = "config/DefaultConfig.conf";
 }
 
-WebServerProg::WebServerProg(std::string fileName)
-{
-	defaultFileName = fileName;
-}
+WebServerProg::WebServerProg(std::string fileName) : serverCount(0) , configFileName(fileName)
+{}
 
 WebServerProg::~WebServerProg()
 {
