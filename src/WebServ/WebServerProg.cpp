@@ -83,7 +83,6 @@ void WebServerProg::sendResponse(int clientSocket)
     if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
-		appendStatus(_response, OK); //this needs to be fluid
 		_response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request));
     }
 	else
