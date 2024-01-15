@@ -18,7 +18,7 @@
 #include "utils.hpp"
 #include "CgiHandler.hpp"
 
-# define MAXSOCKET 10
+# define MAXSOCKET 25
 
 
 static void errnoPrinting(std::string message, int error) 
@@ -93,7 +93,6 @@ void WebServerProg::sendResponse(int clientSocket)
 		std::cout << "Error! send" << "\n";
 		exit(EXIT_FAILURE);
 	}
-	// std::cout << "Response sent: " << _response << "\n";
 	deleteDataInMap(clientSocket);
 	_response.clear();
 }
@@ -165,7 +164,7 @@ void WebServerProg::runPoll()
 {
 	while (true)
 	{
-		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 2000);
+		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 1000);
 		if (pollResult < 0)
 		{
 			std::cout << "Error! poll" << std::endl;
@@ -180,7 +179,6 @@ void WebServerProg::runPoll()
 				if (i < serverCount)
 				{
 					addSocketToPoll(accept(m_pollSocketsVec[i].fd, NULL, NULL), POLLIN);
-					
 					int flags = fcntl(m_pollSocketsVec.back().fd, F_GETFL, 0);
 					fcntl(m_pollSocketsVec.back().fd, F_SETFL, flags | O_NONBLOCK);
 					initClientData(m_pollSocketsVec.back().fd, i);
@@ -189,7 +187,6 @@ void WebServerProg::runPoll()
 				else
 				{
 					int check = receiveRequest(m_pollSocketsVec[i].fd, i);
-					std::cout << COLOR_GREEN << "Check:	" << check  << "BodySize:	" << bodySize <<  "		_request.size()	" << _request.size() << COLOR_RESET << std::endl;
 					if (check)
 					{
 						if (check == 2)
