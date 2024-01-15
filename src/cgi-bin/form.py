@@ -1,52 +1,30 @@
-#!/usr/bin/python3
 
-print("Content-type: text/html\n\n")
-import cgi
 
-# Get form data
-form = cgi.FieldStorage()
+#!/Users/smorphet/.brew/bin/python3
+import os
+from urllib.parse import unquote
+import sys
 
-# Retrieve values from the form
-name = form.getvalue('name')
-lastName = form.getvalue('lastName')
-textcontent = form.getvalue('textcontent')  # Add this line to retrieve textcontent
+def get_parameter_value(key, query_string):
+    key_value_pairs = query_string.split('&')
+    for pair in key_value_pairs:
+        k, v = pair.split('=')
+        if k == key:
+            return v
 
-# HTML response
-print("<html>")
-print("<head>")
-print("<img src='/Users/smorphet/Desktop/WebServer/src/cgi-bin/penguinPlaceholder.jpg' alt='Image Description'>")
-print("<title>Registration Confirmation</title>")
-# Embedding an image
-print("<style>")
-print("  /* Style for the card container */")
-print("  .card {")
-print("    width: 300px;")
-print("    padding: 20px;")
-print("    margin: 20px auto;")
-print("    border: 1px solid #ccc;")
-print("    border-radius: 5px;")
-print("    text-align: center;")
-print("  }")
-print("</style>")
-print("</head>")
-print("<body>")
-print("<div class='card'>")
-print("<h2>Registration Confirmation</h2>")
+def main():
+    query_string = os.environ.get("QUERY_STRING")
+    decoded_string = unquote(query_string)
 
-if name is not None:
-    print("<p>Name: " + name + "</p>")
-else:
-    print("<p>Name not provided</p>")
+    # Extract values for "name" and "lastName" from the query string
+    name = get_parameter_value("name", decoded_string)
+    last_name = get_parameter_value("lastName", decoded_string)
 
-if lastName is not None:
-    print("<p>Last Name: " + lastName + "</p>")
-else:
-    print("<p>Last Name not provided</p>")
+    # Basic HTML response displaying the extracted values
+    response = f"HTTP/1.1 200 OKContent-Type: text/html\r\n\r\n<!DOCTYPE html>\n<html>\n<head>\n<title>Query String</title>\n</head>\n<body>\n<p>Name: {name}</p>\n<p>Last Name: {last_name}</p>\n</body>\n</html>"
 
-if textcontent is not None:
-    print("<p>Text Content: " + textcontent + "</p>")
-else:
-    print("<p>Text Content not provided</p>")
-print("</div>")
-print("</body>")
-print("</html>")
+    # Send the response to the browser
+    sys.stdout.write(response)
+
+if __name__ == '__main__':
+    main()

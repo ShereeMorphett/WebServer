@@ -1,9 +1,11 @@
 #!/usr/bin/python3
-
-print("Content-type: text/html\n\n")
 import cgi
 import os
 
+
+
+print("HTTP/1.1 200 OK")
+print("Content-type: text/html\r\n\r\n")
 form = cgi.FieldStorage()
 
 # Check if the file field is present in the form

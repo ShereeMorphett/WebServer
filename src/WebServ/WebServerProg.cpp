@@ -211,10 +211,10 @@ void WebServerProg::startProgram()
 		servers = parseConfigFile(configFileName);
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
-		for (auto it = servers.begin(); it != servers.end(); it++)
-		{
-			printServer(*it);
-		}
+		// for (auto it = servers.begin(); it != servers.end(); it++)
+		// {
+		// 	printServer(*it);
+		// }
 		initServers();
 	}
 	catch (const std::exception& e)
