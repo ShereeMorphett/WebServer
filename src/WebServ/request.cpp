@@ -22,12 +22,12 @@ server& WebServerProg::getClientServer(int clientSocket)
 static void createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path)
 {
 	for (std::vector<location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
-	{
+	{	
 		if (path == it->locationPath)
 		{
 			char buffer[1024];
 			memset(buffer, 0, sizeof(buffer));
-			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->locationPath));
+			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->locationPath + it->defaultFile));
 		}
 		else if (it == server.locations.end() - 1)
 		{
@@ -161,7 +161,7 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	{
 		std::string request(buffer, buffer + bytes_received);
 		_request = buffer;
-		// std::cout << COLOR_RED << "Request: " << "\n";
+		// std::cout << COLOR_BLUE << "Request: " << "\n";
 		// std::cout << COLOR_RED << _request << COLOR_RESET << std::endl;
 		parseRequest(clientSocket, request);
 	}

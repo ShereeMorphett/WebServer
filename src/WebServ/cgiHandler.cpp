@@ -196,7 +196,7 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
     }
 	dup2(resetStdin, STDIN_FILENO);
 	dup2(resetStdout, STDOUT_FILENO);
-    return cgiOutput; // should this be the buffer?
+    return cgiOutput;
 }
 
 CgiHandler::CgiHandler(std::multimap<std::string, std::string> requestData): _requestData(requestData)
