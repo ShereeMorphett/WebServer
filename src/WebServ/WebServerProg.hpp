@@ -42,7 +42,7 @@ class WebServerProg
 		std::vector<struct pollfd> m_pollSocketsVec;
 		std::vector<server> servers;
 		size_t serverCount;
-		std::string defaultFileName;
+		std::string configFileName;
 		
 		std::map<int, struct clientData> m_clientDataMap;
 		std::string	_response;

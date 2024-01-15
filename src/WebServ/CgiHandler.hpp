@@ -12,6 +12,6 @@ class CgiHandler
     
     public:
         std::string runCgi(const std::string& scriptPath, std::string & _request, char method);
-        CgiHandler(); //probably dont need defaults
+        CgiHandler();
         ~CgiHandler();
 };
