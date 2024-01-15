@@ -160,7 +160,7 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
     int pipesIn[2];
     int pipesOut[2];
 	
-		std::cerr << COLOR_RED << "In CGI hangler" << COLOR_RESET << std::endl;
+	std::cerr << COLOR_MAGENTA << "Printing multi map" << std::endl;
 	printMultimap(_requestData);
 	std::cerr << COLOR_RESET;
     setupEnvironment(scriptPath, pipesIn, _request);
@@ -195,7 +195,6 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
     }
 	dup2(resetStdin, STDIN_FILENO);
 	dup2(resetStdout, STDOUT_FILENO);
-	std::cerr << COLOR_RED << cgiOutput << COLOR_RESET << std::endl;
     return cgiOutput;
 }
 

@@ -1,5 +1,3 @@
-
-
 #!/Users/smorphet/.brew/bin/python3
 import os
 from urllib.parse import unquote
@@ -21,7 +19,7 @@ def main():
     last_name = get_parameter_value("lastName", decoded_string)
 
     # Basic HTML response displaying the extracted values
-    response = f"HTTP/1.1 200 OKContent-Type: text/html\r\n\r\n<!DOCTYPE html>\n<html>\n<head>\n<title>Query String</title>\n</head>\n<body>\n<p>Name: {name}</p>\n<p>Last Name: {last_name}</p>\n</body>\n</html>"
+    response = f"Content-Type: text/html\r\n\r\n<!DOCTYPE html>\n<html>\n<head>\n<title>Query String</title>\n</head>\n<body>\n<p>Name: {name}</p>\n<p>Last Name: {last_name}</p>\n</body>\n</html>"
 
     # Send the response to the browser
     sys.stdout.write(response)
