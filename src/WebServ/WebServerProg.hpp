@@ -46,8 +46,9 @@ class WebServerProg
 		
 		std::map<int, struct clientData> m_clientDataMap;
 		std::string	_response;
-		std::string	_request; 
-		size_t		bodySize; 
+		std::string	_request;
+		size_t		currentBodySize; 
+		size_t		expectedBodySize;
 
 	public:
 
