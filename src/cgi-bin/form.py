@@ -6,9 +6,12 @@ import sys
 def get_parameter_value(key, query_string):
     key_value_pairs = query_string.split('&')
     for pair in key_value_pairs:
-        k, v = pair.split('=')
-        if k == key:
-            return v
+        if '=' in pair:
+            k, v = pair.split('=')
+            if k == key:
+                return v
+    return None
+
 
 def main():
     query_string = os.environ.get("QUERY_STRING")

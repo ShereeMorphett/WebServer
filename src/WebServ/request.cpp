@@ -102,7 +102,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	clientRequestMap.insert(std::make_pair("HTTP-version", token));
 	std::string line;
 	requestStream.ignore();
-	requestStream.ignore();// Ignore /r and /n
+	requestStream.ignore();
 	while (std::getline(requestStream, line, '\r'))
 	{
 		std::string key;

@@ -5,7 +5,7 @@ NAME = WebServ
 CC = c++
 
 # compiler flags
-CFLAGS = -std=c++14 -Wall -Werror -Wextra -MMD -fsanitize=address
+CFLAGS = -std=c++11 -Wall -Werror -Wextra -MMD -fsanitize=address
 DEBUG_FLAGS = -g
 
 # src files and path for them

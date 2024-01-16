@@ -137,7 +137,6 @@ void CgiHandler::executeCgi(const std::string& scriptName)
     }
 }
 
-
 std::string CgiHandler::readCgiOutput(int pipesOut[2])
 {
     close(pipesOut[1]); 
