@@ -19,6 +19,26 @@ server& WebServerProg::getClientServer(int clientSocket)
 	return servers[it->second.serverIndex];
 }
 
+static int	countDepth(std::string path)
+{
+	int	depth = 0;
+
+	for (size_t i = 0; i < path.size(); i++)
+	{
+		if (path[i] == '/')
+			depth++;
+	}
+
+	return depth;
+}
+
+static bool	isFile(std::string path)
+{
+	if (path.find('.') != std::string::npos)
+		return true;
+	return false;
+}
+
 static void createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path)
 {
 	for (std::vector<location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
@@ -27,7 +47,13 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 		{
 			char buffer[1024];
 			memset(buffer, 0, sizeof(buffer));
-			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->locationPath + it->defaultFile));
+			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + '/' + it->defaultFile));
+		}
+		else if (countDepth(path) <= ROOT && isFile(path))
+		{
+			char buffer[1024];
+			memset(buffer, 0, sizeof(buffer));
+			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + '/' + path));
 		}
 		else if (it == server.locations.end() - 1)
 		{
