@@ -16,6 +16,28 @@ enum Listing
     OFF
 };
 
+static	std::string	checkRoot(std::string& root)
+{
+	if (root[0] != '/')
+		throw std::runtime_error("Root path must start with '/'");
+	if (root[root.size() - 1] == '/')
+		throw std::runtime_error("Root path must NOT end with '/'");
+	if (root.find('.') != std::string::npos)
+		throw std::runtime_error("Root path must NOT contain '.'");
+	
+	return root;
+}
+
+static std::string	checkDefaultFile(std::string& defaultFile)
+{
+	if (defaultFile.find('/') != std::string::npos)
+		throw std::runtime_error("Default file path must NOT contain '/', include only file name.");
+	if (defaultFile.find('.') == std::string::npos)
+		throw std::runtime_error("Default file path must contain '.', please enter valid filename.");
+
+	return defaultFile;
+}
+
 static location parseLocation(std::istream &stream, std::string extValue)
 {
     char c;
@@ -41,7 +63,7 @@ static location parseLocation(std::istream &stream, std::string extValue)
 		else if (key == "redirection")
 			temp.redirection = value;
 		else if (key == "root")
-			temp.root = value;
+			temp.root = checkRoot(value);
 		else if (key == "listing")
 		{
 			temp.listing = ON;
@@ -49,7 +71,7 @@ static location parseLocation(std::istream &stream, std::string extValue)
 				temp.listing = OFF;	
 		}
 		else if (key == "default_file")
-			temp.defaultFile = value;
+			temp.defaultFile = checkDefaultFile(value);
 		else if (key == "cgi_path")
         	temp.cgiPath = value; 
 		line.clear();

@@ -2,6 +2,7 @@
 # define CONSTANTS_HPP
 
 # define	BUFFER_SIZE		10240
+# define	ROOT			1
 
 // Status codes
 # define	ERRORS			400
