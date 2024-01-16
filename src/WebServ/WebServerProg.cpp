@@ -18,7 +18,7 @@
 #include "utils.hpp"
 #include "CgiHandler.hpp"
 
-# define MAXSOCKET 20
+# define MAXSOCKET 25
 
 
 static void errnoPrinting(std::string message, int error) 
@@ -226,7 +226,7 @@ void WebServerProg::startProgram()
 {
 	try
 	{
-		servers = parseConfigFile(defaultFileName);
+		servers = parseConfigFile(configFileName);
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
 		initServers();
@@ -242,13 +242,11 @@ void WebServerProg::startProgram()
 
 WebServerProg::WebServerProg() : serverCount(0)
 {	
-	defaultFileName = "DefaultConfig.conf";
+	configFileName = "config/DefaultConfig.conf";
 }
 
-WebServerProg::WebServerProg(std::string fileName)
-{
-	defaultFileName = fileName;
-}
+WebServerProg::WebServerProg(std::string fileName) : serverCount(0) , configFileName(fileName)
+{}
 
 WebServerProg::~WebServerProg()
 {
