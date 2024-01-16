@@ -40,6 +40,19 @@ static int validateErrorPage(const server &servers)
     return 0;
 }
 
+// static int validateServerConfigurations(const std::vector<struct server> &servers)
+// {
+//     for (auto it1 = servers.begin(); it1 != servers.end(); ++it1)
+//     {
+//         for (auto it2 = std::next(it1); it2 != servers.end(); ++it2)
+//         {
+//             if (it1->port == it2->port && it1->serverName == it2->serverName)
+// 				throw std::runtime_error("Server config file is invalid: Servers on the same port MUST have different configurations");
+//         }
+//     }
+//     return 0; 
+// }
+
 /*
     Port numbers 1024 - 65535 are available for the following user applications:
     Port numbers 1024 - 49151 are reserved for user server applications.

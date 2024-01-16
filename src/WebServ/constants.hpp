@@ -16,6 +16,12 @@
 # define	ACCEPTED		202
 # define	NO_CONTENT		204
 
+// Request status
+# define	REQUEAST_DONE			0
+# define	REQUEAST_NOT_DONE		1
+# define	REQUEST_ERROR			2
+# define	REQUEST_CLIENT_CLOSED	3
+
 // Response formatting lines
 # define	HTTP_HEADER	"HTTP/1.1 "
 # define 	END_HEADER	"\r\n\r\n"

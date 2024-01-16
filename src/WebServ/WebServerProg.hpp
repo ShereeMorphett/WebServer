@@ -31,8 +31,9 @@ struct server
 
 struct clientData
 {
-	int 									serverIndex;
-	std::multimap<std::string, std::string> requestData;
+	int 			serverIndex;
+	std::string 	headers;
+	std::string 	body;
 };
 
 
@@ -56,10 +57,15 @@ class WebServerProg
 		void startProgram();
 		void initServers();
 		void sendResponse(int clientSocket);
-		std::string accessDataInMap(int clientSocket, std::string header);
-		void deleteDataInMap(int clientSocket);
-		void parseRequest(int clientSocket, std::string request);
-		bool receiveRequest(int clientSocket, int pollIndex);
+
+
+		// std::string accessDataInMap(int clientSocket, std::string header);
+
+		int receiveRequest(int clientSocket, int pollIndex);
+		clientData&	getClientData(int clientSocket);
+		std::string extractHeader(int clientSocket, std::string header);
+
+		// void deleteDataInMap(int clientSocket);
 		int  acceptConnection(int listenSocket);
 		void runPoll();
 		server& getClientServer(int clientSocket);

@@ -39,7 +39,7 @@ void	WebServerProg::getResponse(int clientSocket) {
 	std::string	path;
 	int	status = 200;
 
-	path = accessDataInMap(clientSocket, "Path");
+	path = extractHeader(clientSocket, "Path");
 	checkRequest(&status, path);
 	if (status >= ERRORS) {
 		char buffer[1024] = {};

@@ -42,36 +42,36 @@ void WebServerProg::initClientData(int clientSocket, int serverIndex)
 	m_clientDataMap.insert(std::make_pair(clientSocket, data));
 }
 
-std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
-{
-    std::map<int, clientData>::iterator clientIt = m_clientDataMap.find(clientSocket);
+// std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
+// {
+//     std::map<int, clientData>::iterator clientIt = m_clientDataMap.find(clientSocket);
 
-    if (clientIt != m_clientDataMap.end())
-    {
-        std::map<std::string, std::string>::iterator headerIt = clientIt->second.requestData.find(header);
+//     if (clientIt != m_clientDataMap.end())
+//     {
+//         std::map<std::string, std::string>::iterator headerIt = clientIt->second.requestData.find(header);
 
-        if (headerIt != clientIt->second.requestData.end())
-        {
-            return headerIt->second;
-        }
-    }
-    std::cout << COLOR_RED << "Not found- error issues" << COLOR_RESET << std::endl;
-	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl; //header is body after CGI form
-    return NULL;
-}
+//         if (headerIt != clientIt->second.requestData.end())
+//         {
+//             return headerIt->second;
+//         }
+//     }
+//     std::cout << COLOR_RED << "Not found- error issues" << COLOR_RESET << std::endl;
+// 	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl; //header is body after CGI form
+//     return NULL;
+// }
 
 
-void	WebServerProg::deleteDataInMap(int clientSocket)
-{
-	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
-	if (it == m_clientDataMap.end())
-		return;
-	it->second.requestData.clear();
-}
+// void	WebServerProg::deleteDataInMap(int clientSocket)
+// {
+// 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
+// 	if (it == m_clientDataMap.end())
+// 		return;
+// 	it->second.requestData.clear();
+// }
 
 void WebServerProg::sendResponse(int clientSocket)
 {
-	char method = accessDataInMap(clientSocket, "Method")[0];
+	char method = extractHeader(clientSocket, "Method")[0];
 	switch (method) {
 		case GET:
 			getResponse(clientSocket);
@@ -93,8 +93,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		std::cout << "Error! send" << "\n";
 		exit(EXIT_FAILURE);
 	}
-	// std::cout << "Response sent: " << _response << "\n";
-	deleteDataInMap(clientSocket);
+	// deleteDataInMap(clientSocket);
 	_response.clear();
 }
 
