@@ -101,8 +101,6 @@ void WebServerProg::sendResponse(int clientSocket)
 			break;
 		}
 	}
-	_response.clear();
-	_response.append(createDirectoryListing(accessDataInMap(clientSocket, "Path")));
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{
