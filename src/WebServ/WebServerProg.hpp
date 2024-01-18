@@ -35,7 +35,6 @@ struct clientData
 	std::multimap<std::string, std::string> requestData;
 };
 
-
 class WebServerProg
 {
 	private:
@@ -47,6 +46,7 @@ class WebServerProg
 		std::map<int, struct clientData> m_clientDataMap;
 		std::string	_response;
 		std::string	_request;
+		int			_status;
 		size_t		currentBodySize; 
 		size_t		expectedBodySize;
 

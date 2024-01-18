@@ -3,6 +3,7 @@
 
 # define	BUFFER_SIZE		10240
 # define	ROOT			1
+# define	NOT_SET			0
 
 // Status codes
 # define	ERRORS			400
@@ -12,6 +13,7 @@
 # define	UNAUTHORIZED	401
 # define	FORBIDDEN		403
 # define	NOT_FOUND		404
+# define	NOT_ALLOWED		405
 # define	TOO_LARGE		413
 # define	INT_ERROR		500
 # define	ACCEPTED		202
@@ -37,6 +39,7 @@
 # define	NOT_FOUND_PAGE		"/src/defaults/404.html"
 # define	FORBIDDEN_PAGE		"/src/defaults/403.html"
 # define	UNAUTHORIZED_PAGE	"/src/defaults/401.html"
+# define	NOT_ALLOWED_PAGE	"/src/defaults/405.html"
 # define	SERVER_PAGE			"/src/defaults/500.html"
 
 // All methods server supports
