@@ -41,6 +41,15 @@ static bool	isFile(std::string path)
 
 static void createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path)
 {
+	int	depth = countDepth(path);
+	if (depth > ROOT)
+	{
+		std::string newPath = path.substr(0, path.find_first_of('/', 1));
+		clientRequestMap.insert(std::make_pair("requestPath", newPath));
+	}
+	else
+		clientRequestMap.insert(std::make_pair("requestPath", "/"));
+	
 	for (std::vector<location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
 	{	
 		if (path == it->locationPath)
@@ -49,7 +58,7 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 			memset(buffer, 0, sizeof(buffer));
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + '/' + it->defaultFile));
 		}
-		else if (countDepth(path) <= ROOT && isFile(path))
+		else if (depth <= ROOT && isFile(path))
 		{
 			char buffer[1024];
 			memset(buffer, 0, sizeof(buffer));
@@ -68,11 +77,13 @@ bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string,
 {
 	for (const auto& location : getClientServer(clientSocket).locations)
 	{
-		if (location.locationPath == clientRequestMap.find("Path")->second)
+		std::cout << location.locationPath << " == " << clientRequestMap.find("requestPath")->second << std::endl;
+		if (location.locationPath == clientRequestMap.find("requestPath")->second)
 		{
+			std::cout << COLOR_GREEN << "Found location" << COLOR_RESET << std::endl;
 			for (const auto& methods : location.allowedMethods)
 			{
-					if (methods == clientRequestMap.find("Method")->second)
+				if (methods == clientRequestMap.find("Method")->second)
 					return true;
 			}
 		}
@@ -131,10 +142,12 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 			}
 		}
 	}
-	if (validateRequest(clientSocket, clientRequestMap) == false)
-		std::runtime_error("Invalid request error!");
-
-	if (clientRequestMap.find("Content-Length") != clientRequestMap.end())
+	if (!validateRequest(clientSocket, clientRequestMap))
+	{
+		std::cerr << COLOR_RED << "Method not allowed\n" << COLOR_RESET;
+		_status = NOT_ALLOWED;
+	}
+	else if (clientRequestMap.find("Content-Length") != clientRequestMap.end())
 	{
 		char buffer[16384] = {};
 		std::istringstream bodyLengthStream(clientRequestMap.find("Content-Length")->second);

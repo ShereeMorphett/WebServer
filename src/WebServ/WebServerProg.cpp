@@ -80,9 +80,20 @@ void WebServerProg::sendResponse(int clientSocket)
 {
 	char method = accessDataInMap(clientSocket, "Method")[0];
 
-    if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
+	if (_status >= ERRORS) 
+	{
+		char buffer[1024] = {};
+		std::string path = chooseErrorPage(_status);
+		path = getcwd(buffer, sizeof(buffer)) + path;
+		std::string body = readFile(path);
+
+		appendStatus(_response, _status);
+		appendBody(_response, body, path);
+	}
+    else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
+		appendStatus(_response, OK); //this needs to be fluid --> what about other cases than 200 OK?
 		_response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request));
     }
 	else
@@ -211,6 +222,7 @@ void WebServerProg::runPoll()
 						{
 							sendResponse(m_pollSocketsVec[i].fd);
 							_request.clear();
+							_status = NOT_SET;
 							currentBodySize = 0;
 							expectedBodySize = 0;
 						}

@@ -3,6 +3,7 @@
 #include "constants.hpp"
 #include "utils.hpp"
 #include "Color.hpp"
+#include <unistd.h>
 
 static std::string	fetchName(std::string& body) {
 	std::string	target = "filename=\"";
@@ -32,23 +33,24 @@ static void	appendMisc(std::string& _res) {
 }
 
 void	WebServerProg::postResponse(int clientSocket) {
-	int	status = OK;
-
 	std::string 	body = accessDataInMap(clientSocket, "Body");
 	std::string		fileName = fetchName(body);
 	if (fileName == "error") {
 		// Means filename was not provided by headers
+		std::cout << COLOR_RED << "Error: filename not provided\n" << COLOR_RESET;
+		return ;
 	}
 
 	std::ofstream	outFile(fileName, std::ios::binary);
 	if (!outFile) {
-		status = INT_ERROR;
+		_status = INT_ERROR;
 		std::cerr << "Error: ofstream\n";
 		return;
 	}
 	outFile << body;
 	outFile.close();
-
-	appendStatus(_response, status);
+	
+	_status = OK;
+	appendStatus(_response, _status);
 	appendMisc(_response);
 }
