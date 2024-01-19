@@ -14,8 +14,6 @@ static int validateLocation(const server &servers)
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
         if (servers.locations[i].locationPath.empty())
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
-        // if (servers.locations[i].redirection.empty())
-        //     throw std::runtime_error("Server config file is invalid: Invalid location in server"); can redirection be empty???
         if (servers.locations[i].listing < 0 || servers.locations[i].listing > 1)
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
         if (servers.locations[i].root.empty())
@@ -33,25 +31,24 @@ static int validateErrorPage(const server &servers)
     {
         if (it->first < 100 || it->first > 599)
             throw std::runtime_error("Server config file is invalid: Invalid Error Code in server");
-
         if (it->second.empty())
             throw std::runtime_error("Server config file is invalid: Empty Error Page Path in server");
     }
     return 0;
 }
 
-// static int validateServerConfigurations(const std::vector<struct server> &servers)
-// {
-//     for (auto it1 = servers.begin(); it1 != servers.end(); ++it1)
-//     {
-//         for (auto it2 = std::next(it1); it2 != servers.end(); ++it2)
-//         {
-//             if (it1->port == it2->port && it1->serverName == it2->serverName)
-// 				throw std::runtime_error("Server config file is invalid: Servers on the same port MUST have different configurations");
-//         }
-//     }
-//     return 0; 
-// }
+static int validateServerConfigurations(const std::vector<struct server> &servers)
+{
+    for (auto it1 = servers.begin(); it1 != servers.end(); ++it1)
+    {
+        for (auto it2 = std::next(it1); it2 != servers.end(); ++it2)
+        {
+            if (it1->port == it2->port && it1->serverName == it2->serverName)
+				throw std::runtime_error("Server config file is invalid: Servers on the same port MUST have different configurations");
+        }
+    }
+    return 0; 
+}
 
 /*
     Port numbers 1024 - 65535 are available for the following user applications:
@@ -66,14 +63,15 @@ void validateServers(const std::vector<struct server> &servers) //if there is an
         if(servers[i].port < 1024 && servers[i].port > 49151)
             throw std::runtime_error("Server config file is invalid: Invalid port");
         if(servers[i].clientMaxBodySize <= 0)
-            throw std::runtime_error("Server config file is invalid: Client Max Body Size invalid");        
+            throw std::runtime_error("Server config file is invalid: Client Max Body Size invalid");
         if(servers[i].socketFD < 0)
-            throw std::runtime_error("Server config file is invalid: Socket file descriptor invaild");        
+            throw std::runtime_error("Server config file is invalid: Socket file descriptor invaild");
         if (validateErrorPage(servers[i]))
-         throw std::runtime_error("Server config file is invalid: Error pages invaild");
+			throw std::runtime_error("Server config file is invalid: Error pages invaild");
         if (validateLocation(servers[i]))
-         throw std::runtime_error("Server config file is invalid: Locations invaild");
+			throw std::runtime_error("Server config file is invalid: Locations invaild");
+		if(validateServerConfigurations(servers))
+			throw std::runtime_error("Server config file is invalid: Servers on the same port MUST have different configurations");
     }
     std::cout << COLOR_GREEN << "Servers are valid" << COLOR_RESET << std::endl;
-
 }

@@ -29,7 +29,7 @@ void WebServerProg::deleteResponse(int clientSocket)
     std::string body = "";
     int status = OK;
 
-    path = extractHeader(clientSocket, "Path");
+    path = accessDataInMap(clientSocket, "Path");
     struct stat fileStat;
     if (stat(path.c_str(), &fileStat) == 0)
     {

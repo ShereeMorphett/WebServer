@@ -2,6 +2,8 @@
 # define CONSTANTS_HPP
 
 # define	BUFFER_SIZE		10240
+# define	ROOT			1
+# define	NOT_SET			0
 
 // Status codes
 # define	ERRORS			400
@@ -11,17 +13,11 @@
 # define	UNAUTHORIZED	401
 # define	FORBIDDEN		403
 # define	NOT_FOUND		404
+# define	NOT_ALLOWED		405
 # define	TOO_LARGE		413
 # define	INT_ERROR		500
 # define	ACCEPTED		202
 # define	NO_CONTENT		204
-
-// Request status
-# define	REQUEST_DONE			0
-# define	REQUEST_NOT_DONE		1
-# define	REQUEST_ERROR			2
-# define	REQUEST_CLIENT_CLOSED	3
-# define	REQUEST_TOO_BIG			4
 
 // Response formatting lines
 # define	HTTP_HEADER	"HTTP/1.1 "
@@ -43,6 +39,7 @@
 # define	NOT_FOUND_PAGE		"/src/defaults/404.html"
 # define	FORBIDDEN_PAGE		"/src/defaults/403.html"
 # define	UNAUTHORIZED_PAGE	"/src/defaults/401.html"
+# define	NOT_ALLOWED_PAGE	"/src/defaults/405.html"
 # define	SERVER_PAGE			"/src/defaults/500.html"
 
 // All methods server supports

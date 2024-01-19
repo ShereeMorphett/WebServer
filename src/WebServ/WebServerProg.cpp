@@ -18,7 +18,7 @@
 #include "utils.hpp"
 #include "CgiHandler.hpp"
 
-# define MAXSOCKET 10
+# define MAXSOCKET 25
 
 
 static void errnoPrinting(std::string message, int error) 
@@ -42,59 +42,84 @@ void WebServerProg::initClientData(int clientSocket, int serverIndex)
 	m_clientDataMap.insert(std::make_pair(clientSocket, data));
 }
 
-// std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
-// {
-//     std::map<int, clientData>::iterator clientIt = m_clientDataMap.find(clientSocket);
+std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
+{
+    std::map<int, clientData>::iterator clientIt = m_clientDataMap.find(clientSocket);
 
-//     if (clientIt != m_clientDataMap.end())
-//     {
-//         std::map<std::string, std::string>::iterator headerIt = clientIt->second.requestData.find(header);
+    if (clientIt != m_clientDataMap.end())
+    {
+        std::map<std::string, std::string>::iterator headerIt = clientIt->second.requestData.find(header);
+        if (headerIt != clientIt->second.requestData.end())
+        {
+            return headerIt->second;
+        }
+    }
+    std::cout << COLOR_RED << "Not found- error issues" << COLOR_RESET << std::endl;
+	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl;
+    return NULL;
+}
 
-//         if (headerIt != clientIt->second.requestData.end())
-//         {
-//             return headerIt->second;
-//         }
-//     }
-//     std::cout << COLOR_RED << "Not found- error issues" << COLOR_RESET << std::endl;
-// 	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl; //header is body after CGI form
-//     return NULL;
-// }
 
+void	WebServerProg::deleteDataInMap(int clientSocket)
+{
+	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
+	if (it == m_clientDataMap.end())
+		return;
+	it->second.requestData.clear();
+}
 
-// void	WebServerProg::deleteDataInMap(int clientSocket)
-// {
-// 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
-// 	if (it == m_clientDataMap.end())
-// 		return;
-// 	it->second.requestData.clear();
-// }
+bool hasCgiExtension(const std::string& filePath)
+{
+    size_t dotPosition = filePath.find_last_of('.');
+
+    return dotPosition != std::string::npos && (filePath.substr(dotPosition) == ".py" ||
+           filePath.substr(dotPosition) == ".sh");
+}
 
 void WebServerProg::sendResponse(int clientSocket)
 {
-	char method = extractHeader(clientSocket, "Method")[0];
-	switch (method) {
+	char method = accessDataInMap(clientSocket, "Method")[0];
+
+	if (_status >= ERRORS) 
+	{
+		char buffer[1024] = {};
+		std::string path = chooseErrorPage(_status);
+		path = getcwd(buffer, sizeof(buffer)) + path;
+		std::string body = readFile(path);
+
+		appendStatus(_response, _status);
+		appendBody(_response, body, path);
+	}
+    else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
+	{
+		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
+		appendStatus(_response, OK); //this needs to be fluid --> what about other cases than 200 OK?
+		_response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request));
+    }
+	else
+	{	
+		switch (method) {
 		case GET:
 			getResponse(clientSocket);
 			break;
-
 		case POST:
-			std::cout << "test here" << std::endl;
 			postResponse(clientSocket);
 			break;
 		case DELETE:
 			deleteResponse(clientSocket);
 			break;
-		
 		default:
 			break;
+		}
 	}
+	
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{
 		std::cout << "Error! send" << "\n";
 		exit(EXIT_FAILURE);
 	}
-	// deleteDataInMap(clientSocket);
+	deleteDataInMap(clientSocket);
 	_response.clear();
 }
 
@@ -131,7 +156,7 @@ void WebServerProg::initServers()
 		if (listen(listenSocket, MAXSOCKET) < 0)
 		{
 			errnoPrinting("Listen", errno);
-			return  ;
+			return ;
 		}
 		servers[i].socketFD = listenSocket;
 		addSocketToPoll(listenSocket, POLLIN);
@@ -145,7 +170,7 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
     int clientSocket = accept(listenSocket, NULL, NULL);
     if (clientSocket < 0)
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        if (errno == EAGAIN || errno == EWOULDBLOCK) //this needs to be removed
             return -1;
         errnoPrinting("Accept", errno);
         return -1; 
@@ -157,23 +182,25 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
         return -1;
     }
     addSocketToPoll(clientSocket, POLLIN);
-	initClientData(m_pollSocketsVec.back().fd, serverIndex);
+	initClientData(clientSocket, serverIndex);
     std::cout << COLOR_GREEN << "New connection accepted on client socket " << clientSocket << COLOR_RESET << std::endl;
     return clientSocket;
 }
 
 void WebServerProg::processRequest(int clientIndex)
 {
-	int check  = receiveRequest(m_pollSocketsVec[clientIndex].fd, clientIndex);
-	std::cout << COLOR_GREEN << "Check:	" << check  << "\nBodySize:	" << bodySize <<  "\n_request.size()	" << _request.size() << COLOR_RESET << std::endl;
+	int check = receiveRequest(m_pollSocketsVec[clientIndex].fd, clientIndex);
 	if (check)
 	{
-		return ;
+		return;
 	}
-	if (_request.size() >= bodySize)
+	if (m_pollSocketsVec[clientIndex].revents & POLLOUT)
 	{
 		sendResponse(m_pollSocketsVec[clientIndex].fd);
 		_request.clear();
+		_status = NOT_SET;
+		currentBodySize = 0;
+		expectedBodySize = 0;
 	}
 }
 
@@ -199,12 +226,11 @@ void WebServerProg::runPoll()
 {
 	while (true)
 	{
-		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 5000);
-
+		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 1000);
 		if (pollResult < 0)
 		{
-			std::cout << "Error! poll" << std::endl;
-			exit (1);
+			std::cerr << "Error! poll" << std::endl;
+			return ;
 		}	 
 		if (pollResult == 0)
 			continue;
@@ -217,13 +243,9 @@ void WebServerProg::startProgram()
 {
 	try
 	{
-		servers = parseConfigFile(defaultFileName);
+		servers = parseConfigFile(configFileName);
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
-		for (auto it = servers.begin(); it != servers.end(); it++)
-		{
-			printServer(*it);
-		}
 		initServers();
 	}
 	catch (const std::exception& e)
@@ -237,13 +259,11 @@ void WebServerProg::startProgram()
 
 WebServerProg::WebServerProg() : serverCount(0)
 {	
-	defaultFileName = "DefaultConfig.conf";
+	configFileName = "config/DefaultConfig.conf";
 }
 
-WebServerProg::WebServerProg(std::string fileName)
-{
-	defaultFileName = fileName;
-}
+WebServerProg::WebServerProg(std::string fileName) : serverCount(0) , configFileName(fileName)
+{}
 
 WebServerProg::~WebServerProg()
 {

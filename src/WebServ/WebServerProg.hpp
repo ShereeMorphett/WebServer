@@ -31,11 +31,9 @@ struct server
 
 struct clientData
 {
-	int 			serverIndex;
-	std::string 	headers;
-	std::string 	body;
+	int 									serverIndex;
+	std::multimap<std::string, std::string> requestData;
 };
-
 
 class WebServerProg
 {
@@ -43,12 +41,15 @@ class WebServerProg
 		std::vector<struct pollfd> m_pollSocketsVec;
 		std::vector<server> servers;
 		size_t serverCount;
-		std::string defaultFileName;
+		std::string configFileName;
 		
 		std::map<int, struct clientData> m_clientDataMap;
 		std::string	_response;
-		std::string	_request; 
-		size_t		bodySize; 
+		std::string	_request;
+		int			_status;
+		size_t		currentBodySize; 
+		size_t		expectedBodySize;
+
 	public:
 
 		void addSocketToPoll(int socket, int event);
@@ -56,25 +57,21 @@ class WebServerProg
 		void startProgram();
 		void initServers();
 		void sendResponse(int clientSocket);
-
-
-		// std::string accessDataInMap(int clientSocket, std::string header);
-
-		void handleEvents();
-		void processRequest(int clientIndex);
-		int receiveRequest(int clientSocket, int pollIndex);
-		clientData&	getClientData(int clientSocket);
-		std::string extractHeader(int clientSocket, std::string header);
-
-		// void deleteDataInMap(int clientSocket);
-		int  acceptConnection(int listenSocket, int serverIndex);
+		std::string accessDataInMap(int clientSocket, std::string header);
+		void deleteDataInMap(int clientSocket);
+		void parseRequest(int clientSocket, std::string request);
+		bool receiveRequest(int clientSocket, int pollIndex);
+		int  acceptConnection(int listenSocket);
 		void runPoll();
 		server& getClientServer(int clientSocket);
 
+		void handleEvents();
+		void processRequest(int clientIndex);
+		int  acceptConnection(int listenSocket, int serverIndex);
+		
 		WebServerProg();
 		WebServerProg(std::string fileName);
 		~WebServerProg();
-		// void	deleteResponse(int clientSocket);
 		void	postResponse(int clientSocket);
 		void	getResponse(int clientSocket);
 		void	deleteResponse(int clientSocket);
