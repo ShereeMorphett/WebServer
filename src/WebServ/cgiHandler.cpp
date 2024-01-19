@@ -127,7 +127,7 @@ void CgiHandler::executeCgi(const std::string& scriptName)
     envArray[i] = nullptr;
     const char* scriptArray[3];
     scriptArray[0] = "/Users/smorphet/.brew/bin/python3";
-    scriptArray[1] = "src/cgi-bin/form.py";
+    scriptArray[1] = cgiEnvironment["PATH_INFO"].c_str();
     scriptArray[2] = nullptr;
     (void)scriptName;
     if (execve(scriptArray[0], const_cast<char* const*>(scriptArray), const_cast<char* const*>(envArray)) == -1)

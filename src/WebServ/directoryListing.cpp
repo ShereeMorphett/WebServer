@@ -20,7 +20,7 @@ static std::string buildLink(DIR *directory, std::string path, int depth = 0)
             bool isDirectory = (en->d_type == DT_DIR);
 
             std::string fullPath = entryPath;
-            std::string relativePath = fullPath;  // Start with the full path
+            std::string relativePath = fullPath;
 
             std::string fullLink = "<a href='" + fullPath + "'>" + entryName + "</a>";
 
@@ -41,10 +41,7 @@ static std::string buildLink(DIR *directory, std::string path, int depth = 0)
                 }
             }
             else
-            {
                 directoryFinding += fullLink;
-            }
-
             directoryFinding += "</p>\n";
         }
     }
@@ -52,31 +49,31 @@ static std::string buildLink(DIR *directory, std::string path, int depth = 0)
 }
 
 
-std::string WebServerProg::createDirectoryListing(std::string path)
+std::string WebServerProg::createDirectoryListing(std::string startingPath)
 {
     _response.append(HTTP_HEADER);
     _response.append(NEW_VALUE);
     _response.append("Content-Type: text/html\r\n");
     _response.append("OK\r\n");
     std::string directoryFinding;
-    DIR *directory = opendir(path.c_str());
+    DIR *directory = opendir(startingPath.c_str());
 
     if (directory == NULL)
     {
-        std::cerr << COLOR_RED << "Error: could not open " << path << COLOR_RESET << std::endl;
+        std::cerr << COLOR_RED << "Error: could not open " << startingPath << COLOR_RESET << std::endl;
         return "";
     }
 
     directoryFinding += "<!DOCTYPE html>\n\
                         <html>\n\
                         <head>\n\
-                            <title>" + path + "</title>\n\
+                            <title>" + startingPath + "</title>\n\
                         </head>\n\
                         <body>\n\
                             <h1>AUTOINDEX</h1>\n\
                             <p>\n";
 
-    directoryFinding += buildLink(directory, path);
+    directoryFinding += buildLink(directory, startingPath);
     directoryFinding += "\
                             </p>\n\
                         </body>\n\
