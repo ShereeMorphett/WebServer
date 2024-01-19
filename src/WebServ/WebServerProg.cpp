@@ -17,6 +17,7 @@
 #include "api_helpers.hpp"
 #include "utils.hpp"
 #include "CgiHandler.hpp"
+#include <sys/stat.h>
 
 # define MAXSOCKET 25
 
@@ -74,10 +75,23 @@ bool hasCgiExtension(const std::string& filePath)
     return dotPosition != std::string::npos && (filePath.substr(dotPosition) == ".py");
 }
 
+bool isDirectory(const std::string& path)
+{
+    struct stat fileInfo;
+    
+    if (stat(path.c_str(), &fileInfo) != 0)
+	{
+        std::cerr << "Error getting file information for " << path << std::endl;
+        return false;
+    }
+
+    return S_ISDIR(fileInfo.st_mode);
+}
+
 void WebServerProg::sendResponse(int clientSocket)
 {
 	char method = accessDataInMap(clientSocket, "Method")[0];
-
+	
 	if (_status >= ERRORS) 
 	{
 		char buffer[1024] = {};
@@ -87,6 +101,10 @@ void WebServerProg::sendResponse(int clientSocket)
 
 		appendStatus(_response, _status);
 		appendBody(_response, body, path);
+	}
+	else if (isDirectory(accessDataInMap(clientSocket, "Path")))
+	{
+		std::cout << COLOR_GREEN << "Location is a directory" << COLOR_RESET << std::endl;
 	}
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
@@ -238,13 +256,13 @@ void WebServerProg::startProgram()
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
 		initServers();
+		runPoll();
 	}
 	catch (const std::exception& e)
 	{
 		std::cout << COLOR_RED << "Error! " << e.what() << "Server cannot start" << COLOR_RESET << std::endl;
 		return ;
-	}	
-	runPoll();
+	}
 }
 
 

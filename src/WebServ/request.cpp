@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "constants.hpp"
 
+
 server& WebServerProg::getClientServer(int clientSocket)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
@@ -72,6 +73,9 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 		}
 	}
 }
+
+
+
 
 bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
 {

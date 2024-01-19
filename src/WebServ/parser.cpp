@@ -9,12 +9,9 @@
 #include "../Color.hpp"
 #include <cstdlib>
 #include "utils.hpp"
+#include "constants.hpp"
 
-enum Listing
-{
-    ON,
-    OFF
-};
+
 
 static	std::string	checkRoot(std::string& root)
 {
