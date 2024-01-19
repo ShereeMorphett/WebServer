@@ -34,7 +34,7 @@ static void	appendMisc(std::string& _res) {
 void	WebServerProg::postResponse(int clientSocket) {
 	int	status = OK;
 
-	std::string 	body = extractHeader(clientSocket, "Body");
+	std::string 	body = getClientData(clientSocket).body;
 	std::string		fileName = fetchName(body);
 	if (fileName == "error") {
 		// Means filename was not provided by headers

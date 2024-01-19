@@ -86,7 +86,7 @@ std::string WebServerProg::extractHeader(int clientSocket, std::string header)
 	return "";
 }
 
-int WebServerProg::receiveRequest(int clientSocket, __attribute__((unused))int pollIndex)
+int WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
 	char recvBuffer[8192] = {};
 
@@ -124,12 +124,13 @@ int WebServerProg::receiveRequest(int clientSocket, __attribute__((unused))int p
 			getClientData(clientSocket).headers = strBuffer.substr(0, pos);
 			if (extractHeader(clientSocket, "Method") == "POST")
 			{
+				if (std::stoi(extractHeader(clientSocket, "Content-Lenght")) > 8192)
+				{
+					return REQUEST_TOO_BIG;
+				}
 				getClientData(clientSocket).body = strBuffer.substr(pos + delimiter.length());
 			}
-			return REQUEAST_DONE;
-			// std::cout << extractHeader(clientSocket, "Cache-Control") << std::endl;
-			// exit(0);
-			// std::cout << headers << std::endl;
+			return REQUEST_DONE;
 		}
 	}
 	return 0;

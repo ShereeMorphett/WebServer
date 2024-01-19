@@ -17,10 +17,11 @@
 # define	NO_CONTENT		204
 
 // Request status
-# define	REQUEAST_DONE			0
-# define	REQUEAST_NOT_DONE		1
+# define	REQUEST_DONE			0
+# define	REQUEST_NOT_DONE		1
 # define	REQUEST_ERROR			2
 # define	REQUEST_CLIENT_CLOSED	3
+# define	REQUEST_TOO_BIG			4
 
 // Response formatting lines
 # define	HTTP_HEADER	"HTTP/1.1 "

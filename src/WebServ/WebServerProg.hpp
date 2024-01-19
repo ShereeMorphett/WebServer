@@ -49,7 +49,6 @@ class WebServerProg
 		std::string	_response;
 		std::string	_request; 
 		size_t		bodySize; 
-
 	public:
 
 		void addSocketToPoll(int socket, int event);
@@ -61,12 +60,14 @@ class WebServerProg
 
 		// std::string accessDataInMap(int clientSocket, std::string header);
 
+		void handleEvents();
+		void processRequest(int clientIndex);
 		int receiveRequest(int clientSocket, int pollIndex);
 		clientData&	getClientData(int clientSocket);
 		std::string extractHeader(int clientSocket, std::string header);
 
 		// void deleteDataInMap(int clientSocket);
-		int  acceptConnection(int listenSocket);
+		int  acceptConnection(int listenSocket, int serverIndex);
 		void runPoll();
 		server& getClientServer(int clientSocket);
 

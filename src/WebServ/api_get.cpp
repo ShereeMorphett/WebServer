@@ -34,7 +34,6 @@ void	checkRequest(int* status, std::string const & path) {
 	}
 }
 
-
 static std::string createPath(server& server, std::string path)
 {
 	for (auto it = server.locations.begin(); it != server.locations.end(); it++)
@@ -59,7 +58,6 @@ void	WebServerProg::getResponse(int clientSocket) {
 	int	status = 200;
 
 	path = createPath(getClientServer(clientSocket), extractHeader(clientSocket, "Path"));
-	std::cout << path << std::endl;
 	checkRequest(&status, path);
 	if (status >= ERRORS) {
 		char buffer[1024] = {};

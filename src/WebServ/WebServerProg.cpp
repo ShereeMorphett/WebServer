@@ -78,6 +78,7 @@ void WebServerProg::sendResponse(int clientSocket)
 			break;
 
 		case POST:
+			std::cout << "test here" << std::endl;
 			postResponse(clientSocket);
 			break;
 		case DELETE:
@@ -139,7 +140,7 @@ void WebServerProg::initServers()
 	return ;
 }
 
-int WebServerProg::acceptConnection(int listenSocket)
+int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
 {
     int clientSocket = accept(listenSocket, NULL, NULL);
     if (clientSocket < 0)
@@ -156,8 +157,42 @@ int WebServerProg::acceptConnection(int listenSocket)
         return -1;
     }
     addSocketToPoll(clientSocket, POLLIN);
+	initClientData(m_pollSocketsVec.back().fd, serverIndex);
     std::cout << COLOR_GREEN << "New connection accepted on client socket " << clientSocket << COLOR_RESET << std::endl;
     return clientSocket;
+}
+
+void WebServerProg::processRequest(int clientIndex)
+{
+	int check  = receiveRequest(m_pollSocketsVec[clientIndex].fd, clientIndex);
+	std::cout << COLOR_GREEN << "Check:	" << check  << "\nBodySize:	" << bodySize <<  "\n_request.size()	" << _request.size() << COLOR_RESET << std::endl;
+	if (check)
+	{
+		return ;
+	}
+	if (_request.size() >= bodySize)
+	{
+		sendResponse(m_pollSocketsVec[clientIndex].fd);
+		_request.clear();
+	}
+}
+
+void WebServerProg::handleEvents()
+{
+	for (size_t i  = 0; i < m_pollSocketsVec.size(); i++)
+	{
+		if (m_pollSocketsVec[i].revents & POLLIN)
+		{
+			if (i < serverCount)
+			{
+				acceptConnection(m_pollSocketsVec[i].fd, i);
+			}
+			else
+			{
+				processRequest(i);
+			}
+		}
+	}
 }
 
 void WebServerProg::runPoll()
@@ -165,6 +200,7 @@ void WebServerProg::runPoll()
 	while (true)
 	{
 		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 5000);
+
 		if (pollResult < 0)
 		{
 			std::cout << "Error! poll" << std::endl;
@@ -172,37 +208,8 @@ void WebServerProg::runPoll()
 		}	 
 		if (pollResult == 0)
 			continue;
-		for (size_t i  = 0; i < m_pollSocketsVec.size(); i++)
-		{
-			if (m_pollSocketsVec[i].revents & POLLIN)
-			{
-				if (i < serverCount)
-				{
-					addSocketToPoll(accept(m_pollSocketsVec[i].fd, NULL, NULL), POLLIN);
-					
-					int flags = fcntl(m_pollSocketsVec.back().fd, F_GETFL, 0);
-					fcntl(m_pollSocketsVec.back().fd, F_SETFL, flags | O_NONBLOCK);
-					initClientData(m_pollSocketsVec.back().fd, i);
-					std::cout << "New connection accepted on client socket" << std::endl;
-				}
-				else
-				{
-					int check = receiveRequest(m_pollSocketsVec[i].fd, i);
-					std::cout << COLOR_GREEN << "Check:	" << check  << "\nBodySize:	" << bodySize <<  "\n_request.size()	" << _request.size() << COLOR_RESET << std::endl;
-					if (check)
-					{
-						if (check == 2)
-							return;
-						continue;
-					}
-					if (_request.size() >= bodySize)
-					{
-						sendResponse(m_pollSocketsVec[i].fd);
-						_request.clear();
-					}
-				}
-			}
-		}
+
+		handleEvents();
 	}
 }
 
