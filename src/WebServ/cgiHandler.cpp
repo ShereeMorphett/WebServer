@@ -126,7 +126,7 @@ void CgiHandler::executeCgi(const std::string& scriptName)
     }
     envArray[i] = nullptr;
     const char* scriptArray[3];
-    scriptArray[0] = "/Users/smorphet/.brew/bin/python3";
+    scriptArray[0] = ".brew/bin/python3";
     scriptArray[1] = cgiEnvironment["PATH_INFO"].c_str();
     scriptArray[2] = nullptr;
     (void)scriptName;

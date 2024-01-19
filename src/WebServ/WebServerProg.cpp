@@ -71,9 +71,7 @@ void	WebServerProg::deleteDataInMap(int clientSocket)
 bool hasCgiExtension(const std::string& filePath)
 {
     size_t dotPosition = filePath.find_last_of('.');
-
-    return dotPosition != std::string::npos && (filePath.substr(dotPosition) == ".py" ||
-           filePath.substr(dotPosition) == ".sh");
+    return dotPosition != std::string::npos && (filePath.substr(dotPosition) == ".py");
 }
 
 void WebServerProg::sendResponse(int clientSocket)
@@ -93,7 +91,7 @@ void WebServerProg::sendResponse(int clientSocket)
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
-		appendStatus(_response, OK); //this needs to be fluid --> what about other cases than 200 OK?
+		appendStatus(_response, OK);
 		_response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request));
     }
 	else
