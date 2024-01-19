@@ -19,24 +19,6 @@ server& WebServerProg::getClientServer(int clientSocket)
 	return servers[it->second.serverIndex];
 }
 
-// static void createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path)
-// {
-// 	for (std::vector<location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
-// 	{
-// 		if (path == it->locationPath)
-// 		{
-// 			char buffer[1024];
-// 			memset(buffer, 0, sizeof(buffer));
-// 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->locationPath));
-// 		}
-// 		else if (it == server.locations.end() - 1)
-// 		{
-// 			char buffer[1024];
-// 			memset(buffer, 0, sizeof(buffer));
-// 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + path));
-// 		}
-// 	}
-// }
 
 bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
 {
@@ -97,10 +79,8 @@ std::string WebServerProg::extractHeader(int clientSocket, std::string header)
 		{
 			pos += header.length() + 2;
 			size_t headerEnd = clientHeaders.find('\r', pos);
-			std::cout << header.length() << std::endl;
 			std::string returnStr = clientHeaders.substr(pos, headerEnd - pos);
-			std::cout << "'" << returnStr << "'" << std::endl;
-			exit(0);
+			return returnStr;
 		}
 	}
 	return "";
@@ -142,9 +122,13 @@ int WebServerProg::receiveRequest(int clientSocket, __attribute__((unused))int p
 		if (pos != std::string::npos)
 		{
 			getClientData(clientSocket).headers = strBuffer.substr(0, pos);
-			std::cout << extractHeader(clientSocket, "Content-Type") << std::endl;
-			exit(0);
-			// body = strBuffer.substr(pos + delimiter.length());
+			if (extractHeader(clientSocket, "Method") == "POST")
+			{
+				getClientData(clientSocket).body = strBuffer.substr(pos + delimiter.length());
+			}
+			return REQUEAST_DONE;
+			// std::cout << extractHeader(clientSocket, "Cache-Control") << std::endl;
+			// exit(0);
 			// std::cout << headers << std::endl;
 		}
 	}

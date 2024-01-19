@@ -34,12 +34,32 @@ void	checkRequest(int* status, std::string const & path) {
 	}
 }
 
+
+static std::string createPath(server& server, std::string path)
+{
+	for (auto it = server.locations.begin(); it != server.locations.end(); it++)
+	{
+		if (path == it->locationPath)
+		{
+			char buffer[1024] = {};
+			return getcwd(buffer, sizeof(buffer)) + it->locationPath;
+		}
+		else if (it == server.locations.end() - 1)
+		{
+			char buffer[1024] = {};
+			return getcwd(buffer, sizeof(buffer)) + path;
+		}
+	}
+	return "";
+}
+
 void	WebServerProg::getResponse(int clientSocket) {
 	std::string body;
 	std::string	path;
 	int	status = 200;
 
-	path = extractHeader(clientSocket, "Path");
+	path = createPath(getClientServer(clientSocket), extractHeader(clientSocket, "Path"));
+	std::cout << path << std::endl;
 	checkRequest(&status, path);
 	if (status >= ERRORS) {
 		char buffer[1024] = {};

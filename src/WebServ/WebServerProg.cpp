@@ -188,7 +188,7 @@ void WebServerProg::runPoll()
 				else
 				{
 					int check = receiveRequest(m_pollSocketsVec[i].fd, i);
-					std::cout << COLOR_GREEN << "Check:	" << check  << "BodySize:	" << bodySize <<  "		_request.size()	" << _request.size() << COLOR_RESET << std::endl;
+					std::cout << COLOR_GREEN << "Check:	" << check  << "\nBodySize:	" << bodySize <<  "\n_request.size()	" << _request.size() << COLOR_RESET << std::endl;
 					if (check)
 					{
 						if (check == 2)
