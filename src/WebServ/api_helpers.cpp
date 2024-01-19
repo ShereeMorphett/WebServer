@@ -64,6 +64,9 @@ std::string	chooseErrorPage(int status) {
 		case NOT_FOUND:
 			return NOT_FOUND_PAGE;
 
+		case NOT_ALLOWED:
+			return NOT_ALLOWED_PAGE;
+
 		default:
 			break; 
 	}
@@ -137,10 +140,11 @@ void	checkRequest(int* status, std::string const & path)
 			*status = OK;
 		else
 			*status = NOT_FOUND;
+		file.close();
 	}
 	else
 	{	
-		std::cerr << COLOR_RED << "Error opening file: " << path << COLOR_RESET << std::endl;
+		std::cerr << COLOR_RED << "Error opening file: " << path << COLOR_RESET << "\n";
 		*status = NOT_FOUND;
 	}
 }
