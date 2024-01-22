@@ -105,6 +105,7 @@ void WebServerProg::sendResponse(int clientSocket)
 	else if (isDirectory(accessDataInMap(clientSocket, "Path")))
 	{
 		std::cout << COLOR_GREEN << "Location is a directory" << COLOR_RESET << std::endl;
+		_response.append(createDirectoryListing(accessDataInMap(clientSocket, "Path")));
 	}
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
@@ -185,7 +186,7 @@ int WebServerProg::acceptConnection(int listenSocket)
     int clientSocket = accept(listenSocket, NULL, NULL);
     if (clientSocket < 0)
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK) //this needs to be removed
+        if (errno == EAGAIN || errno == EWOULDBLOCK) //TODO:does this need to be removed
             return -1;
         errnoPrinting("Accept", errno);
         return -1; 
