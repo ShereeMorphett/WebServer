@@ -79,12 +79,13 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 
 bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
 {
+	if (clientRequestMap.find("requestPath")->second == "/src")
+		return true;
+	
 	for (const auto& location : getClientServer(clientSocket).locations)
 	{
-		std::cout << location.locationPath << " == " << clientRequestMap.find("requestPath")->second << std::endl;
 		if (location.locationPath == clientRequestMap.find("requestPath")->second)
-		{
-			std::cout << COLOR_GREEN << "Found location" << COLOR_RESET << std::endl;
+		{	
 			for (const auto& methods : location.allowedMethods)
 			{
 				if (methods == clientRequestMap.find("Method")->second)
@@ -204,8 +205,8 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	{
 		std::string request(buffer, buffer + bytes_received);
 		_request = buffer;
-		// std::cout << COLOR_BLUE << "Request: " << "\n";
-		// std::cout << COLOR_RED << _request << COLOR_RESET << std::endl;
+		std::cout << COLOR_BLUE << "Request: " << "\n";
+		std::cout << COLOR_RED << _request << COLOR_RESET << std::endl;
 		parseRequest(clientSocket, request);
 	}
 	if (currentBodySize == expectedBodySize) 
