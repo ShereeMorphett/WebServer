@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "constants.hpp"
 
+
 server& WebServerProg::getClientServer(int clientSocket)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
@@ -73,6 +74,9 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 	}
 }
 
+
+
+
 bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
 {
 	if (clientRequestMap.find("requestPath")->second == "/src")
@@ -114,7 +118,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	clientRequestMap.insert(std::make_pair("HTTP-version", token));
 	std::string line;
 	requestStream.ignore();
-	requestStream.ignore();// Ignore /r and /n
+	requestStream.ignore();
 	while (std::getline(requestStream, line, '\r'))
 	{
 		std::string key;

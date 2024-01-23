@@ -16,8 +16,4 @@ void	checkRequest(int* status, std::string const & path);
 void	appendBody(std::string& _res, std::string& body, std::string const & path);
 void	appendStatus(std::string& _res, int status);
 
-
-// Check permissions
-
-
 #endif // !API_HELPERS_HPP

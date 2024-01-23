@@ -17,6 +17,7 @@
 #include "api_helpers.hpp"
 #include "utils.hpp"
 #include "CgiHandler.hpp"
+#include <sys/stat.h>
 
 # define MAXSOCKET 25
 
@@ -71,15 +72,26 @@ void	WebServerProg::deleteDataInMap(int clientSocket)
 bool hasCgiExtension(const std::string& filePath)
 {
     size_t dotPosition = filePath.find_last_of('.');
+    return dotPosition != std::string::npos && (filePath.substr(dotPosition) == ".py");
+}
 
-    return dotPosition != std::string::npos && (filePath.substr(dotPosition) == ".py" ||
-           filePath.substr(dotPosition) == ".sh");
+bool isDirectory(const std::string& path)
+{
+    struct stat fileInfo;
+    
+    if (stat(path.c_str(), &fileInfo) != 0)
+	{
+        std::cerr << "Error getting file information for " << path << std::endl;
+        return false;
+    }
+
+    return S_ISDIR(fileInfo.st_mode);
 }
 
 void WebServerProg::sendResponse(int clientSocket)
 {
 	char method = accessDataInMap(clientSocket, "Method")[0];
-
+	
 	if (_status >= ERRORS) 
 	{
 		char buffer[1024] = {};
@@ -90,10 +102,15 @@ void WebServerProg::sendResponse(int clientSocket)
 		appendStatus(_response, _status);
 		appendBody(_response, body, path);
 	}
+	else if (isDirectory(accessDataInMap(clientSocket, "Path")))
+	{
+		std::cout << COLOR_GREEN << "Location is a directory" << COLOR_RESET << std::endl;
+		_response.append(createDirectoryListing(accessDataInMap(clientSocket, "Path")));
+	}
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
-		appendStatus(_response, OK); //this needs to be fluid --> what about other cases than 200 OK?
+		appendStatus(_response, OK);
 		_response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request));
     }
 	else
@@ -112,7 +129,6 @@ void WebServerProg::sendResponse(int clientSocket)
 			break;
 		}
 	}
-	
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{
@@ -170,7 +186,7 @@ int WebServerProg::acceptConnection(int listenSocket)
     int clientSocket = accept(listenSocket, NULL, NULL);
     if (clientSocket < 0)
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK) //this needs to be removed
+        if (errno == EAGAIN || errno == EWOULDBLOCK) //TODO:does this need to be removed
             return -1;
         errnoPrinting("Accept", errno);
         return -1; 
@@ -241,13 +257,13 @@ void WebServerProg::startProgram()
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
 		initServers();
+		runPoll();
 	}
 	catch (const std::exception& e)
 	{
 		std::cout << COLOR_RED << "Error! " << e.what() << "Server cannot start" << COLOR_RESET << std::endl;
 		return ;
-	}	
-	runPoll();
+	}
 }
 
 
