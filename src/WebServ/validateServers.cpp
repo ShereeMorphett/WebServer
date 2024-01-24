@@ -37,19 +37,18 @@ static int validateErrorPage(const server &servers)
     return 0;
 }
 
-static int validateServerConfigurations(const std::vector<struct server> &servers)
+static int_least16_t validateServerConfigurations(const std::vector<struct server> &servers)
 {
     for (auto it1 = servers.begin(); it1 != servers.end(); ++it1)
     {
         for (auto it2 = std::next(it1); it2 != servers.end(); ++it2)
         {
-            if (it1->port == it2->port && it1->serverName == it2->serverName)
+			if (it1->port == it2->port && it1->serverName == it2->serverName)
 				throw std::runtime_error("Server config file is invalid: Servers on the same port MUST have different configurations");
         }
     }
     return 0; 
 }
-
 /*
     Port numbers 1024 - 65535 are available for the following user applications:
     Port numbers 1024 - 49151 are reserved for user server applications.
@@ -62,8 +61,8 @@ void validateServers(const std::vector<struct server> &servers) //if there is an
     {
         if(servers[i].port < 1024 && servers[i].port > 49151)
             throw std::runtime_error("Server config file is invalid: Invalid port");
-        if(servers[i].clientMaxBodySize <= 0)
-            throw std::runtime_error("Server config file is invalid: Client Max Body Size invalid");
+        if(servers[i].clientMaxBodySize <= 0 && servers[i].clientMaxBodySize <= 6144)
+            throw std::runtime_error("Server config file is invalid: The max client body size must be less that 6144 bytes and greater that 0 bytes");
         if(servers[i].socketFD < 0)
             throw std::runtime_error("Server config file is invalid: Socket file descriptor invaild");
         if (validateErrorPage(servers[i]))

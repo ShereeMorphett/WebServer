@@ -60,6 +60,7 @@ std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
     }
     std::cout << COLOR_RED << "Not found- error issues" << COLOR_RESET << std::endl;
 	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl;
+	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl;
     return NULL;
 }
 
@@ -75,15 +76,26 @@ void	WebServerProg::deleteDataInMap(int clientSocket)
 bool hasCgiExtension(const std::string& filePath)
 {
     size_t dotPosition = filePath.find_last_of('.');
+    return dotPosition != std::string::npos && (filePath.substr(dotPosition) == ".py");
+}
 
-    return dotPosition != std::string::npos && (filePath.substr(dotPosition) == ".py" ||
-           filePath.substr(dotPosition) == ".sh");
+bool isDirectory(const std::string& path)
+{
+    struct stat fileInfo;
+    
+    if (stat(path.c_str(), &fileInfo) != 0)
+	{
+        std::cerr << "Error getting file information for " << path << std::endl;
+        return false;
+    }
+
+    return S_ISDIR(fileInfo.st_mode);
 }
 
 void WebServerProg::sendResponse(int clientSocket)
 {
 	char method = accessDataInMap(clientSocket, "Method")[0];
-
+	
 	if (_status >= ERRORS) 
 	{
 		char buffer[1024] = {};
@@ -94,10 +106,15 @@ void WebServerProg::sendResponse(int clientSocket)
 		appendStatus(_response, _status);
 		appendBody(_response, body, path);
 	}
+	else if (isDirectory(accessDataInMap(clientSocket, "Path")))
+	{
+		std::cout << COLOR_GREEN << "Location is a directory" << COLOR_RESET << std::endl;
+		_response.append(createDirectoryListing(accessDataInMap(clientSocket, "Path")));
+	}
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
-		appendStatus(_response, OK); //this needs to be fluid --> what about other cases than 200 OK?
+		appendStatus(_response, OK);
 		_response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request));
     }
 	else
@@ -117,6 +134,8 @@ void WebServerProg::sendResponse(int clientSocket)
 		}
 	}
 	
+		}
+	}
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{
@@ -269,24 +288,28 @@ void WebServerProg::startProgram()
 	try
 	{
 		servers = parseConfigFile(configFileName);
+		servers = parseConfigFile(configFileName);
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
 		initServers();
+		runPoll();
 	}
 	catch (const std::exception& e)
 	{
 		std::cout << COLOR_RED << "Error! " << e.what() << "Server cannot start" << COLOR_RESET << std::endl;
 		return ;
-	}	
-	runPoll();
+	}
 }
 
 
 WebServerProg::WebServerProg() : serverCount(0)
 {	
 	configFileName = "config/DefaultConfig.conf";
+	configFileName = "config/DefaultConfig.conf";
 }
 
+WebServerProg::WebServerProg(std::string fileName) : serverCount(0) , configFileName(fileName)
+{}
 WebServerProg::WebServerProg(std::string fileName) : serverCount(0) , configFileName(fileName)
 {}
 

@@ -18,9 +18,7 @@ def main():
     decoded_string = unquote(query_string)
 
     # Extract values for "name" and "lastName" from the query string
-    name = get_parameter_value("name", decoded_string)
-    last_name = get_parameter_value("lastName", decoded_string)
-
+    text = get_parameter_value("textcontent", decoded_string)
     # Detailed CSS content in an external file
     css_content = """
     body {
@@ -38,11 +36,8 @@ def main():
     }
     """
 	
-    # Image source URL or file path
-    # image_src = "/Users/smorphet/Desktop/WebServer/src/cgi-bin/partPenguin.jpeg"
-
     # Basic HTML response displaying the extracted values with linked CSS and an image
-    html_content = f"<!DOCTYPE html>\n<html>\n<head>\n<title>Hello There!</title>\n<style>{css_content}</style>\n</head>\n<body>\n<h1>Welcome to our site {name} {last_name}</h1>\n</body>\n</html>\r\n\r\n"
+    html_content = f"<!DOCTYPE html>\n<html>\n<head>\n<title>Hello There!</title>\n<style>{css_content}</style>\n</head>\n<body>\n<h1>{text}</h1>\n</body>\n</html>\r\n\r\n"
 
     response = f"HTTP/1.1 200 OK\r\nContent-Length:{len(html_content)}\r\nContent-Type: text/html\r\n\r\n{html_content}"
 

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "constants.hpp"
 
+
 server& WebServerProg::getClientServer(int clientSocket)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
@@ -73,14 +74,18 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 	}
 }
 
+
+
+
 bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
 {
+	if (clientRequestMap.find("requestPath")->second == "/src")
+		return true;
+	
 	for (const auto& location : getClientServer(clientSocket).locations)
 	{
-		std::cout << location.locationPath << " == " << clientRequestMap.find("requestPath")->second << std::endl;
 		if (location.locationPath == clientRequestMap.find("requestPath")->second)
-		{
-			std::cout << COLOR_GREEN << "Found location" << COLOR_RESET << std::endl;
+		{	
 			for (const auto& methods : location.allowedMethods)
 			{
 				if (methods == clientRequestMap.find("Method")->second)
@@ -113,7 +118,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 	clientRequestMap.insert(std::make_pair("HTTP-version", token));
 	std::string line;
 	requestStream.ignore();
-	requestStream.ignore();// Ignore /r and /n
+	requestStream.ignore();
 	while (std::getline(requestStream, line, '\r'))
 	{
 		std::string key;
@@ -177,7 +182,7 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
-	char buffer[8192] = {};
+	char buffer[16384] = {};
 
 	_request.clear();
 	int bytes_received = recv(clientSocket, buffer, sizeof(buffer), 0);
@@ -200,8 +205,8 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	{
 		std::string request(buffer, buffer + bytes_received);
 		_request = buffer;
-		// std::cout << COLOR_BLUE << "Request: " << "\n";
-		// std::cout << COLOR_RED << _request << COLOR_RESET << std::endl;
+		std::cout << COLOR_BLUE << "Request: " << "\n";
+		std::cout << COLOR_RED << _request << COLOR_RESET << std::endl;
 		parseRequest(clientSocket, request);
 	}
 	if (currentBodySize == expectedBodySize) 

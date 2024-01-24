@@ -2,8 +2,6 @@
 # define CONSTANTS_HPP
 
 # define	BUFFER_SIZE		10240
-# define	ROOT			1
-# define	NOT_SET			0
 
 // Status codes
 # define	ERRORS			400
@@ -18,6 +16,7 @@
 # define	INT_ERROR		500
 # define	ACCEPTED		202
 # define	NO_CONTENT		204
+# define 	LISTING			418 //repurpose of the "I'm a teapot" status
 
 // Response formatting lines
 # define	HTTP_HEADER	"HTTP/1.1 "
@@ -46,5 +45,8 @@
 # define	DELETE	'D'
 # define	POST	'P'
 # define	GET		'G'
+
+#define ON 1
+#define OFF 0
 
 #endif // !CONSTANTS_HPP
