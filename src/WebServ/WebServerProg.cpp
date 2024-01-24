@@ -18,6 +18,7 @@
 #include "utils.hpp"
 #include "CgiHandler.hpp"
 #include <chrono>
+#include <sys/stat.h>
 
 
 # define MAXSOCKET 25
@@ -59,8 +60,8 @@ std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
         }
     }
     std::cout << COLOR_RED << "Not found- error issues" << COLOR_RESET << std::endl;
-	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl;
-	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl;
+	// std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl;
+	// std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl;
     return NULL;
 }
 
@@ -134,8 +135,6 @@ void WebServerProg::sendResponse(int clientSocket)
 		}
 	}
 	
-		}
-	}
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{
@@ -196,7 +195,15 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
         errnoPrinting("Accept", errno);
         return -1; 
     }
-    if (fcntl(clientSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
+
+	int maxBufferSize = BUFFER_SIZE;
+	if (setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, &maxBufferSize, sizeof(maxBufferSize)) == -1) 
+    {
+        errnoPrinting("setsockopt", errno);
+        close(clientSocket);
+        return -1;
+    }
+    if (fcntl(clientSocket, F_SETFL, O_NONBLOCK | FD_CLOEXEC))
     {
         errnoPrinting("fcntl", errno);
         close(clientSocket);  
@@ -254,9 +261,9 @@ void WebServerProg::checkClientTimeout()
 			auto client = m_clientDataMap.find(socketFd);
 			std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
 			std::chrono::duration<double> duration =  currentTime - client->second.connectionTime;
-			if (duration > std::chrono::seconds(1))
+			if (duration > std::chrono::milliseconds(10))
 			{
-				std::cout << "Closing client socket" << std::endl;
+				// std::cout << "Closing client socket" << std::endl;
 				close(socketFd);
 				m_pollSocketsVec.erase(m_pollSocketsVec.begin() + i);
 				m_clientDataMap.erase(m_clientDataMap.find(socketFd));
@@ -269,8 +276,9 @@ void WebServerProg::runPoll()
 {
 	while (true)
 	{
-		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 1000);
-		checkClientTimeout();
+		// checkClientTimeout();
+		std::cout << COLOR_CYAN <<  m_pollSocketsVec.size() << COLOR_RESET << std::endl;
+		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 10);
 		if (pollResult < 0)
 		{
 			std::cerr << "Error! poll" << std::endl;
@@ -288,7 +296,6 @@ void WebServerProg::startProgram()
 	try
 	{
 		servers = parseConfigFile(configFileName);
-		servers = parseConfigFile(configFileName);
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
 		validateServers(servers);
 		initServers();
@@ -296,7 +303,7 @@ void WebServerProg::startProgram()
 	}
 	catch (const std::exception& e)
 	{
-		std::cout << COLOR_RED << "Error! " << e.what() << "Server cannot start" << COLOR_RESET << std::endl;
+		std::cout << COLOR_RED << "Error! " << e.what() << "\nServer cannot start" << COLOR_RESET << std::endl;
 		return ;
 	}
 }
@@ -305,11 +312,8 @@ void WebServerProg::startProgram()
 WebServerProg::WebServerProg() : serverCount(0)
 {	
 	configFileName = "config/DefaultConfig.conf";
-	configFileName = "config/DefaultConfig.conf";
 }
 
-WebServerProg::WebServerProg(std::string fileName) : serverCount(0) , configFileName(fileName)
-{}
 WebServerProg::WebServerProg(std::string fileName) : serverCount(0) , configFileName(fileName)
 {}
 

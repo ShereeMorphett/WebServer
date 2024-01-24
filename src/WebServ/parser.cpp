@@ -35,28 +35,6 @@ static std::string	checkDefaultFile(std::string& defaultFile)
 	return defaultFile;
 }
 
-static	std::string	checkRoot(std::string& root)
-{
-	if (root[0] != '/')
-		throw std::runtime_error("Root path must start with '/'");
-	if (root[root.size() - 1] == '/')
-		throw std::runtime_error("Root path must NOT end with '/'");
-	if (root.find('.') != std::string::npos)
-		throw std::runtime_error("Root path must NOT contain '.'");
-	
-	return root;
-}
-
-static std::string	checkDefaultFile(std::string& defaultFile)
-{
-	if (defaultFile.find('/') != std::string::npos)
-		throw std::runtime_error("Default file path must NOT contain '/', include only file name.");
-	if (defaultFile.find('.') == std::string::npos)
-		throw std::runtime_error("Default file path must contain '.', please enter valid filename.");
-
-	return defaultFile;
-}
-
 static location parseLocation(std::istream &stream, std::string extValue)
 {
     char c;
@@ -222,7 +200,3 @@ std::vector<struct server> parseConfigFile(const std::string& fileName)
     servers = parseConfigFile(file);
     return servers;
 }
-
-
-
-
