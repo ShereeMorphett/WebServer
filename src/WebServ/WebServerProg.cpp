@@ -53,16 +53,17 @@ std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
 
     if (clientIt != m_clientDataMap.end())
     {
-        std::map<std::string, std::string>::iterator headerIt = clientIt->second.requestData.find(header);
-        if (headerIt != clientIt->second.requestData.end())
+        auto& requestDataMap = clientIt->second.requestData;
+        for (auto headerIt = requestDataMap.rbegin(); headerIt != requestDataMap.rend(); ++headerIt)
         {
-            return headerIt->second;
+            if (headerIt->first == header)
+            {
+                return headerIt->second; 
+            }
         }
     }
-    std::cout << COLOR_RED << "Not found- error issues" << COLOR_RESET << std::endl;
     return "";
 }
-
 
 void	WebServerProg::deleteDataInMap(int clientSocket)
 {
@@ -139,8 +140,8 @@ void WebServerProg::sendResponse(int clientSocket)
 		std::cout << "Error! send" << "\n";
 		exit(EXIT_FAILURE);
 	}
-	// deleteDataInMap(clientSocket);
 	_response.clear();
+	
 }
 
 void WebServerProg::initServers()
