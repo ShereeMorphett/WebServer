@@ -17,7 +17,9 @@
 #include "api_helpers.hpp"
 #include "utils.hpp"
 #include "CgiHandler.hpp"
+#include <chrono>
 #include <sys/stat.h>
+
 
 # define MAXSOCKET 25
 
@@ -40,7 +42,9 @@ void WebServerProg::initClientData(int clientSocket, int serverIndex)
 {
 	clientData data;
 	data.serverIndex = serverIndex;
+	data.connectionTime = std::chrono::steady_clock::now();
 	m_clientDataMap.insert(std::make_pair(clientSocket, data));
+
 }
 
 std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
@@ -49,17 +53,17 @@ std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
 
     if (clientIt != m_clientDataMap.end())
     {
-        std::map<std::string, std::string>::iterator headerIt = clientIt->second.requestData.find(header);
-        if (headerIt != clientIt->second.requestData.end())
+        auto& requestDataMap = clientIt->second.requestData;
+        for (auto headerIt = requestDataMap.rbegin(); headerIt != requestDataMap.rend(); ++headerIt)
         {
-            return headerIt->second;
+            if (headerIt->first == header)
+            {
+                return headerIt->second; 
+            }
         }
     }
-    std::cout << COLOR_RED << "Not found- error issues" << COLOR_RESET << std::endl;
-	std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl;
-    return NULL;
+    return "";
 }
-
 
 void	WebServerProg::deleteDataInMap(int clientSocket)
 {
@@ -129,14 +133,15 @@ void WebServerProg::sendResponse(int clientSocket)
 			break;
 		}
 	}
+	
 	int bytes_sent = send(clientSocket, _response.c_str(), _response.size(), 0);
 	if (bytes_sent < 0)
 	{
 		std::cout << "Error! send" << "\n";
 		exit(EXIT_FAILURE);
 	}
-	deleteDataInMap(clientSocket);
 	_response.clear();
+	
 }
 
 void WebServerProg::initServers()
@@ -181,32 +186,102 @@ void WebServerProg::initServers()
 	return ;
 }
 
-int WebServerProg::acceptConnection(int listenSocket)
+int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
 {
     int clientSocket = accept(listenSocket, NULL, NULL);
     if (clientSocket < 0)
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK) //TODO:does this need to be removed
-            return -1;
         errnoPrinting("Accept", errno);
         return -1; 
     }
-    if (fcntl(clientSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC))
+
+	int maxBufferSize = BUFFER_SIZE;
+	if (setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, &maxBufferSize, sizeof(maxBufferSize)) == -1) 
+    {
+        errnoPrinting("setsockopt", errno);
+        close(clientSocket);
+        return -1;
+    }
+    if (fcntl(clientSocket, F_SETFL, O_NONBLOCK | FD_CLOEXEC))
     {
         errnoPrinting("fcntl", errno);
         close(clientSocket);  
         return -1;
     }
     addSocketToPoll(clientSocket, POLLIN);
-    std::cout << COLOR_GREEN << "New connection accepted on client socket " << clientSocket << COLOR_RESET << std::endl;
+	initClientData(clientSocket, serverIndex);
     return clientSocket;
+}		
+void	WebServerProg::closeClientConnection(int clientIndex)
+{
+	close(m_pollSocketsVec[clientIndex].fd);		
+	m_clientDataMap.erase(m_pollSocketsVec[clientIndex].fd);
+	m_pollSocketsVec.erase(m_pollSocketsVec.begin() + clientIndex);
+}
+
+void WebServerProg::handleRequestResponse(int clientIndex)
+{
+	int check = receiveRequest(m_pollSocketsVec[clientIndex].fd, clientIndex);
+	if (check)
+	{
+		return;
+	}
+	if (m_pollSocketsVec[clientIndex].revents & POLLOUT)
+	{
+		sendResponse(m_pollSocketsVec[clientIndex].fd);
+		if(accessDataInMap(m_pollSocketsVec[clientIndex].fd,  "Connection") == "close")
+		{	
+			closeClientConnection(clientIndex);
+		}
+	}
+		_request.clear();
+		_status = NOT_SET;
+		currentBodySize = 0;
+		expectedBodySize = 0;
+}
+
+void WebServerProg::handleEvents()
+{
+	for (size_t i  = 0; i < m_pollSocketsVec.size(); i++)
+	{
+		if (m_pollSocketsVec[i].revents & POLLIN)
+		{
+			if (i < serverCount)
+			{
+				acceptConnection(m_pollSocketsVec[i].fd, i);
+			}
+			else
+			{
+				handleRequestResponse(i);
+			}
+		}
+	}
+}
+
+void WebServerProg::checkClientTimeout()
+{
+	for (size_t i  = 0; i < m_pollSocketsVec.size(); i++)
+	{
+		int socketFd = m_pollSocketsVec[i].fd;
+		if (i >= serverCount)
+		{
+			auto client = m_clientDataMap.find(socketFd);
+			std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+			std::chrono::duration<double> duration =  currentTime - client->second.connectionTime;
+			if (duration > std::chrono::milliseconds(10))
+			{
+				closeClientConnection(i);
+			}
+		}
+	}
 }
 
 void WebServerProg::runPoll()
 {
 	while (true)
 	{
-		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 1000);
+		checkClientTimeout();
+		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 10);
 		if (pollResult < 0)
 		{
 			std::cerr << "Error! poll" << std::endl;
@@ -214,38 +289,7 @@ void WebServerProg::runPoll()
 		}	 
 		if (pollResult == 0)
 			continue;
-		for (size_t i  = 0; i < m_pollSocketsVec.size(); i++)
-		{
-			if (m_pollSocketsVec[i].revents & POLLIN)
-			{
-				if (i < serverCount)
-				{
-					addSocketToPoll(accept(m_pollSocketsVec[i].fd, NULL, NULL), POLLIN);
-					int flags = fcntl(m_pollSocketsVec.back().fd, F_GETFL, 0);
-					fcntl(m_pollSocketsVec.back().fd, F_SETFL, flags | O_NONBLOCK);
-					initClientData(m_pollSocketsVec.back().fd, i);
-					std::cout << "New connection accepted on client socket" << std::endl;
-				}
-				else
-				{
-						int check = receiveRequest(m_pollSocketsVec[i].fd, i);
-						if (check)
-						{
-							if (check == 2)
-								return;
-							continue;
-						}
-						if (m_pollSocketsVec[i].revents & POLLOUT)
-						{
-							sendResponse(m_pollSocketsVec[i].fd);
-							_request.clear();
-							_status = NOT_SET;
-							currentBodySize = 0;
-							expectedBodySize = 0;
-						}
-				}
-			}
-		}
+		handleEvents();
 	}
 }
 
@@ -261,7 +305,7 @@ void WebServerProg::startProgram()
 	}
 	catch (const std::exception& e)
 	{
-		std::cout << COLOR_RED << "Error! " << e.what() << "Server cannot start" << COLOR_RESET << std::endl;
+		std::cout << COLOR_RED << "Error! " << e.what() << "\nServer cannot start" << COLOR_RESET << std::endl;
 		return ;
 	}
 }

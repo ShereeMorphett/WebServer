@@ -64,6 +64,7 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 			char buffer[1024];
 			memset(buffer, 0, sizeof(buffer));
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + '/' + path));
+	
 		}
 		else if (it == server.locations.end() - 1)
 		{
@@ -188,25 +189,21 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	int bytes_received = recv(clientSocket, buffer, sizeof(buffer), 0);
 	if (bytes_received < 0)
 	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
+		if (errno == EAGAIN || errno == EWOULDBLOCK) //TODO: read and write check from revents
 			return 1;
-		std::cout << "Error! recv" << std::endl;
+		std::cerr << "Error! recv" << std::endl;
 		return 2;
 	}
 	else if (bytes_received == 0)
 	{
-		std::cout << "Closing client socket" << std::endl;
-		close(clientSocket);
-		m_pollSocketsVec.erase(m_pollSocketsVec.begin() + pollIndex);
-		m_clientDataMap.erase(m_clientDataMap.find(clientSocket));
+		closeClientConnection(clientSocket);
 		return 1;
 	}
 	else
 	{
 		std::string request(buffer, buffer + bytes_received);
 		_request = buffer;
-		std::cout << COLOR_BLUE << "Request: " << "\n";
-		std::cout << COLOR_RED << _request << COLOR_RESET << std::endl;
+		// std::cout << _request << std::endl;
 		parseRequest(clientSocket, request);
 	}
 	if (currentBodySize == expectedBodySize) 
