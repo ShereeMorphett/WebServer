@@ -17,6 +17,8 @@
 #include "api_helpers.hpp"
 #include "utils.hpp"
 #include "CgiHandler.hpp"
+#include <chrono>
+
 
 # define MAXSOCKET 25
 
@@ -39,7 +41,9 @@ void WebServerProg::initClientData(int clientSocket, int serverIndex)
 {
 	clientData data;
 	data.serverIndex = serverIndex;
+	data.connectionTime = std::chrono::steady_clock::now();
 	m_clientDataMap.insert(std::make_pair(clientSocket, data));
+
 }
 
 std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
@@ -170,8 +174,6 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
     int clientSocket = accept(listenSocket, NULL, NULL);
     if (clientSocket < 0)
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK) //this needs to be removed
-            return -1;
         errnoPrinting("Accept", errno);
         return -1; 
     }
@@ -187,8 +189,9 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
     return clientSocket;
 }
 
-void WebServerProg::processRequest(int clientIndex)
+void WebServerProg::handleRequestResponse(int clientIndex)
 {
+
 	int check = receiveRequest(m_pollSocketsVec[clientIndex].fd, clientIndex);
 	if (check)
 	{
@@ -216,7 +219,28 @@ void WebServerProg::handleEvents()
 			}
 			else
 			{
-				processRequest(i);
+				handleRequestResponse(i);
+			}
+		}
+	}
+}
+
+void WebServerProg::checkClientTimeout()
+{
+	for (size_t i  = 0; i < m_pollSocketsVec.size(); i++)
+	{
+		int socketFd = m_pollSocketsVec[i].fd;
+		if (i >= serverCount)
+		{
+			auto client = m_clientDataMap.find(socketFd);
+			std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+			std::chrono::duration<double> duration =  currentTime - client->second.connectionTime;
+			if (duration > std::chrono::seconds(1))
+			{
+				std::cout << "Closing client socket" << std::endl;
+				close(socketFd);
+				m_pollSocketsVec.erase(m_pollSocketsVec.begin() + i);
+				m_clientDataMap.erase(m_clientDataMap.find(socketFd));
 			}
 		}
 	}
@@ -227,6 +251,7 @@ void WebServerProg::runPoll()
 	while (true)
 	{
 		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 1000);
+		checkClientTimeout();
 		if (pollResult < 0)
 		{
 			std::cerr << "Error! poll" << std::endl;

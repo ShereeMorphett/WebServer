@@ -33,6 +33,7 @@ struct clientData
 {
 	int 									serverIndex;
 	std::multimap<std::string, std::string> requestData;
+	std::chrono::steady_clock::time_point	connectionTime;
 };
 
 class WebServerProg
@@ -66,9 +67,10 @@ class WebServerProg
 		server& getClientServer(int clientSocket);
 
 		void handleEvents();
-		void processRequest(int clientIndex);
+		void handleRequestResponse(int clientIndex);
 		int  acceptConnection(int listenSocket, int serverIndex);
-		
+		void checkClientTimeout();
+
 		WebServerProg();
 		WebServerProg(std::string fileName);
 		~WebServerProg();
