@@ -60,9 +60,7 @@ std::string WebServerProg::accessDataInMap(int clientSocket, std::string header)
         }
     }
     std::cout << COLOR_RED << "Not found- error issues" << COLOR_RESET << std::endl;
-	// std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl;
-	// std::cout << COLOR_YELLOW << header << COLOR_RESET << std::endl;
-    return NULL;
+    return "";
 }
 
 
@@ -141,7 +139,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		std::cout << "Error! send" << "\n";
 		exit(EXIT_FAILURE);
 	}
-	deleteDataInMap(clientSocket);
+	// deleteDataInMap(clientSocket);
 	_response.clear();
 }
 
@@ -211,13 +209,17 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
     }
     addSocketToPoll(clientSocket, POLLIN);
 	initClientData(clientSocket, serverIndex);
-    std::cout << COLOR_GREEN << "New connection accepted on client socket " << clientSocket << COLOR_RESET << std::endl;
     return clientSocket;
+}		
+void	WebServerProg::closeClientConnection(int clientIndex)
+{
+	close(m_pollSocketsVec[clientIndex].fd);		
+	m_clientDataMap.erase(m_pollSocketsVec[clientIndex].fd);
+	m_pollSocketsVec.erase(m_pollSocketsVec.begin() + clientIndex);
 }
 
 void WebServerProg::handleRequestResponse(int clientIndex)
 {
-
 	int check = receiveRequest(m_pollSocketsVec[clientIndex].fd, clientIndex);
 	if (check)
 	{
@@ -226,11 +228,15 @@ void WebServerProg::handleRequestResponse(int clientIndex)
 	if (m_pollSocketsVec[clientIndex].revents & POLLOUT)
 	{
 		sendResponse(m_pollSocketsVec[clientIndex].fd);
+		if(accessDataInMap(m_pollSocketsVec[clientIndex].fd,  "Connection") == "close")
+		{	
+			closeClientConnection(clientIndex);
+		}
+	}
 		_request.clear();
 		_status = NOT_SET;
 		currentBodySize = 0;
 		expectedBodySize = 0;
-	}
 }
 
 void WebServerProg::handleEvents()
@@ -263,10 +269,7 @@ void WebServerProg::checkClientTimeout()
 			std::chrono::duration<double> duration =  currentTime - client->second.connectionTime;
 			if (duration > std::chrono::milliseconds(10))
 			{
-				// std::cout << "Closing client socket" << std::endl;
-				close(socketFd);
-				m_pollSocketsVec.erase(m_pollSocketsVec.begin() + i);
-				m_clientDataMap.erase(m_clientDataMap.find(socketFd));
+				closeClientConnection(i);
 			}
 		}
 	}
@@ -276,8 +279,7 @@ void WebServerProg::runPoll()
 {
 	while (true)
 	{
-		// checkClientTimeout();
-		std::cout << COLOR_CYAN <<  m_pollSocketsVec.size() << COLOR_RESET << std::endl;
+		checkClientTimeout();
 		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 10);
 		if (pollResult < 0)
 		{
@@ -286,7 +288,6 @@ void WebServerProg::runPoll()
 		}	 
 		if (pollResult == 0)
 			continue;
-
 		handleEvents();
 	}
 }
