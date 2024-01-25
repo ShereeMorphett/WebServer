@@ -200,7 +200,3 @@ std::vector<struct server> parseConfigFile(const std::string& fileName)
     servers = parseConfigFile(file);
     return servers;
 }
-
-
-
-

@@ -33,6 +33,7 @@ struct clientData
 {
 	int 									serverIndex;
 	std::multimap<std::string, std::string> requestData;
+	std::chrono::steady_clock::time_point	connectionTime;
 };
 
 class WebServerProg
@@ -65,6 +66,11 @@ class WebServerProg
 		void runPoll();
 		server& getClientServer(int clientSocket);
 
+		void handleEvents();
+		void handleRequestResponse(int clientIndex);
+		int  acceptConnection(int listenSocket, int serverIndex);
+		void checkClientTimeout();
+
 		WebServerProg();
 		WebServerProg(std::string fileName);
 		~WebServerProg();
@@ -73,7 +79,7 @@ class WebServerProg
 		void	deleteResponse(int clientSocket);
 		bool 	validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap);
 		std::string createDirectoryListing(std::string path);
-
+		void	closeClientConnection(int clientIndex);
 };
 
 std::vector<struct server> parseConfigFile(const std::string& fileName);

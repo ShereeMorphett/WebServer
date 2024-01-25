@@ -1,10 +1,10 @@
 #ifndef CONSTANTS_HPP
 # define CONSTANTS_HPP
 
+
 # define	BUFFER_SIZE		10240
 # define	ROOT			1
 # define	NOT_SET			0
-
 // Status codes
 # define	ERRORS			400
 # define 	REQUEST_TIMEOUT 408

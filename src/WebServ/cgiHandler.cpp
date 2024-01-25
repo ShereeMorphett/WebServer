@@ -108,6 +108,7 @@ void CgiHandler::executeCgi(const std::string& scriptName)
     if (execve(scriptArray[0], const_cast<char* const*>(scriptArray), const_cast<char* const*>(envArray)) == -1)
     {
         perror("execve");
+        std::cerr << COLOR_RED << "execve" << COLOR_RESET << std::endl;
     }
 }
 
