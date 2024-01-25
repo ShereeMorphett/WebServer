@@ -63,7 +63,6 @@ std::string WebServerProg::createDirectoryListing(std::string startingPath)
         std::cerr << COLOR_RED << "Error: could not open " << startingPath << COLOR_RESET << std::endl;
         return "";
     }
-
     directoryFinding += "<!DOCTYPE html>\n\
                         <html>\n\
                         <head>\n\

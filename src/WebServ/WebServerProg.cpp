@@ -108,8 +108,8 @@ void WebServerProg::sendResponse(int clientSocket)
 	}
 	else if (isDirectory(accessDataInMap(clientSocket, "Path")))
 	{
-		std::cout << COLOR_GREEN << "Location is a directory" << COLOR_RESET << std::endl;
 		_response.append(createDirectoryListing(accessDataInMap(clientSocket, "Path")));
+		std::cout << COLOR_GREEN << "Location is a directory" << COLOR_RESET << std::endl;
 	}
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
@@ -141,7 +141,6 @@ void WebServerProg::sendResponse(int clientSocket)
 		exit(EXIT_FAILURE);
 	}
 	_response.clear();
-	
 }
 
 void WebServerProg::initServers()
@@ -214,9 +213,14 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
 }		
 void	WebServerProg::closeClientConnection(int clientIndex)
 {
-	close(m_pollSocketsVec[clientIndex].fd);		
-	m_clientDataMap.erase(m_pollSocketsVec[clientIndex].fd);
-	m_pollSocketsVec.erase(m_pollSocketsVec.begin() + clientIndex);
+
+	if (clientIndex >= 0 && clientIndex < static_cast<int>(m_pollSocketsVec.size()))
+	{
+		close(m_pollSocketsVec[clientIndex].fd);		
+		m_clientDataMap.erase(m_pollSocketsVec[clientIndex].fd);
+		m_pollSocketsVec.erase(m_pollSocketsVec.begin() + clientIndex);
+	} 
+
 }
 
 void WebServerProg::handleRequestResponse(int clientIndex)
