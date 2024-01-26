@@ -186,6 +186,7 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	char buffer[16384] = {};
 
 	_request.clear();
+
 	int bytes_received = recv(clientSocket, buffer, sizeof(buffer), 0);
 	if (bytes_received < 0)
 	{
@@ -203,7 +204,7 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	{
 		std::string request(buffer, buffer + bytes_received);
 		_request = buffer;
-		// std::cout << _request << std::endl;
+		std::cout << _request << std::endl;
 		parseRequest(clientSocket, request);
 	}
 	if (currentBodySize == expectedBodySize) 
