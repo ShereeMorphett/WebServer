@@ -11,11 +11,10 @@ static std::string parseStartingPath(std::string startingPath)
 {
 	std::string webServer = "WebServer/";
 	size_t pos = startingPath.find(webServer);
-	
 	if (pos != std::string::npos)
 	{
 		std::string resultPath = startingPath.substr(pos + webServer.length());
-		if (isDirectory(resultPath))
+		if (isDirectory(resultPath) && resultPath.back() != '/')
 			resultPath.append("/");
 		std::cout << COLOR_GREEN << resultPath << COLOR_RESET << std::endl;
 		return resultPath;
@@ -38,13 +37,15 @@ static std::string buildLink(DIR *directory, std::string path, int depth = 0)
         if (entryName != "." && entryName != ".." && entryName[0] != '.' && entryName != "obj")
         {
             std::string entryPath = path + entryName;
+			if (isDirectory(entryPath) && entryPath.back() != '/')
+				entryPath.append("/");
             bool isDirectory = (en->d_type == DT_DIR);
             std::string fullPath = entryPath;
             std::string relativePath = parseStartingPath(entryPath);
-			// std::cout <<  COLOR_MAGENTA << relativePath << COLOR_RESET << std::endl;
-            std::string fullLink = "<a href='" + relativePath + "'>" + entryName + "</a>";
+            std::string fullLink = "<a href='" + entryName + "'>" + entryName + "</a>";
 
             directoryFinding += "\t\t<p>";
+			std::cout <<  COLOR_MAGENTA << entryPath << COLOR_RESET << std::endl;
             for (int i = 0; i < depth; ++i)
             {
                 directoryFinding += "&emsp;";
@@ -77,7 +78,6 @@ std::string WebServerProg::createDirectoryListing(std::string startingPath)
     _response.append("OK\r\n");
     std::string directoryFinding;
     DIR *directory = opendir(startingPath.c_str());
-	std::cout <<  COLOR_MAGENTA << startingPath << COLOR_RESET << std::endl;
 	std::string basePath;
 	if (startingPath == "/")
 		basePath = "";
