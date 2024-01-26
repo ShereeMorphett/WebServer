@@ -1,10 +1,31 @@
 #include "WebServerProg.hpp"
 #include "../Color.hpp"
 #include "constants.hpp"
+#include "utils.hpp"
 #include <string>
 #include <iostream>
 #include <dirent.h>
 #include <sys/types.h>
+
+static std::string parseStartingPath(std::string startingPath)
+{
+	std::string webServer = "WebServer/";
+	size_t pos = startingPath.find(webServer);
+	
+	if (pos != std::string::npos)
+	{
+		std::string resultPath = startingPath.substr(pos + webServer.length());
+		if (isDirectory(resultPath))
+			resultPath.append("/");
+		std::cout << COLOR_GREEN << resultPath << COLOR_RESET << std::endl;
+		return resultPath;
+    } 
+	else
+	{
+        std::cout << "WebServer not found in the path." << std::endl;
+		return "";
+    }
+}
 
 static std::string buildLink(DIR *directory, std::string path, int depth = 0)
 {
@@ -16,13 +37,12 @@ static std::string buildLink(DIR *directory, std::string path, int depth = 0)
         std::string entryName = en->d_name;
         if (entryName != "." && entryName != ".." && entryName[0] != '.' && entryName != "obj")
         {
-            std::string entryPath = path + "/" + entryName;
+            std::string entryPath = path + entryName;
             bool isDirectory = (en->d_type == DT_DIR);
-
             std::string fullPath = entryPath;
-            std::string relativePath = fullPath;
-
-            std::string fullLink = "<a href='" + fullPath + "'>" + entryName + "</a>";
+            std::string relativePath = parseStartingPath(entryPath);
+			// std::cout <<  COLOR_MAGENTA << relativePath << COLOR_RESET << std::endl;
+            std::string fullLink = "<a href='" + relativePath + "'>" + entryName + "</a>";
 
             directoryFinding += "\t\t<p>";
             for (int i = 0; i < depth; ++i)
@@ -32,7 +52,7 @@ static std::string buildLink(DIR *directory, std::string path, int depth = 0)
 
             if (isDirectory)
             {
-                directoryFinding += fullLink + "/\n";
+                directoryFinding += fullLink + "\n";
                 DIR *subDirectory = opendir(entryPath.c_str());
                 if (subDirectory != NULL)
                 {
@@ -57,7 +77,12 @@ std::string WebServerProg::createDirectoryListing(std::string startingPath)
     _response.append("OK\r\n");
     std::string directoryFinding;
     DIR *directory = opendir(startingPath.c_str());
-
+	std::cout <<  COLOR_MAGENTA << startingPath << COLOR_RESET << std::endl;
+	std::string basePath;
+	if (startingPath == "/")
+		basePath = "";
+	else
+		basePath = parseStartingPath(startingPath);
     if (directory == NULL)
     {
         std::cerr << COLOR_RED << "Error: could not open " << startingPath << COLOR_RESET << std::endl;
@@ -66,13 +91,14 @@ std::string WebServerProg::createDirectoryListing(std::string startingPath)
     directoryFinding += "<!DOCTYPE html>\n\
                         <html>\n\
                         <head>\n\
-                            <title>" + startingPath + "</title>\n\
+                            <title>" + basePath + "</title>\n\
                         </head>\n\
                         <body>\n\
                             <h1>AUTOINDEX</h1>\n\
                             <p>\n";
 
     directoryFinding += buildLink(directory, startingPath);
+
     directoryFinding += "\
                             </p>\n\
                         </body>\n\

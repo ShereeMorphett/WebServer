@@ -18,7 +18,7 @@
 #include "utils.hpp"
 #include "CgiHandler.hpp"
 #include <chrono>
-#include <sys/stat.h>
+
 
 
 # define MAXSOCKET 25
@@ -77,19 +77,6 @@ bool hasCgiExtension(const std::string& filePath)
 {
     size_t dotPosition = filePath.find_last_of('.');
     return dotPosition != std::string::npos && (filePath.substr(dotPosition) == ".py");
-}
-
-bool isDirectory(const std::string& path)
-{
-    struct stat fileInfo;
-    
-    if (stat(path.c_str(), &fileInfo) != 0)
-	{
-        std::cerr << "Error getting file information for " << path << std::endl;
-        return false;
-    }
-
-    return S_ISDIR(fileInfo.st_mode);
 }
 
 void WebServerProg::sendResponse(int clientSocket)
