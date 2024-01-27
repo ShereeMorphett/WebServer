@@ -8,6 +8,7 @@
 #include <cerrno>
 #include <stdlib.h>
 #include "constants.hpp"
+#include <iterator>
 
 
 server& WebServerProg::getClientServer(int clientSocket)
@@ -18,6 +19,11 @@ server& WebServerProg::getClientServer(int clientSocket)
 		;//!throw?
 	}
 	return servers[it->second.serverIndex];
+}
+
+clientData& WebServerProg::accessClientData(int clientSocket)
+{
+	return m_clientDataMap.find(clientSocket)->second;
 }
 
 static int	countDepth(std::string path)
@@ -97,14 +103,15 @@ bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string,
 	return false;
 }
 
-void WebServerProg::parseRequest(int clientSocket, std::string request)
+
+void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
 	if (it == m_clientDataMap.end())
 		return;
 
 	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
-	std::istringstream	requestStream(request);
+	std::istringstream	requestStream(requestChunk);
 	std::string			token;
 
 	if (!(requestStream >> token))
@@ -153,31 +160,33 @@ void WebServerProg::parseRequest(int clientSocket, std::string request)
 		std::cerr << COLOR_RED << "Method not allowed\n" << COLOR_RESET;
 		_status = NOT_ALLOWED;
 	}
-	else if (clientRequestMap.find("Content-Length") != clientRequestMap.end())
-	{
-		char buffer[16384] = {};
-		std::istringstream bodyLengthStream(clientRequestMap.find("Content-Length")->second);
-		int bodyLength;
-		if (!(bodyLengthStream >> bodyLength))
-			std::runtime_error("Request parsing error!");
-		expectedBodySize = bodyLength;
+	accessClientData(clientSocket)._statusClient = IN_BODY;
+	// Set rest of the chunk stream to _body of clientData
+	if (accessDataInMap(clientSocket, "Method") != "POST")
+		return;
+	
+	accessClientData(clientSocket)._body.assign(std::istreambuf_iterator<char>(requestStream), std::istreambuf_iterator<char>());
+	accessClientData(clientSocket).expectedBodySize = std::stoi(accessDataInMap(clientSocket, "Content-Length"));
+	accessClientData(clientSocket).currentBodySize = accessClientData(clientSocket)._body.size();
 
-		std::ostringstream bodyStream;
-		while (bodyLength > 0)
-		{
-			int bytesRead = requestStream.readsome(buffer, std::min(static_cast<std::streamsize>(sizeof(buffer)), static_cast<std::streamsize>(bodyLength)));
-			std::cout << COLOR_GREEN << "bytesRead:	" << bytesRead  << COLOR_RESET << std::endl;
-			if (bytesRead <= 0)
-			{
-				std::runtime_error("Failed to read the entire body!");
-				break;
-			}
-			bodyStream.write(buffer, bytesRead);
-			bodyLength -= bytesRead;
-		}
-		std::string bodyStr = bodyStream.str();
-		clientRequestMap.insert(std::make_pair("Body", bodyStr));
-		currentBodySize += clientRequestMap.find("Body")->second.size();
+}
+
+void WebServerProg::handleBody(int clientSocket, __attribute__((unused))std::string requestChunk)
+{
+	accessClientData(clientSocket)._body.append(requestChunk);
+	accessClientData(clientSocket).currentBodySize = accessClientData(clientSocket)._body.size();
+}
+
+void WebServerProg::handleChunk(int clientSocket, std::string requestChunk)
+{
+	switch (accessClientData(clientSocket)._statusClient)
+	{
+		case NONE:
+			parseHeaders(clientSocket, requestChunk);
+			break;
+		case IN_BODY:
+			handleBody(clientSocket, requestChunk);
+			break;
 	}
 }
 
@@ -201,13 +210,14 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	}
 	else
 	{
-		std::string request(buffer, buffer + bytes_received);
+		std::string requestChunk(buffer, buffer + bytes_received);
 		_request = buffer;
 		// std::cout << _request << std::endl;
-		parseRequest(clientSocket, request);
+		handleChunk(clientSocket, requestChunk);
 	}
-	if (currentBodySize == expectedBodySize) 
+	if (accessClientData(clientSocket).currentBodySize == accessClientData(clientSocket).expectedBodySize)
+	{
 		m_pollSocketsVec[pollIndex].revents = POLLOUT;
-
+	}
 	return 0;
 }

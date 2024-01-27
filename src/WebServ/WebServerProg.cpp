@@ -40,10 +40,12 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 
 void WebServerProg::initClientData(int clientSocket, int serverIndex)
 {
-	clientData data;
+	clientData data = {};
 	data.serverIndex = serverIndex;
 	data.connectionTime = std::chrono::steady_clock::now();
+	data._statusClient = NONE;
 	m_clientDataMap.insert(std::make_pair(clientSocket, data));
+
 
 }
 
