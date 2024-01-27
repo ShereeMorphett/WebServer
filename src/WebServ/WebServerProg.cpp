@@ -18,7 +18,7 @@
 #include "utils.hpp"
 #include "CgiHandler.hpp"
 #include <chrono>
-#include <sys/stat.h>
+
 
 
 # define MAXSOCKET 25
@@ -81,19 +81,6 @@ bool hasCgiExtension(const std::string& filePath)
     return dotPosition != std::string::npos && (filePath.substr(dotPosition) == ".py");
 }
 
-bool isDirectory(const std::string& path)
-{
-    struct stat fileInfo;
-    
-    if (stat(path.c_str(), &fileInfo) != 0)
-	{
-        std::cerr << "Error getting file information for " << path << std::endl;
-        return false;
-    }
-
-    return S_ISDIR(fileInfo.st_mode);
-}
-
 void WebServerProg::sendResponse(int clientSocket)
 {
 	char method = accessDataInMap(clientSocket, "Method")[0];
@@ -109,10 +96,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		appendBody(_response, body, path);
 	}
 	else if (isDirectory(accessDataInMap(clientSocket, "Path")))
-	{
-		std::cout << COLOR_GREEN << "Location is a directory" << COLOR_RESET << std::endl;
-		_response.append(createDirectoryListing(accessDataInMap(clientSocket, "Path")));
-	}
+		_response.append(createDirectoryListing(accessDataInMap(clientSocket, "Path"), accessDataInMap(clientSocket, "Referer")));
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
@@ -140,10 +124,8 @@ void WebServerProg::sendResponse(int clientSocket)
 	if (bytes_sent < 0)
 	{
 		std::cout << "Error! send" << "\n";
-		exit(EXIT_FAILURE);
 	}
 	_response.clear();
-	
 }
 
 void WebServerProg::initServers()
@@ -216,9 +198,14 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
 }		
 void	WebServerProg::closeClientConnection(int clientIndex)
 {
-	close(m_pollSocketsVec[clientIndex].fd);		
-	m_clientDataMap.erase(m_pollSocketsVec[clientIndex].fd);
-	m_pollSocketsVec.erase(m_pollSocketsVec.begin() + clientIndex);
+
+	if (clientIndex >= 0 && clientIndex < static_cast<int>(m_pollSocketsVec.size()))
+	{
+		close(m_pollSocketsVec[clientIndex].fd);		
+		m_clientDataMap.erase(m_pollSocketsVec[clientIndex].fd);
+		m_pollSocketsVec.erase(m_pollSocketsVec.begin() + clientIndex);
+	} 
+
 }
 
 void WebServerProg::handleRequestResponse(int clientIndex)

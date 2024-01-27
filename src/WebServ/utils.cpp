@@ -2,7 +2,7 @@
 #include <iostream>
 #include "utils.hpp"
 #include "../Color.hpp"
-
+#include <sys/stat.h>
 
 void skipNonPrintable(std::istream& stream)
 {
@@ -13,6 +13,19 @@ void skipNonPrintable(std::istream& stream)
             return ;
         stream.get();
     }
+}
+
+bool isDirectory(const std::string& path)
+{
+    struct stat fileInfo;
+    
+    if (stat(path.c_str(), &fileInfo) != 0)
+	{
+        std::cerr << "Error getting file information for " << path << std::endl;
+        return false;
+    }
+
+    return S_ISDIR(fileInfo.st_mode);
 }
 
 void skipWhitespace(std::istream& stream)

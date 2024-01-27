@@ -69,7 +69,7 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 		{
 			char buffer[1024];
 			memset(buffer, 0, sizeof(buffer));
-			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + '/' + path));
+			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + path)); //TODO: sheree removed '/' if it breaks something
 	
 		}
 		else if (it == server.locations.end() - 1)
@@ -195,6 +195,7 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	char buffer[16384] = {};
 
 	_request.clear();
+
 	int bytes_received = recv(clientSocket, buffer, sizeof(buffer), 0);
 	if (bytes_received < 0)
 	{
@@ -212,7 +213,7 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	{
 		std::string requestChunk(buffer, buffer + bytes_received);
 		_request = buffer;
-		// std::cout << _request << std::endl;
+		std::cout << _request << std::endl;
 		handleChunk(clientSocket, requestChunk);
 	}
 	if (accessClientData(clientSocket).currentBodySize == accessClientData(clientSocket).expectedBodySize)

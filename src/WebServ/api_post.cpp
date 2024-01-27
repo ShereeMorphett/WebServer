@@ -32,25 +32,42 @@ static void	appendMisc(std::string& _res) {
 	_res.append(END_HEADER);
 }
 
-void	WebServerProg::postResponse(int clientSocket) {
-	std::string 	body = accessDataInMap(clientSocket, "Body");
-	std::string		fileName = fetchName(body);
-	if (fileName == "error") {
-		// Means filename was not provided by headers
-		std::cout << COLOR_RED << "Error: filename not provided\n" << COLOR_RESET;
-		return ;
-	}
+void parseAndWriteToFile(const std::string& body, const std::string& fileName) {
+    // Find the start and end positions of the actual content
+    size_t start = body.find("\r\n\r\n") + 4;
+    size_t end = body.rfind("\r\n------");
 
-	std::ofstream	outFile(fileName, std::ios::binary);
-	if (!outFile) {
-		_status = INT_ERROR;
-		std::cerr << "Error: ofstream\n";
-		return;
-	}
-	outFile << body;
-	outFile.close();
-	
-	_status = OK;
-	appendStatus(_response, _status);
-	appendMisc(_response);
+    // Check if the boundaries are found
+    if (start != std::string::npos && end != std::string::npos) {
+        // Extract the relevant content
+        std::string content = body.substr(start, end - start);
+
+        // Write the content to the file
+        std::ofstream outFile(fileName, std::ios::binary);
+        if (!outFile) {
+            std::cerr << "Error: ofstream\n";
+            return;
+        }
+
+        outFile << content;
+        outFile.close();
+    } else {
+        std::cerr << "Error: Boundaries not found\n";
+    }
+}
+
+void WebServerProg::postResponse(int clientSocket) {
+    std::string body = accessDataInMap(clientSocket, "Body");
+    std::string fileName = fetchName(body);
+    if (fileName == "error") {
+        // Means filename was not provided by headers
+        std::cout << COLOR_RED << "Error: filename not provided\n" << COLOR_RESET;
+        return;
+    }
+
+    parseAndWriteToFile(body, fileName);
+
+    _status = OK;
+    appendStatus(_response, _status);
+    appendMisc(_response);
 }
