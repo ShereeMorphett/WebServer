@@ -20,7 +20,6 @@ static std::string parseStartingPath(std::string startingPath)
     } 
 	else
 	{
-
 		return "";
     }
 }
@@ -47,8 +46,10 @@ static std::string buildLink(DIR *directory, std::string path, std::string refer
             std::string entryPath = path + entryName;
             bool isDirectory = (en->d_type == DT_DIR);
             std::string relativePath = parseStartingPath(entryPath);
+			std::cout << COLOR_GREEN << "relativePath		" << relativePath << std::cout;
             size_t refererPos = referer.find_last_of('/');
             std::string refererPath = referer.substr(0, refererPos + 1);
+			std::cout << COLOR_GREEN << "refererPath		" << refererPath << std::cout;
             relativePath = refererPath + relativePath;
 
             std::string fullLink = "<a href='" + relativePath + "'>" + entryName + "</a>";
