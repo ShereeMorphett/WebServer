@@ -37,7 +37,6 @@ struct clientData
 	std::chrono::steady_clock::time_point	connectionTime;
 	std::string	_responseClient;
 	std::string	_requestClient;
-	std::string _body;
 	size_t		currentBodySize; 
 	size_t		expectedBodySize;
 	int			_statusClient;

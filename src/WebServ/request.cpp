@@ -165,16 +165,18 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk)
 	if (accessDataInMap(clientSocket, "Method") != "POST")
 		return;
 	
-	accessClientData(clientSocket)._body.assign(std::istreambuf_iterator<char>(requestStream), std::istreambuf_iterator<char>());
+	std::string body;
+	body.assign(std::istreambuf_iterator<char>(requestStream), std::istreambuf_iterator<char>());
+	clientRequestMap.insert(std::make_pair("Body", body));
 	accessClientData(clientSocket).expectedBodySize = std::stoi(accessDataInMap(clientSocket, "Content-Length"));
-	accessClientData(clientSocket).currentBodySize = accessClientData(clientSocket)._body.size();
+	accessClientData(clientSocket).currentBodySize = accessDataInMap(clientSocket, "Body").size();
 
 }
 
 void WebServerProg::handleBody(int clientSocket, __attribute__((unused))std::string requestChunk)
 {
-	accessClientData(clientSocket)._body.append(requestChunk);
-	accessClientData(clientSocket).currentBodySize = accessClientData(clientSocket)._body.size();
+	accessDataInMap(clientSocket, "Body").append(requestChunk);
+	accessClientData(clientSocket).currentBodySize = accessDataInMap(clientSocket, "Body").size();
 }
 
 void WebServerProg::handleChunk(int clientSocket, std::string requestChunk)
