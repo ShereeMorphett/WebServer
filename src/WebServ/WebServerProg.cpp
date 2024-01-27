@@ -94,10 +94,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		appendBody(_response, body, path);
 	}
 	else if (isDirectory(accessDataInMap(clientSocket, "Path")))
-	{
-		_response.append(createDirectoryListing(accessDataInMap(clientSocket, "Path")));
-		std::cout << COLOR_GREEN << "Location is a directory" << COLOR_RESET << std::endl;
-	}
+		_response.append(createDirectoryListing(accessDataInMap(clientSocket, "Path"), accessDataInMap(clientSocket, "Referer")));
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
@@ -125,7 +122,6 @@ void WebServerProg::sendResponse(int clientSocket)
 	if (bytes_sent < 0)
 	{
 		std::cout << "Error! send" << "\n";
-		exit(EXIT_FAILURE);
 	}
 	_response.clear();
 }

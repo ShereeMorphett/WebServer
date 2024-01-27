@@ -1,5 +1,5 @@
 # Program name
-NAME = WebServ
+NAME = webserv
 
 # compiler
 CC = c++
