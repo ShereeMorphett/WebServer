@@ -28,7 +28,7 @@ static std::string buildLink(DIR *directory, std::string path, std::string refer
 {
     struct dirent *en;
     std::string directoryFinding;
-
+	(void) referer;//
     directoryFinding += "<!DOCTYPE html>\n\
                         <html>\n\
                         <head>\n\
@@ -43,22 +43,21 @@ static std::string buildLink(DIR *directory, std::string path, std::string refer
         std::string entryName = en->d_name;
         if (entryName != "." && entryName != ".." && entryName[0] != '.' && entryName != "obj" && entryName.substr(entryName.length() - 3) != ".md")
         {
+			if (isDirectory(path) && path.back() != '/')
+				path.append("/");
             std::string entryPath = path + entryName;
-            bool isDirectory = (en->d_type == DT_DIR);
+			std::cout << COLOR_GREEN << "Path		" << path << COLOR_RESET << std::endl;
+            bool boolDirectory = (en->d_type == DT_DIR);
+			// // std::string relativePath = entryPath.append("/");
+			// std::cout << COLOR_GREEN << "relativePath		" << relativePath << std::endl;
+            // size_t refererPos = referer.find_last_of('/');
+            // std::string refererPath = referer.substr(0, refererPos + 1);
             std::string relativePath = parseStartingPath(entryPath);
-			std::cout << COLOR_GREEN << "relativePath		" << relativePath << std::cout;
-            size_t refererPos = referer.find_last_of('/');
-            std::string refererPath = referer.substr(0, refererPos + 1);
-			std::cout << COLOR_GREEN << "refererPath		" << refererPath << std::cout;
-            relativePath = refererPath + relativePath;
-
+			std::cout << COLOR_CYAN << "relativePath		" << relativePath << COLOR_RESET << std::endl;
             std::string fullLink = "<a href='" + relativePath + "'>" + entryName + "</a>";
-            if (!relativePath.empty() && relativePath.back() == '/')
-                relativePath.pop_back();
-
             directoryFinding += "\t\t<p>";
 
-            if (isDirectory)
+            if (boolDirectory)
             {
                 directoryFinding += fullLink + "\n";
             }
@@ -81,6 +80,7 @@ static std::string buildLink(DIR *directory, std::string path, std::string refer
 
 std::string WebServerProg::createDirectoryListing(std::string startingPath, std::string referer)
 {
+	(void) referer;//
     _response.append(HTTP_HEADER);
     _response.append(NEW_VALUE);
     _response.append("Content-Type: text/html\r\n");
@@ -90,8 +90,8 @@ std::string WebServerProg::createDirectoryListing(std::string startingPath, std:
 	std::string basePath;
 	if (startingPath == "/")
 		basePath = "";
-	else
-		basePath = parseStartingPath(startingPath);
+	// else
+	// 	basePath = parseStartingPath(startingPath);
     if (directory == NULL)
     {
         std::cerr << COLOR_RED << "Error: could not open " << startingPath << COLOR_RESET << std::endl;
