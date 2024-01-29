@@ -76,7 +76,7 @@ class WebServerProg
 		void parseHeaders(int clientSocket, std::string requestChunk);
 		server& getClientServer(int clientSocket);
 		clientData& accessClientData(int clientSocket);
-
+		void appendChunk(int clientSocket, std::string requestChunk);
 
 		void handleEvents();
 		void handleRequestResponse(int clientIndex);

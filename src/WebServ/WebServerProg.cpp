@@ -223,10 +223,10 @@ void WebServerProg::handleRequestResponse(int clientIndex)
 			closeClientConnection(clientIndex);
 		}
 	}
-		_request.clear();
-		_status = NOT_SET;
-		currentBodySize = 0;
-		expectedBodySize = 0;
+	_request.clear();
+	_status = NOT_SET;
+	currentBodySize = 0;
+	expectedBodySize = 0;
 }
 
 void WebServerProg::handleEvents()
@@ -241,6 +241,7 @@ void WebServerProg::handleEvents()
 			}
 			else
 			{
+				std::cout << "test " << std::endl;
 				handleRequestResponse(i);
 			}
 		}
@@ -269,7 +270,7 @@ void WebServerProg::runPoll()
 {
 	while (true)
 	{
-		checkClientTimeout();
+		// checkClientTimeout();
 		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 10);
 		if (pollResult < 0)
 		{

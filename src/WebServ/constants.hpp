@@ -45,7 +45,8 @@
 // Request statuses
 # define	NONE	0
 # define	IN_BODY	1
-# define	DONE	2
+# define	CHUNKED	2
+# define	DONE	3
 
 
 # define	SERVER_PAGE			"/src/defaults/500.html"
