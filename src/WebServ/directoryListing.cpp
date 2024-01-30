@@ -47,17 +47,13 @@ static std::string buildDirectoryLinks(DIR *directory, std::string rootPath)
         std::string entryName = en->d_name;
         if (entryName == "." || entryName == ".." || entryName[0] == '.' || entryName == "obj")
             continue;
-        std::cout << COLOR_MAGENTA << "in while" << COLOR_RESET << std::endl;
         std::string entryPath = rootPath + entryName;
         bool boolDirectory = (en->d_type == DT_DIR);
        if (boolDirectory && !isDirectory(entryPath))
         {
-        // Handle the case where the directory entry is expected to be a directory, but it's not.
             std::cerr << "Error: " << entryPath << " is not a directory as expected." << std::endl;
-            continue;  // Skip this entry
+            continue;
         }
-        std::cout << COLOR_MAGENTA << "after error" << COLOR_RESET << std::endl;
-
         std::string relativePath = parseStartingPath(entryPath);
         std::string fullLink = "<a href='" + relativePath + "'>" + entryName + "</a>";
         directoryFinding += "\t\t<p>";
