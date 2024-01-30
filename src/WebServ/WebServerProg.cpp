@@ -101,7 +101,7 @@ void WebServerProg::sendResponse(int clientSocket)
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
 		appendStatus(_response, OK);
-		_response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request));
+		_response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), accessClientData(clientSocket)._requestClient));
     }
 	else
 	{	
@@ -241,7 +241,6 @@ void WebServerProg::handleEvents()
 			}
 			else
 			{
-				std::cout << "test " << std::endl;
 				handleRequestResponse(i);
 			}
 		}
@@ -270,7 +269,7 @@ void WebServerProg::runPoll()
 {
 	while (true)
 	{
-		// checkClientTimeout();
+		checkClientTimeout();
 		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 10);
 		if (pollResult < 0)
 		{

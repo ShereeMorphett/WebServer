@@ -186,7 +186,6 @@ void WebServerProg::handleBody(int clientSocket, __attribute__((unused))std::str
 
 void WebServerProg::appendChunk(__attribute__((unused))int clientSocket, __attribute__((unused))std::string requestChunk)
 {
-	std::cout << "JEEEESU" << std::endl;
 	std::istringstream ss(requestChunk);
 
 	size_t chunkSize;
@@ -194,7 +193,6 @@ void WebServerProg::appendChunk(__attribute__((unused))int clientSocket, __attri
 	ss >> chunkSize;
 	ss.ignore();
 	ss.ignore();
-	std::cout << chunkSize << std::endl;
 	if (chunkSize == 0)
 	{
 		accessClientData(clientSocket)._statusClient = DONE;
@@ -246,8 +244,9 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	else
 	{
 		std::string requestChunk(buffer, buffer + bytes_received);
+		accessClientData(clientSocket)._requestClient.append(buffer, buffer + bytes_received);
 		_request.assign(buffer, buffer + bytes_received);
-		std::cout << _request << std::endl;
+		// std::cout << _request << std::endl;
 		handleChunk(clientSocket, requestChunk);
 	}
 	if (accessClientData(clientSocket)._statusClient != CHUNKED && accessClientData(clientSocket).currentBodySize == accessClientData(clientSocket).expectedBodySize)

@@ -35,7 +35,6 @@ struct clientData
 	int 									serverIndex;
 	std::multimap<std::string, std::string> requestData;
 	std::chrono::steady_clock::time_point	connectionTime;
-	std::string	_responseClient;
 	std::string	_requestClient;
 	size_t		currentBodySize; 
 	size_t		expectedBodySize;
