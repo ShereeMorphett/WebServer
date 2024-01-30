@@ -89,7 +89,7 @@ class WebServerProg
 		void	getResponse(int clientSocket);
 		void	deleteResponse(int clientSocket);
 		bool 	validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap);
-		std::string createDirectoryListing(std::string path, std::string referer);
+		std::string createDirectoryListing(std::string path);
 		void	closeClientConnection(int clientIndex);
 };
 

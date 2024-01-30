@@ -96,7 +96,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		appendBody(_response, body, path);
 	}
 	else if (isDirectory(accessDataInMap(clientSocket, "Path")))
-		_response.append(createDirectoryListing(accessDataInMap(clientSocket, "Path"), accessDataInMap(clientSocket, "Referer")));
+		_response.append(createDirectoryListing(accessDataInMap(clientSocket, "Path")));
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
