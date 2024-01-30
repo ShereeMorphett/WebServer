@@ -103,8 +103,22 @@ bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string,
 	return false;
 }
 
+void	WebServerProg::saveBody(int clientSocket, int size)
+{
+	std::vector<u_int8_t>	bodyVector;
+	
+	size_t	rawSize = accessClientData(clientSocket)._rawRequest.size();
 
-void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk)
+	bodyVector.resize(size);
+
+	for (size_t i = 0; i < rawSize; i++) {
+		bodyVector[i] = accessClientData(clientSocket)._rawRequest[i];
+	}
+
+	accessClientData(clientSocket)._bodyString = std::string(bodyVector.begin(), bodyVector.end());
+}
+
+void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int size)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
 	if (it == m_clientDataMap.end())
@@ -165,23 +179,35 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk)
 	if (accessDataInMap(clientSocket, "Method") != "POST")
 		return;
 	
-	accessClientData(clientSocket)._statusClient = IN_BODY;
-	std::string body;
-	body.assign(std::istreambuf_iterator<char>(requestStream), std::istreambuf_iterator<char>());
-	clientRequestMap.insert(std::make_pair("Body", body));
-	if (accessDataInMap(clientSocket, "Transfer-Encoding") == "chunked")
-	{
-		accessClientData(clientSocket)._statusClient = CHUNKED;
-		return;
-	}
-	accessClientData(clientSocket).expectedBodySize = std::stoi(accessDataInMap(clientSocket, "Content-Length"));
-	accessClientData(clientSocket).currentBodySize = accessDataInMap(clientSocket, "Body").size();
+
+	clientData client = accessClientData(clientSocket);
+	client._statusClient = IN_BODY;
+	client._expectedBodySize = std::stoi(accessDataInMap(clientSocket, "Content-Length"));
+	
+	std::string content;
+	std::streampos pos = requestStream.tellg();
+	int tot = static_cast<int>(pos);
+	client._currentBodySize = size - tot;
+	std::cout << "tot: " << tot << " body size: " << client._currentBodySize << std::endl;
+
+
+	client._rawRequest = requestChunk.substr(tot);
+	std::cout << COLOR_GREEN << "raw: " << client._rawRequest << COLOR_RESET << std::endl;
+
+	saveBody(clientSocket, client._currentBodySize);
+
+	// if (accessDataInMap(clientSocket, "Transfer-Encoding") == "chunked")
+	// {
+	// 	accessClientData(clientSocket)._statusClient = CHUNKED;
+	// 	return;
+	// }
 }
 
-void WebServerProg::handleBody(int clientSocket, __attribute__((unused))std::string requestChunk)
+void WebServerProg::handleBody(int clientSocket, std::string requestChunk)
 {
+	std::cout << COLOR_GREEN << "BODY: " << requestChunk << COLOR_RESET << std::endl;
 	accessDataInMap(clientSocket, "Body").append(requestChunk);
-	accessClientData(clientSocket).currentBodySize = accessDataInMap(clientSocket, "Body").size();
+	accessClientData(clientSocket)._currentBodySize = accessDataInMap(clientSocket, "Body").size();
 }
 
 void WebServerProg::appendChunk(__attribute__((unused))int clientSocket, __attribute__((unused))std::string requestChunk)
@@ -201,15 +227,14 @@ void WebServerProg::appendChunk(__attribute__((unused))int clientSocket, __attri
 	std::string actualChunk;
 	actualChunk.assign(std::istreambuf_iterator<char>(ss), std::istreambuf_iterator<char>());
 	accessDataInMap(clientSocket, "Body").append(actualChunk);
-
 }
 
-void WebServerProg::handleChunk(int clientSocket, std::string requestChunk)
+void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int size)
 {
 	switch (accessClientData(clientSocket)._statusClient)
 	{
 		case NONE:
-			parseHeaders(clientSocket, requestChunk);
+			parseHeaders(clientSocket, requestChunk, size);
 			break;
 		case IN_BODY:
 			handleBody(clientSocket, requestChunk);
@@ -223,12 +248,11 @@ void WebServerProg::handleChunk(int clientSocket, std::string requestChunk)
 
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
-	char buffer[8192] = {};
+	char buffer[50000];
 
-	_request.clear();
-
-	int bytes_received = recv(clientSocket, buffer, sizeof(buffer), 0);
-	std::cout << bytes_received << std::endl;
+	std::memset(buffer, 0, 50000);
+	int bytes_received = recv(clientSocket, buffer, 50000, 0);
+	// std::cout << bytes_received << std::endl;
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK) //TODO: read and write check from revents
@@ -243,13 +267,13 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	}
 	else
 	{
-		std::string requestChunk(buffer, buffer + bytes_received);
+		// std::string requestChunk(buffer, buffer + bytes_received);
+		std::string requestChunk(buffer, bytes_received);
 		accessClientData(clientSocket)._requestClient.append(buffer, buffer + bytes_received);
-		_request.assign(buffer, buffer + bytes_received);
-		// std::cout << _request << std::endl;
-		handleChunk(clientSocket, requestChunk);
+		std::cout << COLOR_MAGENTA << "REGUEST:\n" << requestChunk << COLOR_RESET << std::endl;
+		handleChunk(clientSocket, requestChunk, bytes_received);
 	}
-	if (accessClientData(clientSocket)._statusClient != CHUNKED && accessClientData(clientSocket).currentBodySize == accessClientData(clientSocket).expectedBodySize)
+	if (accessClientData(clientSocket)._statusClient != CHUNKED && accessClientData(clientSocket)._currentBodySize == accessClientData(clientSocket).expectedBodySize)
 	{
 		m_pollSocketsVec[pollIndex].revents = POLLOUT;
 	}

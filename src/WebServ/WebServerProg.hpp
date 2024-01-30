@@ -35,10 +35,14 @@ struct clientData
 	int 									serverIndex;
 	std::multimap<std::string, std::string> requestData;
 	std::chrono::steady_clock::time_point	connectionTime;
-	std::string	_requestClient;
-	size_t		currentBodySize; 
-	size_t		expectedBodySize;
-	int			_statusClient;
+	std::string								_requestClient;
+	size_t									expectedBodySize;
+	int										_statusClient;
+
+	size_t									_expectedBodySize;
+	size_t									_currentBodySize; 
+	std::string								_rawRequest;
+	std::string								_bodyString;
 };
 
 class WebServerProg
@@ -70,12 +74,14 @@ class WebServerProg
 		void initClientData(int clientSocket, int serverIndex);
 		std::string accessDataInMap(int clientSocket, std::string header);
 		void deleteDataInMap(int clientSocket);
-		void handleChunk(int clientSocket, std::string request);
+		void handleChunk(int clientSocket, std::string request, int size);
 		void handleBody(int clientSocket, std::string request);
-		void parseHeaders(int clientSocket, std::string requestChunk);
+		void parseHeaders(int clientSocket, std::string requestChunk, int size);
 		server& getClientServer(int clientSocket);
 		clientData& accessClientData(int clientSocket);
 		void appendChunk(int clientSocket, std::string requestChunk);
+
+		void	saveBody(int clientSocket, int size);
 
 		void handleEvents();
 		void handleRequestResponse(int clientIndex);

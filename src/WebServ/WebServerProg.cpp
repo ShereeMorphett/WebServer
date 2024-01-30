@@ -192,8 +192,10 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
         close(clientSocket);  
         return -1;
     }
+	std::cout << COLOR_GREEN << "client id: " << clientSocket << " OPENING\n" << COLOR_RESET;
     addSocketToPoll(clientSocket, POLLIN);
 	initClientData(clientSocket, serverIndex);
+	
     return clientSocket;
 }		
 void	WebServerProg::closeClientConnection(int clientIndex)
@@ -201,6 +203,7 @@ void	WebServerProg::closeClientConnection(int clientIndex)
 
 	if (clientIndex >= 0 && clientIndex < static_cast<int>(m_pollSocketsVec.size()))
 	{
+		std::cout << COLOR_RED<< "client id: " << m_pollSocketsVec[clientIndex].fd << " CLOSING\n" << COLOR_RESET;
 		close(m_pollSocketsVec[clientIndex].fd);		
 		m_clientDataMap.erase(m_pollSocketsVec[clientIndex].fd);
 		m_pollSocketsVec.erase(m_pollSocketsVec.begin() + clientIndex);
@@ -219,14 +222,11 @@ void WebServerProg::handleRequestResponse(int clientIndex)
 	{
 		sendResponse(m_pollSocketsVec[clientIndex].fd);
 		if(accessDataInMap(m_pollSocketsVec[clientIndex].fd,  "Connection") == "close")
-		{	
+		{
 			closeClientConnection(clientIndex);
 		}
 	}
-	_request.clear();
 	_status = NOT_SET;
-	currentBodySize = 0;
-	expectedBodySize = 0;
 }
 
 void WebServerProg::handleEvents()
@@ -270,7 +270,7 @@ void WebServerProg::runPoll()
 	while (true)
 	{
 		checkClientTimeout();
-		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 10);
+		int pollResult = poll(m_pollSocketsVec.data(), m_pollSocketsVec.size(), 1000);
 		if (pollResult < 0)
 		{
 			std::cerr << "Error! poll" << std::endl;
