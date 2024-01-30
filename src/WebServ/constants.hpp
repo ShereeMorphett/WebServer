@@ -41,6 +41,14 @@
 # define	FORBIDDEN_PAGE		"/src/defaults/403.html"
 # define	UNAUTHORIZED_PAGE	"/src/defaults/401.html"
 # define	NOT_ALLOWED_PAGE	"/src/defaults/405.html"
+
+// Request statuses
+# define	NONE	0
+# define	IN_BODY	1
+# define	CHUNKED	2
+# define	DONE	3
+
+
 # define	SERVER_PAGE			"/src/defaults/500.html"
 
 // All methods server supports

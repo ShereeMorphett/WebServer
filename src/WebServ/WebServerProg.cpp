@@ -40,10 +40,12 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 
 void WebServerProg::initClientData(int clientSocket, int serverIndex)
 {
-	clientData data;
+	clientData data = {};
 	data.serverIndex = serverIndex;
 	data.connectionTime = std::chrono::steady_clock::now();
+	data._statusClient = NONE;
 	m_clientDataMap.insert(std::make_pair(clientSocket, data));
+
 
 }
 
@@ -99,7 +101,7 @@ void WebServerProg::sendResponse(int clientSocket)
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
 		appendStatus(_response, OK);
-		_response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), _request));
+		_response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), accessClientData(clientSocket)._requestClient));
     }
 	else
 	{	
@@ -221,10 +223,10 @@ void WebServerProg::handleRequestResponse(int clientIndex)
 			closeClientConnection(clientIndex);
 		}
 	}
-		_request.clear();
-		_status = NOT_SET;
-		currentBodySize = 0;
-		expectedBodySize = 0;
+	_request.clear();
+	_status = NOT_SET;
+	currentBodySize = 0;
+	expectedBodySize = 0;
 }
 
 void WebServerProg::handleEvents()

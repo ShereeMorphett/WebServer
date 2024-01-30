@@ -35,6 +35,10 @@ struct clientData
 	int 									serverIndex;
 	std::multimap<std::string, std::string> requestData;
 	std::chrono::steady_clock::time_point	connectionTime;
+	std::string	_requestClient;
+	size_t		currentBodySize; 
+	size_t		expectedBodySize;
+	int			_statusClient;
 };
 
 class WebServerProg
@@ -44,7 +48,6 @@ class WebServerProg
 		std::vector<server> servers;
 		size_t serverCount;
 		std::string configFileName;
-		
 		std::map<int, struct clientData> m_clientDataMap;
 		std::string	_response;
 		std::string	_request;
@@ -55,17 +58,24 @@ class WebServerProg
 	public:
 
 		void addSocketToPoll(int socket, int event);
-		void initClientData(int clientSocket, int serverIndex);
 		void startProgram();
 		void initServers();
 		void sendResponse(int clientSocket);
-		std::string accessDataInMap(int clientSocket, std::string header);
-		void deleteDataInMap(int clientSocket);
-		void parseRequest(int clientSocket, std::string request);
-		bool receiveRequest(int clientSocket, int pollIndex);
 		int  acceptConnection(int listenSocket);
 		void runPoll();
+
+
+		// Request methods
+		bool receiveRequest(int clientSocket, int pollIndex);
+		void initClientData(int clientSocket, int serverIndex);
+		std::string accessDataInMap(int clientSocket, std::string header);
+		void deleteDataInMap(int clientSocket);
+		void handleChunk(int clientSocket, std::string request);
+		void handleBody(int clientSocket, std::string request);
+		void parseHeaders(int clientSocket, std::string requestChunk);
 		server& getClientServer(int clientSocket);
+		clientData& accessClientData(int clientSocket);
+		void appendChunk(int clientSocket, std::string requestChunk);
 
 		void handleEvents();
 		void handleRequestResponse(int clientIndex);
