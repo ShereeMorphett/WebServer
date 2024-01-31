@@ -102,6 +102,10 @@ void	appendStatus(std::string& _res, int status) {
 		case NO_CONTENT:
 			_res.append(" No Content");
 			break;
+
+		case BAD_REQUEST:
+			_res.append(" Bad Request");
+			break;
  
 		default:
 			break;

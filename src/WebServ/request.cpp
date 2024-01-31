@@ -117,23 +117,16 @@ static std::string	fetchName(std::string& body) {
 	std::string	target = "filename=\"";
 
 	size_t	startPos = body.find(target);
-	if (startPos == std::string::npos) {
-		std::cout << "Returning error start \n";
+	if (startPos == std::string::npos)
 		return "error";
-	}
 
 	startPos += target.length();
 	size_t	endPos = body.find("\"", startPos);
-	if (endPos == std::string::npos) {
-		std::cout << "Returning error end \n";
+	if (endPos == std::string::npos)
 		return "error";
-	}
 
 	size_t len = endPos - startPos;
-	std::cout << "len: " << len << " start: " << startPos << " endPos: " << endPos << std::endl;
 	std::string	name = body.substr(startPos, len);
-	std::cout << "FILENAME: " << name << std::endl;
-
 
 	return name;
 }
@@ -173,20 +166,17 @@ void	WebServerProg::parseBody(int clientSocket)
 	if (format.find("multipart/form-data") != std::string::npos) {
 		client._fileName = fetchName(client._bodyString);
 		if (client._fileName == "error") {
-			std::cout << "Error in filename: " << client._fileName << std::endl;
 			client._status = BAD_REQUEST;
 			return;
 		}
 
 		std::string boundary = parseBoundary(format);
 		if (boundary.empty()) {
-			std::cout << "Error in boundary: " << boundary << std::endl;
 			client._status = BAD_REQUEST;
 			return;
 		}
 
 		if (!removeBoundary(client, boundary)) {
-			std::cout << "Error in remove bound: " << std::endl;
 			client._status = BAD_REQUEST;
 			return;
 		}
@@ -194,7 +184,6 @@ void	WebServerProg::parseBody(int clientSocket)
 		client._requestReady = true;
 	}
 	else {
-		std::cout << "ERROR WITH FORMAT" << std::endl;
 		client._status = BAD_REQUEST;
 	}
 }
@@ -205,7 +194,6 @@ static bool	checkValidBodySize(__attribute__((unused))int clientSocket, clientDa
 		return false;
 	// TODO: add cheks for max body size from headers and config
 
-	std::cout << "full body recieved \n";
 	return true;
 }
 
@@ -278,10 +266,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	std::streampos position = requestStream.tellg();
 	int currentPos = static_cast<int>(position);
 	int	len = size - currentPos;
-	// TODO: REMOVE
-	std::cout << "pos: " << position << " len: " << len << " size: " << size << std::endl;
 	if (len > 0) {	
-		std::cout << "parsing body \n";
 		client._rawRequest = requestChunk.substr(currentPos);
 		saveBody(clientSocket, len);
 		client._rawRequest.clear();
@@ -340,11 +325,9 @@ void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int 
 	switch (accessClientData(clientSocket)._statusClient)
 	{
 		case NONE:
-			std::cout << "parsing headers \n";
 			parseHeaders(clientSocket, requestChunk, size);
 			break;
 		case IN_BODY:
-			std::cout << "again body \n";
 			handleBody(clientSocket, requestChunk, size);
 			break;
 		case CHUNKED:
@@ -377,16 +360,11 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 		buffer[bytes_received] = '\0';
 		std::string requestChunk(buffer, bytes_received);
 		accessClientData(clientSocket)._requestClient.append(buffer, buffer + bytes_received);
-		// TODO: REMOVE
-		// std::cout << COLOR_MAGENTA << "Request: " << requestChunk << COLOR_RESET << std::endl;
 		handleChunk(clientSocket, requestChunk, bytes_received);
 	}
-	// TODO: REMOVE
-	std::cout << "current: " << accessClientData(clientSocket)._currentBodySize << " expected: " << accessClientData(clientSocket)._expectedBodySize << std::endl;
-	std::cout << "req status: " << accessClientData(clientSocket)._requestReady << std::endl;
+
 	if (accessClientData(clientSocket)._statusClient != CHUNKED && accessClientData(clientSocket)._requestReady)
 	{
-		std::cout << COLOR_RED << "POLLOUT\n" << COLOR_RESET; // TODO: REMOVE
 		m_pollSocketsVec[pollIndex].revents = POLLOUT;
 	}
 	return 0;

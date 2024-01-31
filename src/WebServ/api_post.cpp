@@ -15,21 +15,15 @@ static void	appendMisc(std::string& _res) {
 void WebServerProg::postResponse(int clientSocket) {
     clientData& client = accessClientData(clientSocket);
 
-
-	if (client._status >= ERRORS) {
-		std::cout << "ERRORS\n";
-	}
-
-	std::cout << "Trying with filename: " << client._fileName << std::endl;
-	std::ofstream outFile(client._fileName, std::ios::binary);
-	if (!outFile) {
-		std::cout << "OUTFILE \n";
-		client._status = INT_ERROR;
-	}
-	else {
-		outFile << client._fileData;
-		outFile.close();
-		client._status = OK;
+	if (client._status < ERRORS) {	
+		std::ofstream outFile(client._fileName, std::ios::binary);
+		if (!outFile)
+			client._status = INT_ERROR;
+		else {
+			outFile << client._fileData;
+			outFile.close();
+			client._status = OK;
+		}
 	}
     
     appendStatus(client._response, client._status);

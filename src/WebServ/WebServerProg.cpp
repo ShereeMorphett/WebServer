@@ -89,7 +89,6 @@ void WebServerProg::sendResponse(int clientSocket)
 	char method = accessDataInMap(clientSocket, "Method")[0];
 	std::string& response = accessClientData(clientSocket)._response;
 	
-	std::cout << "STATUS WHEN SENDING RESPONSE: " << client._status << std::endl;
 	if (client._status >= ERRORS)
 	{
 		char buffer[1024] = {};
@@ -197,7 +196,6 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
         close(clientSocket);  
         return -1;
     }
-	std::cout << COLOR_GREEN << "client id: " << clientSocket << " OPENING\n" << COLOR_RESET;
     addSocketToPoll(clientSocket, POLLIN);
 	initClientData(clientSocket, serverIndex);
 	
@@ -240,12 +238,12 @@ void WebServerProg::handleRequestResponse(int clientIndex)
 	}
 	if (m_pollSocketsVec[clientIndex].revents & POLLOUT)
 	{
-		std::cout << "after polout\n";
 		sendResponse(m_pollSocketsVec[clientIndex].fd);
 		if (accessDataInMap(m_pollSocketsVec[clientIndex].fd,  "Connection") == "close")
 		{
 			closeClientConnection(clientIndex);
 		}
+		// TODO: If its keep alive, what should we reset?
 		// else
 		// {
 		// 	int	clientSocket = m_pollSocketsVec[clientIndex].fd;
