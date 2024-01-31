@@ -4,6 +4,8 @@
 #include "utils.hpp"
 #include "Color.hpp"
 #include <unistd.h>
+#include <iomanip>//
+#include <sstream>//
 
 static void	appendMisc(std::string& _res, size_t contentSize) {
 	_res.append("Content-Type: text/html");
@@ -12,6 +14,27 @@ static void	appendMisc(std::string& _res, size_t contentSize) {
 	_res.append(END_HEADER);
 }
 
+std::string urlEncode(const std::string& value) {
+    std::ostringstream escaped;
+    escaped.fill('0');
+    escaped << std::hex;
+
+    for (char c : value) {
+        // Keep alphanumeric and other safe characters unchanged
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            escaped << c;
+        } else {
+            // Any other characters are percent-encoded
+            escaped << std::uppercase;
+            escaped << '%' << std::setw(2) << int(static_cast<unsigned char>(c));
+            escaped << std::nouppercase;
+        }
+    }
+
+    return escaped.str();
+}
+
+//TODO: make the css linked and correct the file path from these links to the root upload directory when its in
 void WebServerProg::postResponse(int clientSocket) {
     clientData& client = accessClientData(clientSocket);
 
@@ -25,7 +48,7 @@ void WebServerProg::postResponse(int clientSocket) {
 			client._status = OK;
 		}
 	}
-	client._response.clear();//
+	client._response.clear();
     appendStatus(client._response, client._status);
 
 	std::string css_content = R"(body {
@@ -42,9 +65,14 @@ void WebServerProg::postResponse(int clientSocket) {
 
 	if (client._status == OK)
 	{
-    	std::string html_content = "<!DOCTYPE html>\n<html>\n<head>\n<title>You Successfully uploaded!</title>\n</head>\n<body>You Successfully uploaded!\n</body>\n</html>\r\n\r\n";
-		appendMisc(client._response, html_content.size());
-		client._response.append(html_content);
+        std::string html_content = "<!DOCTYPE html>\n<html>\n<head>\n<title>You Successfully uploaded!</title>\n</head>\n<body>\n<p>You Successfully uploaded! Click the link below to view your file.</p>\n";
+        
+		std::string filePath  = "./" + urlEncode(client._fileName); 
+		html_content += "<a href=\"" + filePath + "\" target=\"_blank\">View File</a>\n";
+        html_content += "</body>\n</html>\r\n\r\n";
+        appendMisc(client._response, html_content.size());
+        client._response.append(html_content);
+        client._response.append(html_content);
 	}
 	else
 	{
