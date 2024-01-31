@@ -51,9 +51,8 @@ static std::string buildDirectoryLinks(DIR *directory, std::string rootPath)
         bool boolDirectory = (en->d_type == DT_DIR);
        if (boolDirectory && !isDirectory(entryPath))
         {
-        // Handle the case where the directory entry is expected to be a directory, but it's not.
             std::cerr << "Error: " << entryPath << " is not a directory as expected." << std::endl;
-            continue;  // Skip this entry
+            continue;
         }
 
         std::string relativePath = parseStartingPath(entryPath);
