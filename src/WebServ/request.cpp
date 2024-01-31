@@ -68,7 +68,7 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 		{
 			char buffer[1024];
 			memset(buffer, 0, sizeof(buffer));
-			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + path)); //TODO: sheree removed '/' if it breaks something
+			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + path));
 	
 		}
 		else if (it == server.locations.end() - 1)
@@ -345,10 +345,10 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	int bytes_received = recv(clientSocket, buffer, 50000, 0);
 	if (bytes_received < 0)
 	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK) //TODO: read and write check from revents
-			return 1;
-		std::cerr << "Error! recv" << std::endl;
-		return 2;
+		if (m_pollSocketsVec[pollIndex].revents & (POLLIN | POLLRDNORM | POLLRDBAND)) // is not error, just waiting and try again after
+            return true; 
+        std::cerr << "Error! recv" << std::endl;
+        return true; //is error but not fatal
 	}
 	else if (bytes_received == 0)
 	{

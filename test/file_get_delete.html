@@ -12,8 +12,7 @@
     <button id="deleteButton">Delete Resource</button>
     <script>
         document.getElementById('deleteButton').addEventListener('click', function() {
-            const apiEndpoint = 'hive_copy.png';
-
+            const apiEndpoint = 'uploads/partyPenguin_75.jpeg';
             //SHOULD I BE DOING THIS??
             fetch(apiEndpoint, {
                 method: 'DELETE',
@@ -21,7 +20,6 @@
                     'Content-Type': 'application/json', // Adjust as needed
                     // Additional headers if required (e.g., authentication token)
                 },
-            
             })
             .then(response => {
                 if (response.ok) {

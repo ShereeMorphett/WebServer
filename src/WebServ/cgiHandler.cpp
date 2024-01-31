@@ -134,7 +134,6 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
     int pipesIn[2];
     int pipesOut[2];
 	
-	std::cerr << COLOR_MAGENTA << "Printing multi map" << std::endl;
 	printMultimap(_requestData);
 	std::cerr << COLOR_RESET;
     setupEnvironment(scriptPath, pipesIn, _request);

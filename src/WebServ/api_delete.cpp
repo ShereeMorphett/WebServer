@@ -23,31 +23,30 @@
 
 #include <sys/stat.h>
 
-void WebServerProg::deleteResponse(int clientSocket)
-{
-	std::string&	response = accessClientData(clientSocket)._response;
-    int 			status = OK;
-    std::string 	body = "";
-    std::string		path;
+
+void WebServerProg::deleteResponse(int clientSocket) {
+    std::string& response = accessClientData(clientSocket)._response;
+    int status = OK;
+    std::string body = "";
+    std::string path;
 
     path = accessDataInMap(clientSocket, "Path");
     struct stat fileStat;
-    if (stat(path.c_str(), &fileStat) == 0)
-    {
-        if (S_ISREG(fileStat.st_mode))
-        {
+
+    if (stat(path.c_str(), &fileStat) == 0) {
+        if (S_ISREG(fileStat.st_mode)) {
             if (remove(path.c_str()) == 0)
                 status = OK;
             else
                 status = NO_CONTENT;
-        }
-        else
+        } else {
             status = NOT_FOUND;
-    }
-    else
+        }
+    } else {
         status = NOT_FOUND;
-    if (status >= ERRORS)
-    {
+    }
+
+    if (status >= ERRORS) {
         char buffer[1024] = {};
         path = chooseErrorPage(status);
         path = getcwd(buffer, sizeof(buffer)) + path;
