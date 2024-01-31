@@ -123,7 +123,6 @@ void WebServerProg::sendResponse(int clientSocket)
 			break;
 		}
 	}
-	std::cout << COLOR_CYAN << "Response:	" << response << COLOR_RESET <<std::endl;
 	int bytes_sent = send(clientSocket, response.c_str(), response.size(), 0);
 	if (bytes_sent < 0)
 	{
