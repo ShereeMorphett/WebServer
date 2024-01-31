@@ -7,6 +7,7 @@
 # define	NOT_SET			0
 // Status codes
 # define	ERRORS			400
+# define	BAD_REQUEST		400
 # define 	REQUEST_TIMEOUT 408
 # define	OK 				200
 # define	CREATED			201

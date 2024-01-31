@@ -47,7 +47,6 @@ static std::string buildDirectoryLinks(DIR *directory, std::string rootPath)
         std::string entryName = en->d_name;
         if (entryName == "." || entryName == ".." || entryName[0] == '.' || entryName == "obj")
             continue;
-        std::cout << COLOR_MAGENTA << "in while" << COLOR_RESET << std::endl;
         std::string entryPath = rootPath + entryName;
         bool boolDirectory = (en->d_type == DT_DIR);
        if (boolDirectory && !isDirectory(entryPath))
@@ -56,7 +55,6 @@ static std::string buildDirectoryLinks(DIR *directory, std::string rootPath)
             std::cerr << "Error: " << entryPath << " is not a directory as expected." << std::endl;
             continue;  // Skip this entry
         }
-        std::cout << COLOR_MAGENTA << "after error" << COLOR_RESET << std::endl;
 
         std::string relativePath = parseStartingPath(entryPath);
         std::string fullLink = "<a href='" + relativePath + "'>" + entryName + "</a>";
@@ -81,20 +79,21 @@ static std::string buildDirectoryLinks(DIR *directory, std::string rootPath)
 }
 
 
-std::string WebServerProg::createDirectoryListing(std::string startingPath)
+std::string WebServerProg::createDirectoryListing(int clientSocket, std::string startingPath)
 {
-    _response.append(HTTP_HEADER);
-    _response.append(NEW_VALUE);
-    _response.append("Content-Type: text/html\r\n");
-    _response.append(toString(_status) + "\r\n");
+	clientData&	client = accessClientData(clientSocket);
+
+    client._response.append(HTTP_HEADER);
+    client._response.append(NEW_VALUE);
+   	client._response.append("Content-Type: text/html\r\n");
+    client._response.append(toString(client._status) + "\r\n");
     std::string directoryFinding;
     DIR *directory = opendir(startingPath.c_str());
 
-    std::cout << COLOR_MAGENTA << startingPath << COLOR_RESET << std::endl;
     if (directory == NULL)
     {
         std::cerr << COLOR_RED << "Error: could not open " << startingPath << COLOR_RESET << std::endl;
-		_status = 404;
+		client._status = NOT_FOUND;
         return "";
     }
     directoryFinding += "<!DOCTYPE html>\n\
@@ -113,9 +112,9 @@ std::string WebServerProg::createDirectoryListing(std::string startingPath)
                         </body>\n\
                         </html>";
     closedir(directory);
-    _response.append("Content-Length:" + std::to_string(directoryFinding.length()));
-    _response.append(END_HEADER);
-    _response.append(directoryFinding);
+    client._response.append("Content-Length:" + std::to_string(directoryFinding.length()));
+    client._response.append(END_HEADER);
+    client._response.append(directoryFinding);
 
     return directoryFinding;
 }

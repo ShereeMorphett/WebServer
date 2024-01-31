@@ -16,7 +16,7 @@ server& WebServerProg::getClientServer(int clientSocket)
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
 	if (it == m_clientDataMap.end())
 	{
-		;//!throw?
+		;// TODO: !throw?
 	}
 	return servers[it->second.serverIndex];
 }
@@ -30,8 +30,7 @@ static int	countDepth(std::string path)
 {
 	int	depth = 0;
 
-	for (size_t i = 0; i < path.size(); i++)
-	{
+	for (size_t i = 0; i < path.size(); i++) {
 		if (path[i] == '/')
 			depth++;
 	}
@@ -81,9 +80,6 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 	}
 }
 
-
-
-
 bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
 {
 	if (clientRequestMap.find("requestPath")->second == "/src")
@@ -103,14 +99,112 @@ bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string,
 	return false;
 }
 
+void	WebServerProg::saveBody(int clientSocket, int size)
+{
+	std::string&			rawRequest = accessClientData(clientSocket)._rawRequest;
+	std::vector<u_int8_t>	bodyVector;
+	
+	for (int i = 0; i < size; i++) {
+		bodyVector.push_back(rawRequest[i]);
+	}
 
-void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk)
+	std::string	content = std::string(bodyVector.begin(), bodyVector.end());
+	accessClientData(clientSocket)._bodyString.append(content);
+	accessClientData(clientSocket)._currentBodySize += size;
+}
+
+static std::string	fetchName(std::string& body) {
+	std::string	target = "filename=\"";
+
+	size_t	startPos = body.find(target);
+	if (startPos == std::string::npos)
+		return "error";
+
+	startPos += target.length();
+	size_t	endPos = body.find("\"", startPos);
+	if (endPos == std::string::npos)
+		return "error";
+
+	size_t len = endPos - startPos;
+	std::string	name = body.substr(startPos, len);
+
+	return name;
+}
+
+static std::string	parseBoundary(std::string& format)
+{
+	size_t		boundaryStart = format.find(" boundary=");
+	std::string	boundary;
+
+
+	if (boundaryStart == std::string::npos)
+		return boundary;
+	
+	boundary = format.substr(boundaryStart + 10);
+	return boundary;
+}
+
+static bool	removeBoundary(clientData& client, std::string& boundary)
+{
+	size_t start = client._bodyString.find("\r\n\r\n") + 4;
+    size_t end = client._bodyString.rfind(boundary + "--");
+
+    if (start != std::string::npos && end != std::string::npos) {
+        client._fileData = client._bodyString.substr(start, end - start);
+		return true;
+	}
+	
+	return false;
+}
+
+// Currently handles just multipart form 
+void	WebServerProg::parseBody(int clientSocket)
+{
+	clientData& client = accessClientData(clientSocket);
+
+	std::string	format = accessDataInMap(clientSocket, "Content-Type");
+	if (format.find("multipart/form-data") != std::string::npos) {
+		client._fileName = fetchName(client._bodyString);
+		if (client._fileName == "error") {
+			client._status = BAD_REQUEST;
+			return;
+		}
+
+		std::string boundary = parseBoundary(format);
+		if (boundary.empty()) {
+			client._status = BAD_REQUEST;
+			return;
+		}
+
+		if (!removeBoundary(client, boundary)) {
+			client._status = BAD_REQUEST;
+			return;
+		}
+
+		client._requestReady = true;
+	}
+	else {
+		client._status = BAD_REQUEST;
+	}
+}
+
+static bool	checkValidBodySize(__attribute__((unused))int clientSocket, clientData& client)
+{
+	if (client._currentBodySize != client._expectedBodySize)
+		return false;
+	// TODO: add cheks for max body size from headers and config
+
+	return true;
+}
+
+void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int size)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
 	if (it == m_clientDataMap.end())
 		return;
-
+	
 	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
+	clientData& client = accessClientData(clientSocket);
 	std::istringstream	requestStream(requestChunk);
 	std::string			token;
 
@@ -127,61 +221,84 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk)
 	std::string line;
 	requestStream.ignore();
 	requestStream.ignore();
-	while (std::getline(requestStream, line, '\r'))
+
+	// NOTE: refactored version
+	while (std::getline(requestStream, line) && !line.empty())
 	{
-		std::string key;
-		std::string value;
+		if (!line.empty() && line.back() == '\r')
+			line.pop_back();
 
 		size_t pos = line.find(":");
-		if (pos == std::string::npos)
-			std::runtime_error("Request parsing error!");
-		key = line.substr(0, pos);
-		value = line.substr(pos + 1);
-
-            size_t valueStart = value.find_first_not_of(" \t");
-            value = value.substr(valueStart);
-
-		if (key.size() != 1)
-			clientRequestMap.insert(std::make_pair(key, value));
-
-		if (requestStream.peek() == '\n')
-		{
-			requestStream.ignore();
-			if (requestStream.peek() == '\r')
-			{
-				requestStream.ignore();
-				requestStream.ignore();
+		if (pos == std::string::npos) {
+			if (line.empty())
 				break;
-			}
+			else // TODO: maybe change status etc and go from there
+				std::runtime_error("Request parsing error\n");
 		}
+
+		std::string	key = line.substr(0, pos);
+		std::string value = line.substr(pos + 1);
+		size_t valueStart = value.find_first_not_of(" \t");
+		value = value.substr(valueStart);
+
+		if (key.size() > 0)
+			clientRequestMap.insert(std::make_pair(key, value));
 	}
+
 	if (!validateRequest(clientSocket, clientRequestMap))
 	{
 		std::cerr << COLOR_RED << "Method not allowed\n" << COLOR_RESET;
-		_status = NOT_ALLOWED;
+		client._status = NOT_ALLOWED;
+		client._requestReady = true;
+		return;
 	}
 	// Set rest of the chunk stream to _body of clientData
 
-	if (accessDataInMap(clientSocket, "Method") != "POST")
-		return;
-	
-	accessClientData(clientSocket)._statusClient = IN_BODY;
-	std::string body;
-	body.assign(std::istreambuf_iterator<char>(requestStream), std::istreambuf_iterator<char>());
-	clientRequestMap.insert(std::make_pair("Body", body));
-	if (accessDataInMap(clientSocket, "Transfer-Encoding") == "chunked")
-	{
-		accessClientData(clientSocket)._statusClient = CHUNKED;
+	if (accessDataInMap(clientSocket, "Method") != "POST") {
+		client._requestReady = true;
 		return;
 	}
-	accessClientData(clientSocket).expectedBodySize = std::stoi(accessDataInMap(clientSocket, "Content-Length"));
-	accessClientData(clientSocket).currentBodySize = accessDataInMap(clientSocket, "Body").size();
+
+	client._expectedBodySize = std::stoi(accessDataInMap(clientSocket, "Content-Length"));
+	client._statusClient = IN_BODY;
+	client._currentBodySize = 0;
+
+	std::streampos position = requestStream.tellg();
+	int currentPos = static_cast<int>(position);
+	int	len = size - currentPos;
+	if (len > 0) {	
+		client._rawRequest = requestChunk.substr(currentPos);
+		saveBody(clientSocket, len);
+		client._rawRequest.clear();
+
+		if (checkValidBodySize(clientSocket, client)) {
+			parseBody(clientSocket);
+		}
+	}
+
+	// TODO: Do we need a chunked one? If so handle it here
+	
+	// if (accessDataInMap(clientSocket, "Transfer-Encoding") == "chunked")
+	// {
+	// 	accessClientData(clientSocket)._statusClient = CHUNKED;
+	// 	return;
+	// }
 }
 
-void WebServerProg::handleBody(int clientSocket, __attribute__((unused))std::string requestChunk)
+
+
+void WebServerProg::handleBody(int clientSocket, std::string requestChunk, int size)
 {
-	accessDataInMap(clientSocket, "Body").append(requestChunk);
-	accessClientData(clientSocket).currentBodySize = accessDataInMap(clientSocket, "Body").size();
+	clientData& client = accessClientData(clientSocket);
+
+	client._rawRequest.append(requestChunk);
+	saveBody(clientSocket, size);
+	client._rawRequest.clear();
+
+	// TODO: Check correct status
+	if (checkValidBodySize(clientSocket, client)) {
+		parseBody(clientSocket);
+	}
 }
 
 void WebServerProg::appendChunk(__attribute__((unused))int clientSocket, __attribute__((unused))std::string requestChunk)
@@ -201,18 +318,17 @@ void WebServerProg::appendChunk(__attribute__((unused))int clientSocket, __attri
 	std::string actualChunk;
 	actualChunk.assign(std::istreambuf_iterator<char>(ss), std::istreambuf_iterator<char>());
 	accessDataInMap(clientSocket, "Body").append(actualChunk);
-
 }
 
-void WebServerProg::handleChunk(int clientSocket, std::string requestChunk)
+void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int size)
 {
 	switch (accessClientData(clientSocket)._statusClient)
 	{
 		case NONE:
-			parseHeaders(clientSocket, requestChunk);
+			parseHeaders(clientSocket, requestChunk, size);
 			break;
 		case IN_BODY:
-			handleBody(clientSocket, requestChunk);
+			handleBody(clientSocket, requestChunk, size);
 			break;
 		case CHUNKED:
 			appendChunk(clientSocket, requestChunk);
@@ -223,12 +339,10 @@ void WebServerProg::handleChunk(int clientSocket, std::string requestChunk)
 
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
-	char buffer[8192] = {};
+	char buffer[50000];
 
-	_request.clear();
-
-	int bytes_received = recv(clientSocket, buffer, sizeof(buffer), 0);
-	std::cout << bytes_received << std::endl;
+	std::memset(buffer, 0, 50000);
+	int bytes_received = recv(clientSocket, buffer, 50000, 0);
 	if (bytes_received < 0)
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK) //TODO: read and write check from revents
@@ -243,13 +357,13 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	}
 	else
 	{
-		std::string requestChunk(buffer, buffer + bytes_received);
+		buffer[bytes_received] = '\0';
+		std::string requestChunk(buffer, bytes_received);
 		accessClientData(clientSocket)._requestClient.append(buffer, buffer + bytes_received);
-		_request.assign(buffer, buffer + bytes_received);
-		// std::cout << _request << std::endl;
-		handleChunk(clientSocket, requestChunk);
+		handleChunk(clientSocket, requestChunk, bytes_received);
 	}
-	if (accessClientData(clientSocket)._statusClient != CHUNKED && accessClientData(clientSocket).currentBodySize == accessClientData(clientSocket).expectedBodySize)
+
+	if (accessClientData(clientSocket)._statusClient != CHUNKED && accessClientData(clientSocket)._requestReady)
 	{
 		m_pollSocketsVec[pollIndex].revents = POLLOUT;
 	}
