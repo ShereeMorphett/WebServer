@@ -45,7 +45,8 @@ void WebServerProg::initClientData(int clientSocket, int serverIndex)
 	data.connectionTime = std::chrono::steady_clock::now();
 	data._statusClient = NONE;
 	data._currentBodySize = 0;
-	data._expectedBodySize = -1;
+	data._expectedBodySize = 0;
+	data._requestReady = false;
 	m_clientDataMap.insert(std::make_pair(clientSocket, data));
 }
 
@@ -83,20 +84,23 @@ bool hasCgiExtension(const std::string& filePath)
 
 void WebServerProg::sendResponse(int clientSocket)
 {
+	clientData& client = accessClientData(clientSocket);
+
 	char method = accessDataInMap(clientSocket, "Method")[0];
 	std::string& response = accessClientData(clientSocket)._response;
 	
-	if (_status >= ERRORS) 
+	std::cout << "STATUS WHEN SENDING RESPONSE: " << client._status << std::endl;
+	if (client._status >= ERRORS)
 	{
 		char buffer[1024] = {};
-		std::string path = chooseErrorPage(_status);
+		std::string path = chooseErrorPage(client._status);
 		path = getcwd(buffer, sizeof(buffer)) + path;
 		std::string body = readFile(path);
 
-		appendStatus(response, _status);
+		appendStatus(response, client._status);
 		appendBody(response, body, path);
 	}
-	else if (isDirectory(accessDataInMap(clientSocket, "Path")))
+	else if (isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET)
 		response.append(createDirectoryListing(clientSocket, accessDataInMap(clientSocket, "Path")));
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
@@ -105,7 +109,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), accessClientData(clientSocket)._requestClient));
     }
 	else
-	{	
+	{
 		switch (method) {
 		case GET:
 			getResponse(clientSocket);
@@ -212,6 +216,21 @@ void	WebServerProg::closeClientConnection(int clientIndex)
 
 }
 
+// static void	clearClientData(clientData& client)
+// {
+// 	client._statusClient = NONE;
+// 	client._status = NOT_SET;
+
+// 	client._expectedBodySize = 0;
+// 	client._currentBodySize = 0;
+
+// 	client._bodyString.clear();
+// 	client._rawRequest.clear();
+// 	client._fileData.clear();
+// 	client._response.clear();
+// 	client._fileName.clear();
+// }
+
 void WebServerProg::handleRequestResponse(int clientIndex)
 {
 	int check = receiveRequest(m_pollSocketsVec[clientIndex].fd, clientIndex);
@@ -221,13 +240,19 @@ void WebServerProg::handleRequestResponse(int clientIndex)
 	}
 	if (m_pollSocketsVec[clientIndex].revents & POLLOUT)
 	{
+		std::cout << "after polout\n";
 		sendResponse(m_pollSocketsVec[clientIndex].fd);
-		if(accessDataInMap(m_pollSocketsVec[clientIndex].fd,  "Connection") == "close")
+		if (accessDataInMap(m_pollSocketsVec[clientIndex].fd,  "Connection") == "close")
 		{
 			closeClientConnection(clientIndex);
 		}
+		// else
+		// {
+		// 	int	clientSocket = m_pollSocketsVec[clientIndex].fd;
+		// 	clientData& client = accessClientData(clientSocket);
+		// 	clearClientData(client);
+		// }
 	}
-	_status = NOT_SET;
 }
 
 void WebServerProg::handleEvents()

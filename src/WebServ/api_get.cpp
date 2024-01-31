@@ -4,19 +4,19 @@
 #include <unistd.h>
 
 void	WebServerProg::getResponse(int clientSocket) {
-	std::string&	response = accessClientData(clientSocket)._response;
+	clientData& 	client = accessClientData(clientSocket);
 	std::string 	body;
 	std::string		path;
 
 	path = accessDataInMap(clientSocket, "Path");
-	checkRequest(&_status, path);
-	if (_status >= ERRORS) {
+	checkRequest(&client._status, path);
+	if (client._status >= ERRORS) {
 		char buffer[1024] = {};
-		path = chooseErrorPage(_status);
+		path = chooseErrorPage(client._status);
 		path = getcwd(buffer, sizeof(buffer)) + path;
 	}
 	body = readFile(path);
 
-	appendStatus(response, _status);
-	appendBody(response, body, path);
+	appendStatus(client._response, client._status);
+	appendBody(client._response, body, path);
 }

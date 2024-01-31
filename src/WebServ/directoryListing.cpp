@@ -83,12 +83,12 @@ static std::string buildDirectoryLinks(DIR *directory, std::string rootPath)
 
 std::string WebServerProg::createDirectoryListing(int clientSocket, std::string startingPath)
 {
-	std::string&	response = accessClientData(clientSocket)._response;
+	clientData&	client = accessClientData(clientSocket);
 
-    response.append(HTTP_HEADER);
-    response.append(NEW_VALUE);
-    response.append("Content-Type: text/html\r\n");
-    response.append(toString(_status) + "\r\n");
+    client._response.append(HTTP_HEADER);
+    client._response.append(NEW_VALUE);
+   	client._response.append("Content-Type: text/html\r\n");
+    client._response.append(toString(client._status) + "\r\n");
     std::string directoryFinding;
     DIR *directory = opendir(startingPath.c_str());
 
@@ -96,7 +96,7 @@ std::string WebServerProg::createDirectoryListing(int clientSocket, std::string 
     if (directory == NULL)
     {
         std::cerr << COLOR_RED << "Error: could not open " << startingPath << COLOR_RESET << std::endl;
-		_status = 404;
+		client._status = NOT_FOUND;
         return "";
     }
     directoryFinding += "<!DOCTYPE html>\n\
@@ -115,9 +115,9 @@ std::string WebServerProg::createDirectoryListing(int clientSocket, std::string 
                         </body>\n\
                         </html>";
     closedir(directory);
-    response.append("Content-Length:" + std::to_string(directoryFinding.length()));
-    response.append(END_HEADER);
-    response.append(directoryFinding);
+    client._response.append("Content-Length:" + std::to_string(directoryFinding.length()));
+    client._response.append(END_HEADER);
+    client._response.append(directoryFinding);
 
     return directoryFinding;
 }

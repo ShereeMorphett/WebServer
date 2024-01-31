@@ -41,22 +41,24 @@ struct clientData
 	int										_expectedBodySize;
 	int										_currentBodySize; 
 	std::string								_rawRequest;
-	std::string								_bodyString;
 
+	std::string								_bodyString;
+	std::string								_fileName;
+	std::string								_fileData;
+
+	int										_status;
 	std::string								_response;
+	bool									_requestReady;
 };
 
 class WebServerProg
 {
 	private:
-		std::vector<struct pollfd> m_pollSocketsVec;
-		std::vector<server> servers;
-		size_t serverCount;
-		std::string configFileName;
-		std::map<int, struct clientData> m_clientDataMap;
-		// std::string	_response;
-		// std::string	_request;
-		int			_status;
+		size_t 								serverCount;
+		std::string 						configFileName;
+		std::vector<struct pollfd> 			m_pollSocketsVec;
+		std::map<int, struct clientData>	m_clientDataMap;
+		std::vector<server> 				servers;
 
 	public:
 
@@ -81,6 +83,7 @@ class WebServerProg
 		void appendChunk(int clientSocket, std::string requestChunk);
 
 		void	saveBody(int clientSocket, int size);
+		void	parseBody(int clientSocket);
 
 		void handleEvents();
 		void handleRequestResponse(int clientIndex);
