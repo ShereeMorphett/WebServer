@@ -57,8 +57,10 @@ void parseAndWriteToFile(const std::string& body, const std::string& fileName) {
 }
 
 void WebServerProg::postResponse(int clientSocket) {
-    std::string body = accessDataInMap(clientSocket, "Body");
-    std::string fileName = fetchName(body);
+	std::string&	response = accessClientData(clientSocket)._response;
+    std::string		body = accessDataInMap(clientSocket, "Body");
+    std::string		fileName = fetchName(body);
+
     if (fileName == "error") {
         // Means filename was not provided by headers
         std::cout << COLOR_RED << "Error: filename not provided\n" << COLOR_RESET;
@@ -68,6 +70,6 @@ void WebServerProg::postResponse(int clientSocket) {
     parseAndWriteToFile(body, fileName);
 
     _status = OK;
-    appendStatus(_response, _status);
-    appendMisc(_response);
+    appendStatus(response, _status);
+    appendMisc(response);
 }

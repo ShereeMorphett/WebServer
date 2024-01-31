@@ -25,9 +25,10 @@
 
 void WebServerProg::deleteResponse(int clientSocket)
 {
-    std::string path;
-    std::string body = "";
-    int status = OK;
+	std::string&	response = accessClientData(clientSocket)._response;
+    int 			status = OK;
+    std::string 	body = "";
+    std::string		path;
 
     path = accessDataInMap(clientSocket, "Path");
     struct stat fileStat;
@@ -52,6 +53,6 @@ void WebServerProg::deleteResponse(int clientSocket)
         path = getcwd(buffer, sizeof(buffer)) + path;
     }
 
-    appendStatus(_response, status);
-    appendBody(_response, body, path);
+    appendStatus(response, status);
+    appendBody(response, body, path);
 }

@@ -36,13 +36,14 @@ struct clientData
 	std::multimap<std::string, std::string> requestData;
 	std::chrono::steady_clock::time_point	connectionTime;
 	std::string								_requestClient;
-	size_t									expectedBodySize;
 	int										_statusClient;
 
-	size_t									_expectedBodySize;
-	size_t									_currentBodySize; 
+	int										_expectedBodySize;
+	int										_currentBodySize; 
 	std::string								_rawRequest;
 	std::string								_bodyString;
+
+	std::string								_response;
 };
 
 class WebServerProg
@@ -53,11 +54,9 @@ class WebServerProg
 		size_t serverCount;
 		std::string configFileName;
 		std::map<int, struct clientData> m_clientDataMap;
-		std::string	_response;
-		std::string	_request;
+		// std::string	_response;
+		// std::string	_request;
 		int			_status;
-		size_t		currentBodySize; 
-		size_t		expectedBodySize;
 
 	public:
 
@@ -75,7 +74,7 @@ class WebServerProg
 		std::string accessDataInMap(int clientSocket, std::string header);
 		void deleteDataInMap(int clientSocket);
 		void handleChunk(int clientSocket, std::string request, int size);
-		void handleBody(int clientSocket, std::string request);
+		void handleBody(int clientSocket, std::string request, int size);
 		void parseHeaders(int clientSocket, std::string requestChunk, int size);
 		server& getClientServer(int clientSocket);
 		clientData& accessClientData(int clientSocket);
@@ -95,7 +94,7 @@ class WebServerProg
 		void	getResponse(int clientSocket);
 		void	deleteResponse(int clientSocket);
 		bool 	validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap);
-		std::string createDirectoryListing(std::string path);
+		std::string createDirectoryListing(int clientSocket, std::string startingPath);
 		void	closeClientConnection(int clientIndex);
 };
 

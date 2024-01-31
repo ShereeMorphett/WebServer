@@ -4,8 +4,9 @@
 #include <unistd.h>
 
 void	WebServerProg::getResponse(int clientSocket) {
-	std::string body;
-	std::string	path;
+	std::string&	response = accessClientData(clientSocket)._response;
+	std::string 	body;
+	std::string		path;
 
 	path = accessDataInMap(clientSocket, "Path");
 	checkRequest(&_status, path);
@@ -16,6 +17,6 @@ void	WebServerProg::getResponse(int clientSocket) {
 	}
 	body = readFile(path);
 
-	appendStatus(_response, _status);
-	appendBody(_response, body, path);
+	appendStatus(response, _status);
+	appendBody(response, body, path);
 }

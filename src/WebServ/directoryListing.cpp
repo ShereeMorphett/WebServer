@@ -81,12 +81,14 @@ static std::string buildDirectoryLinks(DIR *directory, std::string rootPath)
 }
 
 
-std::string WebServerProg::createDirectoryListing(std::string startingPath)
+std::string WebServerProg::createDirectoryListing(int clientSocket, std::string startingPath)
 {
-    _response.append(HTTP_HEADER);
-    _response.append(NEW_VALUE);
-    _response.append("Content-Type: text/html\r\n");
-    _response.append(toString(_status) + "\r\n");
+	std::string&	response = accessClientData(clientSocket)._response;
+
+    response.append(HTTP_HEADER);
+    response.append(NEW_VALUE);
+    response.append("Content-Type: text/html\r\n");
+    response.append(toString(_status) + "\r\n");
     std::string directoryFinding;
     DIR *directory = opendir(startingPath.c_str());
 
@@ -113,9 +115,9 @@ std::string WebServerProg::createDirectoryListing(std::string startingPath)
                         </body>\n\
                         </html>";
     closedir(directory);
-    _response.append("Content-Length:" + std::to_string(directoryFinding.length()));
-    _response.append(END_HEADER);
-    _response.append(directoryFinding);
+    response.append("Content-Length:" + std::to_string(directoryFinding.length()));
+    response.append(END_HEADER);
+    response.append(directoryFinding);
 
     return directoryFinding;
 }
