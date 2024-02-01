@@ -88,14 +88,13 @@ void WebServerProg::sendResponse(int clientSocket)
 
 	char method = accessDataInMap(clientSocket, "Method")[0];
 	std::string& response = accessClientData(clientSocket)._response;
-	
 	if (client._status >= ERRORS)
 	{
 		char buffer[1024] = {};
 		std::string path = chooseErrorPage(client._status);
 		path = getcwd(buffer, sizeof(buffer)) + path;
 		std::string body = readFile(path);
-
+		
 		appendStatus(response, client._status);
 		appendBody(response, body, path);
 	}
@@ -205,7 +204,6 @@ void	WebServerProg::closeClientConnection(int clientIndex)
 
 	if (clientIndex >= 0 && clientIndex < static_cast<int>(m_pollSocketsVec.size()))
 	{
-		std::cout << COLOR_RED<< "client id: " << m_pollSocketsVec[clientIndex].fd << " CLOSING\n" << COLOR_RESET;
 		close(m_pollSocketsVec[clientIndex].fd);		
 		m_clientDataMap.erase(m_pollSocketsVec[clientIndex].fd);
 		m_pollSocketsVec.erase(m_pollSocketsVec.begin() + clientIndex);
@@ -213,20 +211,27 @@ void	WebServerProg::closeClientConnection(int clientIndex)
 
 }
 
-// static void	clearClientData(clientData& client)
-// {
-// 	client._statusClient = NONE;
-// 	client._status = NOT_SET;
+static void	clearClientData(clientData& client)
+{
+	client._statusClient = NONE;
+	client._status = NOT_SET;
 
-// 	client._expectedBodySize = 0;
-// 	client._currentBodySize = 0;
+	client._expectedBodySize = 0;
+	client._currentBodySize = 0;
 
-// 	client._bodyString.clear();
-// 	client._rawRequest.clear();
-// 	client._fileData.clear();
-// 	client._response.clear();
-// 	client._fileName.clear();
-// }
+	client._bodyString.clear();
+	client._rawRequest.clear();
+	client._fileData.clear();
+	client._response.clear();
+	client._fileName.clear();
+
+	// NOTE: WILL NOT WORK
+	client.requestData.clear();
+
+	client.connectionTime = std::chrono::steady_clock::now();
+
+	client._requestReady = false;
+}
 
 void WebServerProg::handleRequestResponse(int clientIndex)
 {
@@ -237,18 +242,18 @@ void WebServerProg::handleRequestResponse(int clientIndex)
 	}
 	if (m_pollSocketsVec[clientIndex].revents & POLLOUT)
 	{
+
 		sendResponse(m_pollSocketsVec[clientIndex].fd);
 		if (accessDataInMap(m_pollSocketsVec[clientIndex].fd,  "Connection") == "close")
 		{
 			closeClientConnection(clientIndex);
 		}
-		// TODO: If its keep alive, what should we reset?
-		// else
-		// {
-		// 	int	clientSocket = m_pollSocketsVec[clientIndex].fd;
-		// 	clientData& client = accessClientData(clientSocket);
-		// 	clearClientData(client);
-		// }
+		else // TODO: If its keep alive, what should we reset?
+		{
+			int	clientSocket = m_pollSocketsVec[clientIndex].fd;
+			clientData& client = accessClientData(clientSocket);
+			clearClientData(client);
+		}
 	}
 }
 
