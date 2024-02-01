@@ -36,10 +36,14 @@ std::string urlEncode(const std::string& value) {
 
 //TODO: make the css linked and correct the file path from these links to the root upload directory when its in
 void WebServerProg::postResponse(int clientSocket) {
-    clientData& client = accessClientData(clientSocket);
-	
-	if (client._status < ERRORS) {
 
+    clientData& client = accessClientData(clientSocket);
+	std::cout << COLOR_CYAN;
+	// printServer(servers[client.serverIndex].locations);//how can i access the server/location details from here
+	std::cout << COLOR_RESET << std::endl;
+
+	if (client._status < ERRORS)
+	{
 		std::ofstream outFile("./uploads/" + client._fileName, std::ios::binary);
 		if (!outFile)
 			client._status = INT_ERROR;

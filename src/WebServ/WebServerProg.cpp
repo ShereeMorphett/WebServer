@@ -85,9 +85,10 @@ bool hasCgiExtension(const std::string& filePath)
 void WebServerProg::sendResponse(int clientSocket)
 {
 	clientData& client = accessClientData(clientSocket);
-
+	
 	char method = accessDataInMap(clientSocket, "Method")[0];
 	std::string& response = accessClientData(clientSocket)._response;
+
 	if (client._status >= ERRORS)
 	{
 		char buffer[1024] = {};
