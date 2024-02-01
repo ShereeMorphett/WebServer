@@ -33,6 +33,5 @@ int main(int argc, char** argv)
 			std::cout << COLOR_YELLOW << "For custom configuration -	./Webserv <fileName.conf>" << std::endl;
 			std::cout << "For default configuration -	./Webserv" << COLOR_RESET << std::endl;
 		}
-
 	}
 }

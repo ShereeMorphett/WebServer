@@ -37,7 +37,6 @@ std::string getFileExtension(std::string const & fileName) {
 // Will read a file based on path given
 std::string	readFile(std::string const & path) {
 	std::ifstream	inFile;
-
 	inFile.open(path.c_str(), std::ios::binary | std::ios::ate);
 	if (!inFile) {
 		std::cerr << "Error with infile\n";

@@ -68,7 +68,7 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 		{
 			char buffer[1024];
 			memset(buffer, 0, sizeof(buffer));
-			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + path)); //TODO: sheree removed '/' if it breaks something
+			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + path));
 	
 		}
 		else if (it == server.locations.end() - 1)
@@ -114,11 +114,16 @@ void	WebServerProg::saveBody(int clientSocket, int size)
 }
 
 static std::string	fetchName(std::string& body) {
-	std::string	target = "filename=\"";
-
+	std::string	target = "filename=\""; 
 	size_t	startPos = body.find(target);
 	if (startPos == std::string::npos)
-		return "error";
+	{
+		target = "name=\"";
+		startPos = body.find(target);
+		std::cout << "target:	" << target << std::endl;
+		if (startPos == std::string::npos)
+			return "error";
+	}
 
 	startPos += target.length();
 	size_t	endPos = body.find("\"", startPos);
@@ -157,20 +162,24 @@ static bool	removeBoundary(clientData& client, std::string& boundary)
 	return false;
 }
 
-// Currently handles just multipart form 
+// NOTE: Currently handles just multipart form 
 void	WebServerProg::parseBody(int clientSocket)
 {
 	clientData& client = accessClientData(clientSocket);
-
 	std::string	format = accessDataInMap(clientSocket, "Content-Type");
-	if (format.find("multipart/form-data") != std::string::npos) {
-		client._fileName = fetchName(client._bodyString);
-		if (client._fileName == "error") {
-			client._status = BAD_REQUEST;
-			return;
-		}
 
+	if (format.find("application/x-www-form-urlencoded") != std::string::npos)
+	{
+		
+		client.requestData.insert(std::make_pair("Body", client._bodyString));
+		client._requestReady = true;
+		return;
+	}
+	if (format.find("multipart/form-data;") != std::string::npos)
+	{
+		client._fileName = fetchName(client._bodyString);
 		std::string boundary = parseBoundary(format);
+		
 		if (boundary.empty()) {
 			client._status = BAD_REQUEST;
 			return;
@@ -180,13 +189,19 @@ void	WebServerProg::parseBody(int clientSocket)
 			client._status = BAD_REQUEST;
 			return;
 		}
-
 		client._requestReady = true;
 	}
-	else {
+	else
+	{
 		client._status = BAD_REQUEST;
+		return;
 	}
 }
+	// else
+	// {
+	// 	client._status = BAD_REQUEST;
+	// }
+
 
 static bool	checkValidBodySize(__attribute__((unused))int clientSocket, clientData& client)
 {
@@ -244,7 +259,6 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 		if (key.size() > 0)
 			clientRequestMap.insert(std::make_pair(key, value));
 	}
-
 	if (!validateRequest(clientSocket, clientRequestMap))
 	{
 		std::cerr << COLOR_RED << "Method not allowed\n" << COLOR_RESET;
@@ -253,7 +267,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 		return;
 	}
 	// Set rest of the chunk stream to _body of clientData
-
+	
 	if (accessDataInMap(clientSocket, "Method") != "POST") {
 		client._requestReady = true;
 		return;
@@ -262,7 +276,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	client._expectedBodySize = std::stoi(accessDataInMap(clientSocket, "Content-Length"));
 	client._statusClient = IN_BODY;
 	client._currentBodySize = 0;
-
+	
 	std::streampos position = requestStream.tellg();
 	int currentPos = static_cast<int>(position);
 	int	len = size - currentPos;
@@ -345,10 +359,10 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	int bytes_received = recv(clientSocket, buffer, 50000, 0);
 	if (bytes_received < 0)
 	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK) //TODO: read and write check from revents
-			return 1;
-		std::cerr << "Error! recv" << std::endl;
-		return 2;
+		if (m_pollSocketsVec[pollIndex].revents & (POLLIN | POLLRDNORM | POLLRDBAND)) // is not error, just waiting and try again after
+            return true; 
+        std::cerr << "Error! recv" << std::endl;
+        return true; //is error but not fatal
 	}
 	else if (bytes_received == 0)
 	{
