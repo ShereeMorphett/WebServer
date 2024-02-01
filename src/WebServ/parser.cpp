@@ -11,8 +11,6 @@
 #include "utils.hpp"
 #include "constants.hpp"
 
-
-
 static	std::string	checkRoot(std::string& root)
 {
 	if (root[0] != '/')
@@ -40,6 +38,7 @@ static location parseLocation(std::istream &stream, std::string extValue)
     char c;
     location temp;
     temp.locationPath = extValue;
+	temp.redirection = false;
 	std::string line;
 	while (stream.get(c))
 	{
@@ -57,8 +56,12 @@ static location parseLocation(std::istream &stream, std::string extValue)
 		sstream >> key >> value;
 		if (key == "allow")
 			temp.allowedMethods.push_back(value);
-		else if (key == "redirection")
-			temp.redirection = value;
+		else if (key == "return") {
+			temp.redirection = true;
+			temp.redirStatus = std::stoi(value);
+			sstream >> value;
+			temp.redirLocation = value;
+		}
 		else if (key == "root")
 			temp.root = checkRoot(value);
 		else if (key == "listing")

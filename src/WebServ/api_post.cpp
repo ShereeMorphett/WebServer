@@ -5,13 +5,6 @@
 #include "Color.hpp"
 #include <unistd.h>
 
-static void	appendMisc(std::string& _res) {
-	_res.append("Content-Type: text/plain");
-	_res.append(NEW_VALUE);
-	_res.append("Content-length: 0");
-	_res.append(END_HEADER);
-}
-
 void WebServerProg::postResponse(int clientSocket) {
     clientData& client = accessClientData(clientSocket);
 

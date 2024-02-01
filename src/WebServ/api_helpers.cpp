@@ -73,6 +73,33 @@ std::string	chooseErrorPage(int status) {
 	return SERVER_PAGE;
 }
 
+std::string	createRedirHeader(clientData& client)
+{
+	// new location
+	// root of new location
+	// deffault file of new location
+
+	std::string newLocation = client.location.redirLocation;
+	std::string	defaultFile;
+	std::string	root;
+	
+	for (size_t i = 0; i < client.server.locations.size(); i++)
+	{
+		if (client.server.locations[i].locationPath == newLocation)
+		{
+			defaultFile = client.server.locations[i].defaultFile;
+			root = client.server.locations[i].root;
+		}
+	}
+	
+	if (root.empty() || defaultFile.empty()) {
+		client._status = INT_ERROR;
+		return "";
+	}
+
+	// return path;
+}
+
 void	appendStatus(std::string& _res, int status) {
 	_res.append(HTTP_HEADER);
 	_res.append(toString(status));
@@ -96,9 +123,11 @@ void	appendStatus(std::string& _res, int status) {
 		case FORBIDDEN:
 			_res.append(" Forbidden");
 			break;
+		
 		case ACCEPTED:
 			_res.append(" Accepted");
 			break;
+		
 		case NO_CONTENT:
 			_res.append(" No Content");
 			break;
@@ -106,12 +135,25 @@ void	appendStatus(std::string& _res, int status) {
 		case BAD_REQUEST:
 			_res.append(" Bad Request");
 			break;
+
+		case TEMP_REDIR:
+			_res.append(" Temporary Redirect");
+			break;
+
+		case PERMA_REDIR:
+			_res.append(" Permanent Redirect");
+			break;
  
 		default:
 			break;
 	}
 	_res.append(NEW_VALUE);
   
+}
+
+void	appendMisc(std::string& _res) {
+	_res.append("Content-length: 0");
+	_res.append(END_HEADER);
 }
 
 // Append content type, length and actual body

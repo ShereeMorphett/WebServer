@@ -2,24 +2,29 @@
 # define CONSTANTS_HPP
 
 
-# define	BUFFER_SIZE		10240
+# define	BUFFER_SIZE		50000
 # define	ROOT			1
 # define	NOT_SET			0
 // Status codes
+# define	INT_ERROR		500
 # define	ERRORS			400
 # define	BAD_REQUEST		400
 # define 	REQUEST_TIMEOUT 408
-# define	OK 				200
-# define	CREATED			201
-# define	UNAUTHORIZED	401
-# define	FORBIDDEN		403
-# define	NOT_FOUND		404
-# define	NOT_ALLOWED		405
-# define	TOO_LARGE		413
-# define	INT_ERROR		500
-# define	ACCEPTED		202
-# define	NO_CONTENT		204
+
 # define 	LISTING			418 //repurpose of the "I'm a teapot" status
+# define	TOO_LARGE		413
+# define	NOT_ALLOWED		405
+# define	NOT_FOUND		404
+# define	FORBIDDEN		403
+# define	UNAUTHORIZED	401
+
+# define	TEMP_REDIR		307
+# define	PERMA_REDIR		308
+
+# define	NO_CONTENT		204
+# define	ACCEPTED		202
+# define	CREATED			201
+# define	OK 				200
 
 // Response formatting lines
 # define	HTTP_HEADER	"HTTP/1.1 "

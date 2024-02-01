@@ -99,6 +99,14 @@ void WebServerProg::sendResponse(int clientSocket)
 		appendStatus(response, client._status);
 		appendBody(response, body, path);
 	}
+	else if (client.location.redirection == true)
+	{
+		std::string redirHeader = createRedirHeader(client);
+
+		appendStatus(response, client.location.redirStatus);
+		response.append(redirHeader);
+		appendMisc(response);
+	}
 	else if (isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET)
 		response.append(createDirectoryListing(clientSocket, accessDataInMap(clientSocket, "Path")));
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
@@ -123,6 +131,7 @@ void WebServerProg::sendResponse(int clientSocket)
 			break;
 		}
 	}
+
 	
 	int bytes_sent = send(clientSocket, response.c_str(), response.size(), 0);
 	if (bytes_sent < 0)

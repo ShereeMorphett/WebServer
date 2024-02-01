@@ -197,14 +197,28 @@ static bool	checkValidBodySize(__attribute__((unused))int clientSocket, clientDa
 	return true;
 }
 
+static void	addRequestLocation(clientData& client, std::string const & path)
+{
+	for (size_t i = 0; i < client.server.locations.size(); i++)
+	{
+		if (client.server.locations[i].locationPath == path)
+		{
+			client.location = client.server.locations[i];
+		}
+	}
+}
+
 void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int size)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
 	if (it == m_clientDataMap.end())
 		return;
 	
-	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
+	server&	serv = servers[accessClientData(clientSocket).serverIndex];
 	clientData& client = accessClientData(clientSocket);
+	client.server = serv;
+
+	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
 	std::istringstream	requestStream(requestChunk);
 	std::string			token;
 
@@ -214,6 +228,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
 	createPath(getClientServer(clientSocket), clientRequestMap, token);
+	addRequestLocation(client, token);
 
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
