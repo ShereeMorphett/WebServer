@@ -70,9 +70,35 @@ void WebServerProg::postResponse(int clientSocket) {
 		std::string filePath  = "uploads/" + urlEncode(client._fileName); 
 		html_content += "<a href=\"" + filePath + "\" target=\"_blank\">View File</a>\n";
 		html_content += "<form action=\"/delete\" method=\"post\">\n";
-		html_content += "<input type=\"hidden\" name=\"file\" value=\"" + filePath+ "\">\n";
-		html_content += "<input type=\"submit\" value=\"Delete File\">\n";	
-		html_content += "</form>\n";
+		html_content += "<input type=\"hidden\" name=\"file\" value=\"" + filePath + "\">\n";
+		html_content += R"(<input type="button" value="Delete File" onclick="deleteFile(')" + filePath + R"###(')">)###";
+		// html_content += "</form>\n";
+		html_content += R"(
+		<script>
+		function deleteFile(filePath) {
+			const apiEndpoint = '/delete';
+
+			fetch(filePath, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json', // You can adjust the content type as needed
+				}
+			})
+			.then(response => {
+				if (response.ok) {
+					// Handle successful delete, e.g., redirect or update UI
+					console.log('File deleted successfully');
+				} else {
+					// Handle error response
+					console.error('Error during the DELETE request:', response.status, response.statusText);
+				}
+			})
+			.catch(error => {
+				console.error('Error during the DELETE request:', error);
+			});
+		}
+		</script>)";
+
 		html_content += "</body>\n</html>\r\n\r\n";
         appendMisc(client._response, html_content.size());
         client._response.append(html_content);

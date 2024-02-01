@@ -184,7 +184,6 @@ void	WebServerProg::parseBody(int clientSocket)
 			client._status = BAD_REQUEST;
 			return;
 		}
-
 		if (!removeBoundary(client, boundary)) {
 			client._status = BAD_REQUEST;
 			return;

@@ -136,6 +136,7 @@ void	appendBody(std::string& _res, std::string& body, std::string const & path) 
 // Check permissions and adjust status accordingly
 void	checkRequest(int* status, std::string const & path)
 {
+
 	std::ifstream	file(path.c_str());
 	if (file.is_open())
 	{

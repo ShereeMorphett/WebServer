@@ -24,12 +24,12 @@
 #include <sys/stat.h>
 
 
-void WebServerProg::deleteResponse(int clientSocket) {
+void WebServerProg::deleteResponse(int clientSocket)
+{
     std::string& response = accessClientData(clientSocket)._response;
     int status = OK;
     std::string body = "";
     std::string path;
-
     path = accessDataInMap(clientSocket, "Path");
     struct stat fileStat;
 
