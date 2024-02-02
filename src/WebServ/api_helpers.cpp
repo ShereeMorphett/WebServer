@@ -151,8 +151,10 @@ void	appendStatus(std::string& _res, int status) {
   
 }
 
-void	appendMisc(std::string& _res) {
-	_res.append("Content-length: 0");
+void	appendMisc(std::string& _res, size_t contentSize) {
+	_res.append("Content-Type: text/html");
+	_res.append(NEW_VALUE);
+	_res.append("Content-length: " + std::to_string(contentSize));
 	_res.append(END_HEADER);
 }
 
