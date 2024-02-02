@@ -141,8 +141,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		appendStatus(response, client._status);
 		appendBody(response, body, path);
 	}
-
-	
+  
 	int bytes_sent = send(clientSocket, response.c_str(), response.size(), 0);
 	if (bytes_sent < 0)
 	{
@@ -250,11 +249,14 @@ static void	clearClientData(clientData& client)
 	client._requestClient.clear();
 	client._requestReady = false;
 	client._requestPath.clear();
+
 	client._bodyString.clear();
 	client._rawRequest.clear();
 	client._fileData.clear();
 	client._response.clear();
 	client._fileName.clear();
+
+	client.connectionTime = std::chrono::steady_clock::now();
 }
 
 void WebServerProg::handleRequestResponse(int clientIndex)
@@ -266,6 +268,7 @@ void WebServerProg::handleRequestResponse(int clientIndex)
 	}
 	if (m_pollSocketsVec[clientIndex].revents & POLLOUT)
 	{
+
 		sendResponse(m_pollSocketsVec[clientIndex].fd);
 		if (accessDataInMap(m_pollSocketsVec[clientIndex].fd,  "Connection") == "close")
 		{

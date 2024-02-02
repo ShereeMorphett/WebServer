@@ -96,12 +96,11 @@ void CgiHandler::executeCgi(const std::string& scriptName)
     for (const auto& entry : cgiEnvironment)
     {
         envArray[i++] = strdup((entry.first + "=" + entry.second).c_str());
-        std::cerr << COLOR_MAGENTA << envArray[i - 1] << "\n" << COLOR_RESET << std::endl;
     }
     envArray[i] = nullptr;
     const char* scriptArray[3];
 	std::string interpreterPath = extractShebang(scriptName);
-	std::cerr << COLOR_CYAN << interpreterPath << "		" << scriptName << COLOR_RESET << std::endl;
+
     scriptArray[0] = interpreterPath.c_str();
 	scriptArray[1] = scriptName.c_str();
     scriptArray[2] = nullptr;
@@ -134,9 +133,6 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
     int pipesIn[2];
     int pipesOut[2];
 	
-	std::cerr << COLOR_MAGENTA << "Printing multi map" << std::endl;
-	printMultimap(_requestData);
-	std::cerr << COLOR_RESET;
     setupEnvironment(scriptPath, pipesIn, _request);
 
     pipe(pipesIn);

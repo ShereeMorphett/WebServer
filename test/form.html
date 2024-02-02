@@ -65,19 +65,12 @@
  
             <input type="submit" name="submit">
         </form>
-        <h1>File Upload Form</h1>
-        <form enctype="multipart/form-data" action="../src/cgi-bin/fileUpload.py" method="post">
-            <label for="file">Choose a file:</label>
-            <input type="file" name="file" id="file" required><br>
-            <input type="submit" value="Upload">
-        </form>
-        <form action="../src/cgi-bin/textContent.py" method="post">	
+		<form action="../src/cgi-bin/textContent.py" method="post">	
             <label for="textcontent">Text Content:</label>
-            <textarea name="textcontent" id="textcontent" cols="40" rows="4" oninput="handleInput(this)">Type your text here...</textarea><br>
+            <textarea name="textcontent" id="textcontent" cols="40" rows="4" onfocus="handleInput(this)">Type your text here...</textarea><br>
             <input type="submit" value="Submit">
         </form>
     </div>
-
     <script>
         function handleInput(element) {
             if (element.value === 'Type your text here...') {
