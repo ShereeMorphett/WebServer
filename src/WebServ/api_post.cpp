@@ -93,22 +93,10 @@ static bool validateFilename(std::string& fileName)
 	return true;
 }
 
-static std::string getFileUploadPath(clientData& client, std::vector<server>& servers) //will return a path
-{
-	// std::cout << COLOR_CYAN;
-	// printMultimap(client.requestData);
-	// std::cout << COLOR_RESET << std::endl;
-	// std::cout << COLOR_MAGENTA << client.requestData.find("Path")->second;
-
-	return servers[client.serverIndex].uploadFile;
-	
-}
-
-
 void WebServerProg::postResponse(int clientSocket) {
 
     clientData& client = accessClientData(clientSocket);
-	std::string uploadPath = getFileUploadPath(client, servers);
+	std::string uploadPath =servers[client.serverIndex].uploadFile;
 	if (validateFilename(client._fileName) == false)
 	{
 		std::string html_content = "<!DOCTYPE html>\n<html>\n<head>\n<title>Error with upload! Invalid File Name</title>\n</head>\n<body>Error with upload!\n</body>\n</html>\r\n\r\n";
