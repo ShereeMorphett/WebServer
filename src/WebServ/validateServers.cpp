@@ -6,20 +6,39 @@
 #include "WebServerProg.hpp"
 #include "../Color.hpp"
 
-static int validateLocation(const server &servers)
+static bool	isValidRedirLocation(const server &server, std::string const & newPath)
 {
-    for (size_t i = 0; i < servers.locations.size() ; i++)
+	for (size_t i = 0; i < server.locations.size(); i++) {
+		if (newPath == server.locations[i].locationPath) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static int validateLocation(const server &server)
+{
+    for (size_t i = 0; i < server.locations.size() ; i++)
     {
-        if (servers.locations[i].allowedMethods.size() == 0)
+        if (server.locations[i].allowedMethods.size() == 0)
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
-        if (servers.locations[i].locationPath.empty())
+        if (server.locations[i].locationPath.empty())
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
-        if (servers.locations[i].listing < 0 || servers.locations[i].listing > 1)
+		// NOTE: might not be needed since bool will always have default value
+        // if (server.locations[i].listing < 0 || server.locations[i].listing > 1)
+        //     throw std::runtime_error("Server config file is invalid: Invalid location in server");
+        if (server.locations[i].root.empty())
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
-        if (servers.locations[i].root.empty())
+        if (server.locations[i].defaultFile.empty())
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
-        if (servers.locations[i].defaultFile.empty())
-            throw std::runtime_error("Server config file is invalid: Invalid location in server");
+		if (server.locations[i].redirection == true)
+		{
+			if (server.locations[i].redirStatus != 307 && server.locations[i].redirStatus != 308)
+				throw std::runtime_error("Server config file is invalid: Invalid location in server");
+			if (!isValidRedirLocation(server, server.locations[i].redirLocation))
+				throw std::runtime_error("Server config file is invalid: Invalid location in server");
+		}
     }
     return 0;
 }

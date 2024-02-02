@@ -7,6 +7,7 @@
 #include <iomanip>//
 #include <sstream>//
 
+// TODO: MOVE TO HELPERS SINCE ITS DUPLICATE; WILL NOT WORK
 static void	appendMisc(std::string& _res, size_t contentSize) {
 	_res.append("Content-Type: text/html");
 	_res.append(NEW_VALUE);

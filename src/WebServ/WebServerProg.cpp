@@ -40,10 +40,13 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 
 void WebServerProg::initClientData(int clientSocket, int serverIndex)
 {
-	clientData data = {};
+	server&	serv = servers[serverIndex];
+	clientData data(serv);
+
 	data.serverIndex = serverIndex;
 	data.connectionTime = std::chrono::steady_clock::now();
 	data._statusClient = NONE;
+	data._status = NOT_SET;
 	data._currentBodySize = 0;
 	data._expectedBodySize = 0;
 	data._requestReady = false;
@@ -88,19 +91,22 @@ void WebServerProg::sendResponse(int clientSocket)
 
 	char method = accessDataInMap(clientSocket, "Method")[0];
 	std::string& response = accessClientData(clientSocket)._response;
-	if (client._status >= ERRORS)
+
+	if (client._status < ERRORS && client.location->redirection == true)
 	{
-		char buffer[1024] = {};
-		std::string path = chooseErrorPage(client._status);
-		path = getcwd(buffer, sizeof(buffer)) + path;
-		std::string body = readFile(path);
-		
-		appendStatus(response, client._status);
-		appendBody(response, body, path);
+		client._status = NOT_SET;
+		std::string redirHeader = createRedirHeader(client);
+
+		appendStatus(response, client.location->redirStatus);
+		response.append(redirHeader);
+		appendMisc(response);
 	}
-	else if (isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET)
-		response.append(createDirectoryListing(clientSocket, accessDataInMap(clientSocket, "Path")));
-    else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
+	else if (client._status < ERRORS && client.location->listing == true)
+	{
+		if (isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET)
+			response.append(createDirectoryListing(clientSocket, accessDataInMap(clientSocket, "Path")));
+	}
+    else if (client._status < ERRORS && hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
 		appendStatus(response, OK);
@@ -108,20 +114,34 @@ void WebServerProg::sendResponse(int clientSocket)
     }
 	else
 	{
-		switch (method) {
-		case GET:
-			getResponse(clientSocket);
-			break;
-		case POST:
-			postResponse(clientSocket);
-			break;
-		case DELETE:
-			deleteResponse(clientSocket);
-			break;
-		default:
-			break;
+		if (client._status < ERRORS)
+		{
+			switch (method) {
+			case GET:
+				getResponse(clientSocket);
+				break;
+			case POST:
+				postResponse(clientSocket);
+				break;
+			case DELETE:
+				deleteResponse(clientSocket);
+				break;
+			default:
+				break;
+			}
 		}
 	}
+	if (client._status >= ERRORS)
+	{
+		char buffer[1024] = {};
+		std::string path = chooseErrorPage(client._status);
+		path = getcwd(buffer, sizeof(buffer)) + path;
+		std::string body = readFile(path);
+
+		appendStatus(response, client._status);
+		appendBody(response, body, path);
+	}
+  
 	int bytes_sent = send(clientSocket, response.c_str(), response.size(), 0);
 	if (bytes_sent < 0)
 	{
@@ -213,11 +233,22 @@ void	WebServerProg::closeClientConnection(int clientIndex)
 
 static void	clearClientData(clientData& client)
 {
+	auto range = client.requestData.equal_range("requestPath");
+	client.requestData.erase(range.first, range.second);
+	range = client.requestData.equal_range("Path");
+	client.requestData.erase(range.first, range.second);
+
+	client.location = nullptr;
+
 	client._statusClient = NONE;
 	client._status = NOT_SET;
 
 	client._expectedBodySize = 0;
 	client._currentBodySize = 0;
+
+	client._requestClient.clear();
+	client._requestReady = false;
+	client._requestPath.clear();
 
 	client._bodyString.clear();
 	client._rawRequest.clear();
@@ -225,12 +256,7 @@ static void	clearClientData(clientData& client)
 	client._response.clear();
 	client._fileName.clear();
 
-	// NOTE: WILL NOT WORK
-	client.requestData.clear();
-
 	client.connectionTime = std::chrono::steady_clock::now();
-
-	client._requestReady = false;
 }
 
 void WebServerProg::handleRequestResponse(int clientIndex)
@@ -248,7 +274,8 @@ void WebServerProg::handleRequestResponse(int clientIndex)
 		{
 			closeClientConnection(clientIndex);
 		}
-		else // TODO: If its keep alive, what should we reset?
+		// TODO: If its keep alive, what should we reset?
+		else
 		{
 			int	clientSocket = m_pollSocketsVec[clientIndex].fd;
 			clientData& client = accessClientData(clientSocket);
