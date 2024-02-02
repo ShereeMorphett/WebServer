@@ -92,20 +92,21 @@ void WebServerProg::sendResponse(int clientSocket)
 	char method = accessDataInMap(clientSocket, "Method")[0];
 	std::string& response = accessClientData(clientSocket)._response;
 
-	if (client.location->redirection == true && client._status < ERRORS)
+	if (client._status < ERRORS && client.location->redirection == true)
 	{
+		client._status = NOT_SET;
 		std::string redirHeader = createRedirHeader(client);
 
 		appendStatus(response, client.location->redirStatus);
 		response.append(redirHeader);
 		appendMisc(response);
 	}
-	else if (client.location->listing == true && client._status < ERRORS)
+	else if (client._status < ERRORS && client.location->listing == true)
 	{
 		if (isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET)
 			response.append(createDirectoryListing(clientSocket, accessDataInMap(clientSocket, "Path")));
 	}
-    else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")) && client._status < ERRORS)
+    else if (client._status < ERRORS && hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
 		appendStatus(response, OK);
@@ -233,7 +234,12 @@ void	WebServerProg::closeClientConnection(int clientIndex)
 
 static void	clearClientData(clientData& client)
 {
-	client.requestData.erase("Path");
+	auto range = client.requestData.equal_range("requestPath");
+	client.requestData.erase(range.first, range.second);
+	range = client.requestData.equal_range("Path");
+	client.requestData.erase(range.first, range.second);
+
+	client.location = nullptr;
 
 	client._statusClient = NONE;
 	client._status = NOT_SET;
@@ -241,6 +247,9 @@ static void	clearClientData(clientData& client)
 	client._expectedBodySize = 0;
 	client._currentBodySize = 0;
 
+	client._requestClient.clear();
+	client._requestReady = false;
+	client._requestPath.clear();
 	client._bodyString.clear();
 	client._rawRequest.clear();
 	client._fileData.clear();

@@ -45,41 +45,41 @@ static bool	isFile(std::string path)
 	return false;
 }
 
-static void createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path)
+static bool createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path)
 {
 	int	depth = countDepth(path);
-	if (depth > ROOT)
-	{
-		std::string newPath = path.substr(0, path.find_first_of('/', 1));
-		clientRequestMap.insert(std::make_pair("requestPath", newPath));
-	}
-	else
-	{
-		clientRequestMap.insert(std::make_pair("requestPath", "/"));
-	}
 
+	char c = path.back();
+	if (c == '/' && depth > ROOT)
+		path.pop_back();
+	
 	char buffer[1024];
 	memset(buffer, 0, sizeof(buffer));
 	for (std::vector<location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
 	{	
-		// if (path == it->locationPath || path == it->locationPath + '/')
 		if (path == it->locationPath)
 		{
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + '/' + it->defaultFile));
+			clientRequestMap.insert(std::make_pair("requestPath", it->locationPath));
 			break;
 		}
 		else if (depth <= ROOT && isFile(path))
 		{
-			// NOTE: added back since it break .css files from root of the server
-			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + path)); //TODO: sheree removed '/' if it breaks something
+			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + path));
+			clientRequestMap.insert(std::make_pair("requestPath", "/"));
 			break;
 		}
 		else if (it == server.locations.end() - 1)
 		{
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + path));
+			clientRequestMap.insert(std::make_pair("requestPath", path.substr(0, path.find_first_of('/', 1))));
 			break;
 		}
 	}
+
+	std::cout << "REQ PATH: " << clientRequestMap.find("Path")->second << std::endl;
+
+	return true;
 }
 
 bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
@@ -204,20 +204,9 @@ static bool	checkValidBodySize(clientData& client)
 
 static bool	addRequestLocation(clientData& client, std::string const & path)
 {
-	std::string	locationRoot;
-	int	depth = countDepth(path);
-	if (depth > ROOT)
-	{
-		locationRoot = path.substr(0, path.find_first_of('/', 1));
-	}
-	else
-	{
-		locationRoot = "/";
-	}
-
 	for (size_t i = 0; i < client.server.locations.size(); i++)
 	{
-		if (client.server.locations[i].locationPath == locationRoot)
+		if (client.server.locations[i].locationPath == path)
 		{
 			client.location = &client.server.locations[i];
 			return true;
@@ -244,10 +233,14 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	clientRequestMap.insert(std::make_pair("Method", token));
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
-	createPath(getClientServer(clientSocket), clientRequestMap, token);
-	if (!addRequestLocation(client, token))
+	if (!createPath(getClientServer(clientSocket), clientRequestMap, token))
 	{
 		client._status = INT_ERROR;
+		std::runtime_error("Request parsing error!");
+	}
+	if (!addRequestLocation(client, clientRequestMap.find("requestPath")->second))
+	{
+		client._status = NOT_FOUND;
 		std::runtime_error("Request parsing error!");
 	}
 
@@ -283,7 +276,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 			clientRequestMap.insert(std::make_pair(key, value));
 	}
 
-	if (!validateRequest(clientSocket, clientRequestMap))
+	if (!validateRequest(clientSocket, clientRequestMap) && client._status < ERRORS)
 	{
 		std::cerr << COLOR_RED << "Method not allowed\n" << COLOR_RESET;
 		client._status = NOT_ALLOWED;
