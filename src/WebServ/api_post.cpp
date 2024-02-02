@@ -7,14 +7,6 @@
 #include <iomanip>//
 #include <sstream>//
 
-// TODO: MOVE TO HELPERS SINCE ITS DUPLICATE; WILL NOT WORK
-static void	appendMisc(std::string& _res, size_t contentSize) {
-	_res.append("Content-Type: text/html");
-	_res.append(NEW_VALUE);
-	_res.append("Content-length: " + std::to_string(contentSize));
-	_res.append(END_HEADER);
-}
-
 std::string urlEncode(const std::string& value) {
     std::ostringstream escaped;
     escaped.fill('0');
