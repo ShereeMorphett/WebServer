@@ -54,28 +54,30 @@ static void createPath(server& server, std::multimap<std::string, std::string>& 
 		clientRequestMap.insert(std::make_pair("requestPath", newPath));
 	}
 	else
+	{
 		clientRequestMap.insert(std::make_pair("requestPath", "/"));
-	
+	}
+
+	char buffer[1024];
+	memset(buffer, 0, sizeof(buffer));
 	for (std::vector<location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
 	{	
+		// if (path == it->locationPath || path == it->locationPath + '/')
 		if (path == it->locationPath)
 		{
-			char buffer[1024];
-			memset(buffer, 0, sizeof(buffer));
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + '/' + it->defaultFile));
+			break;
 		}
 		else if (depth <= ROOT && isFile(path))
 		{
-			char buffer[1024];
-			memset(buffer, 0, sizeof(buffer));
+			// NOTE: added back since it break .css files from root of the server
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + path)); //TODO: sheree removed '/' if it breaks something
-	
+			break;
 		}
 		else if (it == server.locations.end() - 1)
 		{
-			char buffer[1024];
-			memset(buffer, 0, sizeof(buffer));
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + path));
+			break;
 		}
 	}
 }
@@ -202,9 +204,20 @@ static bool	checkValidBodySize(clientData& client)
 
 static bool	addRequestLocation(clientData& client, std::string const & path)
 {
+	std::string	locationRoot;
+	int	depth = countDepth(path);
+	if (depth > ROOT)
+	{
+		locationRoot = path.substr(0, path.find_first_of('/', 1));
+	}
+	else
+	{
+		locationRoot = "/";
+	}
+
 	for (size_t i = 0; i < client.server.locations.size(); i++)
 	{
-		if (client.server.locations[i].locationPath == path)
+		if (client.server.locations[i].locationPath == locationRoot)
 		{
 			client.location = &client.server.locations[i];
 			return true;
@@ -233,7 +246,10 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 		std::runtime_error("Request parsing error!");
 	createPath(getClientServer(clientSocket), clientRequestMap, token);
 	if (!addRequestLocation(client, token))
+	{
+		client._status = INT_ERROR;
 		std::runtime_error("Request parsing error!");
+	}
 
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
@@ -242,7 +258,6 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	requestStream.ignore();
 	requestStream.ignore();
 
-	// NOTE: refactored version
 	while (std::getline(requestStream, line) && !line.empty())
 	{
 		if (!line.empty() && line.back() == '\r')
@@ -252,8 +267,11 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 		if (pos == std::string::npos) {
 			if (line.empty())
 				break;
-			else // TODO: maybe change status etc and go from there
+			else
+			{
 				std::runtime_error("Request parsing error\n");
+				client._status = BAD_REQUEST;
+			}
 		}
 
 		std::string	key = line.substr(0, pos);

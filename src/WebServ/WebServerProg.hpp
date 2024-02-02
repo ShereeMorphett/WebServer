@@ -18,7 +18,7 @@ struct location
 	
     std::string	locationPath;
     std::string	root;
-    int 		listing;
+    bool 		listing;
     std::string	defaultFile;
     std::string	cgiPath;
 };
@@ -49,6 +49,7 @@ struct clientData
 
 	int										_expectedBodySize;
 	int										_currentBodySize; 
+	std::string								_requestPath;
 	std::string								_rawRequest;
 
 	std::string								_bodyString;

@@ -35,10 +35,13 @@ static std::string	checkDefaultFile(std::string& defaultFile)
 
 static location parseLocation(std::istream &stream, std::string extValue)
 {
-    char c;
     location temp;
+    char c;
+
     temp.locationPath = extValue;
 	temp.redirection = false;
+	temp.listing = false;
+
 	std::string line;
 	while (stream.get(c))
 	{
@@ -66,9 +69,8 @@ static location parseLocation(std::istream &stream, std::string extValue)
 			temp.root = checkRoot(value);
 		else if (key == "listing")
 		{
-			temp.listing = ON;
-			if (value == "off")
-				temp.listing = OFF;	
+			if (value == "on")
+				temp.listing = true;
 		}
 		else if (key == "default_file")
 			temp.defaultFile = checkDefaultFile(value);

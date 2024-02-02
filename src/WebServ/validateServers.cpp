@@ -25,8 +25,9 @@ static int validateLocation(const server &server)
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
         if (server.locations[i].locationPath.empty())
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
-        if (server.locations[i].listing < 0 || server.locations[i].listing > 1)
-            throw std::runtime_error("Server config file is invalid: Invalid location in server");
+		// NOTE: might not be needed since bool will always have default value
+        // if (server.locations[i].listing < 0 || server.locations[i].listing > 1)
+        //     throw std::runtime_error("Server config file is invalid: Invalid location in server");
         if (server.locations[i].root.empty())
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
         if (server.locations[i].defaultFile.empty())

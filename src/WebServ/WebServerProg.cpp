@@ -46,6 +46,7 @@ void WebServerProg::initClientData(int clientSocket, int serverIndex)
 	data.serverIndex = serverIndex;
 	data.connectionTime = std::chrono::steady_clock::now();
 	data._statusClient = NONE;
+	data._status = NOT_SET;
 	data._currentBodySize = 0;
 	data._expectedBodySize = 0;
 	data._requestReady = false;
@@ -90,7 +91,45 @@ void WebServerProg::sendResponse(int clientSocket)
 
 	char method = accessDataInMap(clientSocket, "Method")[0];
 	std::string& response = accessClientData(clientSocket)._response;
-	
+
+	if (client.location->redirection == true && client._status < ERRORS)
+	{
+		std::string redirHeader = createRedirHeader(client);
+
+		appendStatus(response, client.location->redirStatus);
+		response.append(redirHeader);
+		appendMisc(response);
+	}
+	else if (client.location->listing == true && client._status < ERRORS)
+	{
+		if (isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET)
+			response.append(createDirectoryListing(clientSocket, accessDataInMap(clientSocket, "Path")));
+	}
+    else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")) && client._status < ERRORS)
+	{
+		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
+		appendStatus(response, OK);
+		response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), accessClientData(clientSocket)._requestClient));
+    }
+	else
+	{
+		if (client._status < ERRORS)
+		{
+			switch (method) {
+			case GET:
+				getResponse(clientSocket);
+				break;
+			case POST:
+				postResponse(clientSocket);
+				break;
+			case DELETE:
+				deleteResponse(clientSocket);
+				break;
+			default:
+				break;
+			}
+		}
+	}
 	if (client._status >= ERRORS)
 	{
 		char buffer[1024] = {};
@@ -100,38 +139,6 @@ void WebServerProg::sendResponse(int clientSocket)
 
 		appendStatus(response, client._status);
 		appendBody(response, body, path);
-	}
-	else if (client.location->redirection == true)
-	{
-		std::string redirHeader = createRedirHeader(client);
-
-		appendStatus(response, client.location->redirStatus);
-		response.append(redirHeader);
-		appendMisc(response);
-	}
-	else if (isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET)
-		response.append(createDirectoryListing(clientSocket, accessDataInMap(clientSocket, "Path")));
-    else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
-	{
-		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
-		appendStatus(response, OK);
-		response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), accessClientData(clientSocket)._requestClient));
-    }
-	else
-	{
-		switch (method) {
-		case GET:
-			getResponse(clientSocket);
-			break;
-		case POST:
-			postResponse(clientSocket);
-			break;
-		case DELETE:
-			deleteResponse(clientSocket);
-			break;
-		default:
-			break;
-		}
 	}
 
 	
@@ -217,7 +224,6 @@ void	WebServerProg::closeClientConnection(int clientIndex)
 
 	if (clientIndex >= 0 && clientIndex < static_cast<int>(m_pollSocketsVec.size()))
 	{
-		std::cout << COLOR_RED<< "client id: " << m_pollSocketsVec[clientIndex].fd << " CLOSING\n" << COLOR_RESET;
 		close(m_pollSocketsVec[clientIndex].fd);		
 		m_clientDataMap.erase(m_pollSocketsVec[clientIndex].fd);
 		m_pollSocketsVec.erase(m_pollSocketsVec.begin() + clientIndex);
@@ -225,20 +231,22 @@ void	WebServerProg::closeClientConnection(int clientIndex)
 
 }
 
-// static void	clearClientData(clientData& client)
-// {
-// 	client._statusClient = NONE;
-// 	client._status = NOT_SET;
+static void	clearClientData(clientData& client)
+{
+	client.requestData.erase("Path");
 
-// 	client._expectedBodySize = 0;
-// 	client._currentBodySize = 0;
+	client._statusClient = NONE;
+	client._status = NOT_SET;
 
-// 	client._bodyString.clear();
-// 	client._rawRequest.clear();
-// 	client._fileData.clear();
-// 	client._response.clear();
-// 	client._fileName.clear();
-// }
+	client._expectedBodySize = 0;
+	client._currentBodySize = 0;
+
+	client._bodyString.clear();
+	client._rawRequest.clear();
+	client._fileData.clear();
+	client._response.clear();
+	client._fileName.clear();
+}
 
 void WebServerProg::handleRequestResponse(int clientIndex)
 {
@@ -255,12 +263,12 @@ void WebServerProg::handleRequestResponse(int clientIndex)
 			closeClientConnection(clientIndex);
 		}
 		// TODO: If its keep alive, what should we reset?
-		// else
-		// {
-		// 	int	clientSocket = m_pollSocketsVec[clientIndex].fd;
-		// 	clientData& client = accessClientData(clientSocket);
-		// 	clearClientData(client);
-		// }
+		else
+		{
+			int	clientSocket = m_pollSocketsVec[clientIndex].fd;
+			clientData& client = accessClientData(clientSocket);
+			clearClientData(client);
+		}
 	}
 }
 

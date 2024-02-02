@@ -75,9 +75,6 @@ std::string	chooseErrorPage(int status) {
 
 std::string	createRedirHeader(clientData& client)
 {
-	// new location
-	// root of new location
-	// deffault file of new location
 	std::string newLocation = client.location->redirLocation;
 	std::string	defaultFile;
 	std::string	root;
@@ -92,7 +89,6 @@ std::string	createRedirHeader(clientData& client)
 	}
 	
 	if (root.empty() || defaultFile.empty()) {
-		std::cout << "THIS IS THE CAUSE" << std::endl;
 		client._status = INT_ERROR;
 		return "";
 	}
@@ -101,8 +97,6 @@ std::string	createRedirHeader(clientData& client)
 	header.append("Location: ");
 	header.append(root + '/' + defaultFile);
 	header.append(END_HEADER);
-
-	std::cout << "HEADER: " << header << std::endl;
 
 	return header;
 }
@@ -187,6 +181,7 @@ void	appendBody(std::string& _res, std::string& body, std::string const & path) 
 void	checkRequest(int* status, std::string const & path)
 {
 	std::ifstream	file(path.c_str());
+
 	if (file.is_open())
 	{
 		if (file.good())
