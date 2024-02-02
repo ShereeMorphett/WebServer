@@ -20,11 +20,9 @@ std::string urlEncode(const std::string& value) {
     escaped << std::hex;
 
     for (char c : value) {
-        // Keep alphanumeric and other safe characters unchanged
         if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
             escaped << c;
         } else {
-            // Any other characters are percent-encoded
             escaped << std::uppercase;
             escaped << '%' << std::setw(2) << int(static_cast<unsigned char>(c));
             escaped << std::nouppercase;
@@ -50,6 +48,7 @@ static std::string generateHtmlcontentPost(clientData& client)
 
 	std::string html_content = "<!DOCTYPE html>\n<html>\n<head>\n<title>You Successfully uploaded!</title>\n</head><style>" + css_content + "</style>\n<body>\n<p>You Successfully uploaded! Click the link below to view your file.</p>\n";
 	std::string filePath  = "uploads/" + urlEncode(client._fileName);
+	std::cout << COLOR_GREEN << filePath << COLOR_RESET << std::endl;
 	html_content += "<a href=\"" + filePath + "\" target=\"_blank\">View File</a>\n";
 	html_content += "<form action=\"/delete\" method=\"post\">\n";
 	html_content += "<input type=\"hidden\" name=\"file\" value=\"" + filePath + "\">\n";
@@ -62,7 +61,7 @@ static std::string generateHtmlcontentPost(clientData& client)
 		fetch(filePath, {
 			method: 'DELETE',
 			headers: {
-				'Content-Type': 'application/json', // You can adjust the content type as needed
+				'Content-Type': 'application/json',
 			}
 		})
 		.then(response => {
@@ -83,7 +82,7 @@ static std::string generateHtmlcontentPost(clientData& client)
 	html_content += "</body>\n</html>\r\n\r\n";
 	return html_content;
 }
-//TODO: make the css linked and correct the file path from these links to the root upload directory when its in
+
 void WebServerProg::postResponse(int clientSocket) {
 
     clientData& client = accessClientData(clientSocket);
