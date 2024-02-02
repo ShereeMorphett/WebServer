@@ -34,6 +34,7 @@ void printMap(typename std::map<Type, T> theMap)
         std::cout << it->first << ": " << it->second << std::endl;
     }
 }
+bool createDirectory(const std::string& path);
 bool isDirectory(const std::string& path);
 void skipNonPrintable(std::istream& stream);
 void skipWhitespace(std::istream& stream);

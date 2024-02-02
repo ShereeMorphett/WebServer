@@ -32,7 +32,7 @@ std::string urlEncode(const std::string& value) {
     return escaped.str();
 }
 
-static std::string generateHtmlcontentPost(clientData& client)
+static std::string generateHtmlcontentPost(clientData& client, std::string uploadPath)
 {
 	std::string css_content = R"(body {
         font-family: 'Arial', sans-serif;
@@ -47,8 +47,7 @@ static std::string generateHtmlcontentPost(clientData& client)
     })";
 
 	std::string html_content = "<!DOCTYPE html>\n<html>\n<head>\n<title>You Successfully uploaded!</title>\n</head><style>" + css_content + "</style>\n<body>\n<p>You Successfully uploaded! Click the link below to view your file.</p>\n";
-	std::string filePath  = "uploads/" + urlEncode(client._fileName);
-	std::cout << COLOR_GREEN << filePath << COLOR_RESET << std::endl;
+	std::string filePath  = uploadPath+ "/" + urlEncode(client._fileName);
 	html_content += "<a href=\"" + filePath + "\" target=\"_blank\">View File</a>\n";
 	html_content += "<form action=\"/delete\" method=\"post\">\n";
 	html_content += "<input type=\"hidden\" name=\"file\" value=\"" + filePath + "\">\n";
@@ -83,17 +82,43 @@ static std::string generateHtmlcontentPost(clientData& client)
 	return html_content;
 }
 
+static bool validateFilename(std::string& fileName)
+{
+    if (fileName.find(' ') != std::string::npos)
+	{
+		std::cerr << COLOR_RED << "Error: Invalid file name" << COLOR_RESET << std::endl;
+		return false;
+	}
+	
+	return true;
+}
+
+static std::string getFileUploadPath(clientData& client, std::vector<server>& servers) //will return a path
+{
+	// std::cout << COLOR_CYAN;
+	// printMultimap(client.requestData);
+	// std::cout << COLOR_RESET << std::endl;
+	// std::cout << COLOR_MAGENTA << client.requestData.find("Path")->second;
+
+	return servers[client.serverIndex].uploadFile;
+	
+}
+
+
 void WebServerProg::postResponse(int clientSocket) {
 
     clientData& client = accessClientData(clientSocket);
-	std::cout << COLOR_CYAN;
-
-	// printLocation(servers[client.serverIndex].locations0]);//how can i access the server/location details from here
-	std::cout << COLOR_RESET << std::endl;
-
+	std::string uploadPath = getFileUploadPath(client, servers);
+	if (validateFilename(client._fileName) == false)
+	{
+		std::string html_content = "<!DOCTYPE html>\n<html>\n<head>\n<title>Error with upload! Invalid File Name</title>\n</head>\n<body>Error with upload!\n</body>\n</html>\r\n\r\n";
+		appendMisc(client._response, html_content.size());
+		client._response.append(html_content);
+		client._status = ERRORS;
+	}
 	if (client._status < ERRORS)
 	{
-		std::ofstream outFile("./uploads/" + client._fileName, std::ios::binary);
+		std::ofstream outFile(uploadPath + "/"+ client._fileName, std::ios::binary);
 		if (!outFile)
 			client._status = INT_ERROR;
 		else {
@@ -106,7 +131,7 @@ void WebServerProg::postResponse(int clientSocket) {
     appendStatus(client._response, client._status);
 	if (client._status == OK)
 	{
-        std::string html_content = generateHtmlcontentPost(client);
+        std::string html_content = generateHtmlcontentPost(client, uploadPath);
         appendMisc(client._response, html_content.size());
         client._response.append(html_content);
 	}

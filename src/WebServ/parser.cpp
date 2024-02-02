@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include "utils.hpp"
 #include "constants.hpp"
+#include <sys/stat.h>
 
 
 
@@ -98,6 +99,8 @@ static std::map<int, std::string> parseErrorFile(const std::string &line)
     return tempMap;
 }
 
+
+
 static server parseServer(std::istream &stream)
 {
     server temp;
@@ -151,6 +154,17 @@ static server parseServer(std::istream &stream)
             std::stringstream sizeStream(value);
             sizeStream >> size;
             temp.clientMaxBodySize = size;
+        }
+        else if (key == "upload_file")
+        {
+            temp.uploadFile = value;
+            if (!isDirectory(temp.uploadFile))
+            {
+                if (!createDirectory(temp.uploadFile))
+                {
+                    temp.uploadFile = "";
+                }
+            }
         }
         line.clear();
     }

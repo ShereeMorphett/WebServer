@@ -65,6 +65,8 @@ void validateServers(const std::vector<struct server> &servers) //if there is an
             throw std::runtime_error("Server config file is invalid: The max client body size must be less that 6144 bytes and greater that 0 bytes");
         if(servers[i].socketFD < 0)
             throw std::runtime_error("Server config file is invalid: Socket file descriptor invaild");
+        if(servers[i].uploadFile.empty())
+            throw std::runtime_error("Server config file is invalid: Server must have valid default uploads file");
         if (validateErrorPage(servers[i]))
 			throw std::runtime_error("Server config file is invalid: Error pages invaild");
         if (validateLocation(servers[i]))

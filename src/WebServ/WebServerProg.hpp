@@ -26,6 +26,7 @@ struct server
 	std::string serverName;
     std::map<int, std::string> errorPages;
     std::vector<location> locations; 
+	std::string uploadFile;
     int clientMaxBodySize;
 
 };
