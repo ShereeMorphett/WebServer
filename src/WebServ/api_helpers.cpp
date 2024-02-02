@@ -78,8 +78,7 @@ std::string	createRedirHeader(clientData& client)
 	// new location
 	// root of new location
 	// deffault file of new location
-
-	std::string newLocation = client.location.redirLocation;
+	std::string newLocation = client.location->redirLocation;
 	std::string	defaultFile;
 	std::string	root;
 	
@@ -93,11 +92,19 @@ std::string	createRedirHeader(clientData& client)
 	}
 	
 	if (root.empty() || defaultFile.empty()) {
+		std::cout << "THIS IS THE CAUSE" << std::endl;
 		client._status = INT_ERROR;
 		return "";
 	}
 
-	// return path;
+	std::string	header;
+	header.append("Location: ");
+	header.append(root + '/' + defaultFile);
+	header.append(END_HEADER);
+
+	std::cout << "HEADER: " << header << std::endl;
+
+	return header;
 }
 
 void	appendStatus(std::string& _res, int status) {

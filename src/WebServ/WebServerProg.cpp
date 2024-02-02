@@ -40,7 +40,9 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 
 void WebServerProg::initClientData(int clientSocket, int serverIndex)
 {
-	clientData data = {};
+	server&	serv = servers[serverIndex];
+	clientData data(serv);
+
 	data.serverIndex = serverIndex;
 	data.connectionTime = std::chrono::steady_clock::now();
 	data._statusClient = NONE;
@@ -99,11 +101,11 @@ void WebServerProg::sendResponse(int clientSocket)
 		appendStatus(response, client._status);
 		appendBody(response, body, path);
 	}
-	else if (client.location.redirection == true)
+	else if (client.location->redirection == true)
 	{
 		std::string redirHeader = createRedirHeader(client);
 
-		appendStatus(response, client.location.redirStatus);
+		appendStatus(response, client.location->redirStatus);
 		response.append(redirHeader);
 		appendMisc(response);
 	}

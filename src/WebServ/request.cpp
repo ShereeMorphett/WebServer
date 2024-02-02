@@ -188,24 +188,30 @@ void	WebServerProg::parseBody(int clientSocket)
 	}
 }
 
-static bool	checkValidBodySize(__attribute__((unused))int clientSocket, clientData& client)
+static bool	checkValidBodySize(clientData& client)
 {
 	if (client._currentBodySize != client._expectedBodySize)
 		return false;
-	// TODO: add cheks for max body size from headers and config
+	if (client._currentBodySize > client.server.clientMaxBodySize)
+		return false;
+	if (client._currentBodySize > client._expectedBodySize)
+		return false;
 
 	return true;
 }
 
-static void	addRequestLocation(clientData& client, std::string const & path)
+static bool	addRequestLocation(clientData& client, std::string const & path)
 {
 	for (size_t i = 0; i < client.server.locations.size(); i++)
 	{
 		if (client.server.locations[i].locationPath == path)
 		{
-			client.location = client.server.locations[i];
+			client.location = &client.server.locations[i];
+			return true;
 		}
 	}
+
+	return false;
 }
 
 void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int size)
@@ -214,9 +220,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	if (it == m_clientDataMap.end())
 		return;
 	
-	server&	serv = servers[accessClientData(clientSocket).serverIndex];
 	clientData& client = accessClientData(clientSocket);
-	client.server = serv;
 
 	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
 	std::istringstream	requestStream(requestChunk);
@@ -228,7 +232,8 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
 	createPath(getClientServer(clientSocket), clientRequestMap, token);
-	addRequestLocation(client, token);
+	if (!addRequestLocation(client, token))
+		std::runtime_error("Request parsing error!");
 
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
@@ -286,7 +291,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 		saveBody(clientSocket, len);
 		client._rawRequest.clear();
 
-		if (checkValidBodySize(clientSocket, client)) {
+		if (checkValidBodySize(client)) {
 			parseBody(clientSocket);
 		}
 	}
@@ -311,7 +316,7 @@ void WebServerProg::handleBody(int clientSocket, std::string requestChunk, int s
 	client._rawRequest.clear();
 
 	// TODO: Check correct status
-	if (checkValidBodySize(clientSocket, client)) {
+	if (checkValidBodySize(client)) {
 		parseBody(clientSocket);
 	}
 }
