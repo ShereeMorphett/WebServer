@@ -104,6 +104,10 @@ void CgiHandler::executeCgi(const std::string& scriptName)
     scriptArray[0] = interpreterPath.c_str();
 	scriptArray[1] = scriptName.c_str();
     scriptArray[2] = nullptr;
+
+	std::cerr << "script arr 0: " << interpreterPath.c_str() << std::endl;
+	std::cerr << "script arr 1: " << scriptName.c_str() << std::endl;
+
     if (execve(scriptArray[0], const_cast<char* const*>(scriptArray), const_cast<char* const*>(envArray)) == -1)
     {
         perror("execve");
@@ -150,6 +154,7 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
         dup2(pipesOut[1], STDOUT_FILENO);
         close(pipesIn[1]);
         close(pipesOut[0]);
+		std::cerr << "EXECUTING CGI" << std::endl;
         executeCgi(scriptPath);
     }
     else
