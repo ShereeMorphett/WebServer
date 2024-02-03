@@ -99,14 +99,14 @@ void WebServerProg::sendResponse(int clientSocket)
 
 		appendStatus(response, client.location->redirStatus);
 		response.append(redirHeader);
-		appendMisc(response);
+		appendMisc(response, 0);
 	}
-	else if (client._status < ERRORS && client.location->listing == true)
+	else if (client.location->listing == true)
 	{
 		if (isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET)
 			response.append(createDirectoryListing(clientSocket, accessDataInMap(clientSocket, "Path")));
 	}
-    else if (client._status < ERRORS && hasCgiExtension(accessDataInMap(clientSocket, "Path")))
+    else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
 		appendStatus(response, OK);
