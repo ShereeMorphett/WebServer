@@ -11,12 +11,16 @@
 struct location
 {
     std::vector<std::string> allowedMethods;
-    std::string locationPath;
-    std::string redirection;
-    std::string root;
-    int listing;
-    std::string defaultFile;
-    std::string cgiPath;
+
+	std::string	redirLocation;
+	bool		redirection;
+	int			redirStatus;
+	
+    std::string	locationPath;
+    std::string	root;
+    bool 		listing;
+    std::string	defaultFile;
+    std::string	cgiPath;
 };
 
 struct server
@@ -33,6 +37,11 @@ struct server
 
 struct clientData
 {
+	clientData(server& serv) : server(serv) {}
+
+	location								*location;
+	server									&server;
+
 	int 									serverIndex;
 	std::multimap<std::string, std::string> requestData;
 	std::chrono::steady_clock::time_point	connectionTime;
@@ -41,6 +50,7 @@ struct clientData
 
 	int										_expectedBodySize;
 	int										_currentBodySize; 
+	std::string								_requestPath;
 	std::string								_rawRequest;
 
 	std::string								_bodyString;

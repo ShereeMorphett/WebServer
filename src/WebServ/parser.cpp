@@ -12,8 +12,6 @@
 #include "constants.hpp"
 #include <sys/stat.h>
 
-
-
 static	std::string	checkRoot(std::string& root)
 {
 	if (root[0] != '/')
@@ -38,9 +36,13 @@ static std::string	checkDefaultFile(std::string& defaultFile)
 
 static location parseLocation(std::istream &stream, std::string extValue)
 {
-    char c;
     location temp;
+    char c;
+
     temp.locationPath = extValue;
+	temp.redirection = false;
+	temp.listing = false;
+
 	std::string line;
 	while (stream.get(c))
 	{
@@ -58,15 +60,18 @@ static location parseLocation(std::istream &stream, std::string extValue)
 		sstream >> key >> value;
 		if (key == "allow")
 			temp.allowedMethods.push_back(value);
-		else if (key == "redirection")
-			temp.redirection = value;
+		else if (key == "return") {
+			temp.redirection = true;
+			temp.redirStatus = std::stoi(value);
+			sstream >> value;
+			temp.redirLocation = value;
+		}
 		else if (key == "root")
 			temp.root = checkRoot(value);
 		else if (key == "listing")
 		{
-			temp.listing = ON;
-			if (value == "off")
-				temp.listing = OFF;	
+			if (value == "on")
+				temp.listing = true;
 		}
 		else if (key == "default_file")
 			temp.defaultFile = checkDefaultFile(value);

@@ -45,39 +45,41 @@ static bool	isFile(std::string path)
 	return false;
 }
 
-static void createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path)
+static bool createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path)
 {
 	int	depth = countDepth(path);
-	if (depth > ROOT)
-	{
-		std::string newPath = path.substr(0, path.find_first_of('/', 1));
-		clientRequestMap.insert(std::make_pair("requestPath", newPath));
-	}
-	else
-		clientRequestMap.insert(std::make_pair("requestPath", "/"));
+
+	char c = path.back();
+	if (c == '/' && depth > ROOT)
+		path.pop_back();
 	
+	char buffer[1024];
+	memset(buffer, 0, sizeof(buffer));
 	for (std::vector<location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
 	{	
 		if (path == it->locationPath)
 		{
-			char buffer[1024];
-			memset(buffer, 0, sizeof(buffer));
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + '/' + it->defaultFile));
+			clientRequestMap.insert(std::make_pair("requestPath", it->locationPath));
+			break;
 		}
 		else if (depth <= ROOT && isFile(path))
 		{
-			char buffer[1024];
-			memset(buffer, 0, sizeof(buffer));
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + path));
-	
+			clientRequestMap.insert(std::make_pair("requestPath", "/"));
+			break;
 		}
 		else if (it == server.locations.end() - 1)
 		{
-			char buffer[1024];
-			memset(buffer, 0, sizeof(buffer));
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + path));
+			clientRequestMap.insert(std::make_pair("requestPath", path.substr(0, path.find_first_of('/', 1))));
+			break;
 		}
 	}
+
+	std::cout << "REQ PATH: " << clientRequestMap.find("Path")->second << std::endl;
+
+	return true;
 }
 
 bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
@@ -202,13 +204,30 @@ void	WebServerProg::parseBody(int clientSocket)
 	// }
 
 
-static bool	checkValidBodySize(__attribute__((unused))int clientSocket, clientData& client)
+static bool	checkValidBodySize(clientData& client)
 {
 	if (client._currentBodySize != client._expectedBodySize)
 		return false;
-	// TODO: add cheks for max body size from headers and config
+	if (client._currentBodySize > client.server.clientMaxBodySize)
+		return false;
+	if (client._currentBodySize > client._expectedBodySize)
+		return false;
 
 	return true;
+}
+
+static bool	addRequestLocation(clientData& client, std::string const & path)
+{
+	for (size_t i = 0; i < client.server.locations.size(); i++)
+	{
+		if (client.server.locations[i].locationPath == path)
+		{
+			client.location = &client.server.locations[i];
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int size)
@@ -217,8 +236,9 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	if (it == m_clientDataMap.end())
 		return;
 	
-	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
 	clientData& client = accessClientData(clientSocket);
+
+	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
 	std::istringstream	requestStream(requestChunk);
 	std::string			token;
 
@@ -227,7 +247,16 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	clientRequestMap.insert(std::make_pair("Method", token));
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
-	createPath(getClientServer(clientSocket), clientRequestMap, token);
+	if (!createPath(getClientServer(clientSocket), clientRequestMap, token))
+	{
+		client._status = INT_ERROR;
+		std::runtime_error("Request parsing error!");
+	}
+	if (!addRequestLocation(client, clientRequestMap.find("requestPath")->second))
+	{
+		client._status = NOT_FOUND;
+		std::runtime_error("Request parsing error!");
+	}
 
 	if (!(requestStream >> token))
 		std::runtime_error("Request parsing error!");
@@ -236,7 +265,6 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	requestStream.ignore();
 	requestStream.ignore();
 
-	// NOTE: refactored version
 	while (std::getline(requestStream, line) && !line.empty())
 	{
 		if (!line.empty() && line.back() == '\r')
@@ -246,8 +274,11 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 		if (pos == std::string::npos) {
 			if (line.empty())
 				break;
-			else // TODO: maybe change status etc and go from there
+			else
+			{
 				std::runtime_error("Request parsing error\n");
+				client._status = BAD_REQUEST;
+			}
 		}
 
 		std::string	key = line.substr(0, pos);
@@ -258,7 +289,8 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 		if (key.size() > 0)
 			clientRequestMap.insert(std::make_pair(key, value));
 	}
-	if (!validateRequest(clientSocket, clientRequestMap))
+
+	if (client._status < ERRORS && !validateRequest(clientSocket, clientRequestMap))
 	{
 		std::cerr << COLOR_RED << "Method not allowed\n" << COLOR_RESET;
 		client._status = NOT_ALLOWED;
@@ -284,7 +316,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 		saveBody(clientSocket, len);
 		client._rawRequest.clear();
 
-		if (checkValidBodySize(clientSocket, client)) {
+		if (checkValidBodySize(client)) {
 			parseBody(clientSocket);
 		}
 	}
@@ -309,7 +341,7 @@ void WebServerProg::handleBody(int clientSocket, std::string requestChunk, int s
 	client._rawRequest.clear();
 
 	// TODO: Check correct status
-	if (checkValidBodySize(clientSocket, client)) {
+	if (checkValidBodySize(client)) {
 		parseBody(clientSocket);
 	}
 }
