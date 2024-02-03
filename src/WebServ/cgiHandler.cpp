@@ -11,7 +11,7 @@
 #include "CgiHandler.hpp"
 #include "constants.hpp"
 
-const char* serverEnviroment[24] =
+const char* serverEnviroment[22] =
 {
    "DOCUMENT_ROOT", "GATEWAY_INTERFACE",   
    "HTTP_ACCEPT", "HTTP_ACCEPT_ENCODING",             
@@ -38,7 +38,7 @@ static std::string getData(std::multimap<std::string, std::string>& _requestData
 
 void CgiHandler::setupEnvironment(const std::string& scriptPath, int pipesIn[2], std::string& _request)
 {
-    for (int i = 0; i < 24; ++i)
+    for (int i = 0; i < 22; ++i)
     {
         char* value = getenv(serverEnviroment[i]);
         if (value != NULL)
