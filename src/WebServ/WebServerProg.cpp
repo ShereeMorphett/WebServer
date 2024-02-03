@@ -101,7 +101,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		response.append(redirHeader);
 		appendMisc(response, 0);
 	}
-	else if (client.location->listing == true)
+	else if (client.location && client.location->listing == true)
 	{
 		if (isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET)
 			response.append(createDirectoryListing(clientSocket, accessDataInMap(clientSocket, "Path")));
