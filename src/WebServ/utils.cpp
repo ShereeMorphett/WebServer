@@ -100,6 +100,7 @@ void printServer(server &server)
 		std::cout << std::endl;
 }
 
+
 std::string parseStartingPath(std::string startingPath, std::string root)
 {
 

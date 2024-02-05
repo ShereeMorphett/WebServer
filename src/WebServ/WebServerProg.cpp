@@ -123,7 +123,6 @@ void WebServerProg::sendResponse(int clientSocket)
 		if (isValidDirectory("." + myNewAwesomePath) && method == GET)
 		{
 			std::cout << "using awesome path" << std::endl;
-			std::cout << COLOR_MAGENTA << client._requestClient << COLOR_RESET << std::endl;
 			response.append(createDirectoryListing(clientSocket, myNewAwesomePath));
 
 			// client.location->locationPath = client.location->root + myNewAwesomePath;
@@ -131,7 +130,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		else if ((!isValidFile(accessDataInMap(clientSocket, "Path")) || isValidDirectory(accessDataInMap(clientSocket, "Path")) ) && method == GET) {
 			std::cout << "using original path" << std::endl;
 			response.append(createDirectoryListing(clientSocket, client.location->locationPath));
-			// client.location->locationPath = client.location->root;
+			client.location->locationPath = client.location->root;
 		}
 		else {
 			std::cout << "went to get res" << std::endl;

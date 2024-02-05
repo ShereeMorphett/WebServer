@@ -38,10 +38,8 @@ static std::string buildDirectoryLinks(DIR *directory, std::string path)
             continue;
         }
 
-		std::cout << "build directoery links: " << entryPath << std::endl;
-
-        // std::string relativePath = parseStartingPath(entryPath, path);
-		std::string relativePath = entryPath;
+		std::cout << "build directoery links: " << entryPath << "Path	"<< path << std::endl;
+        std::string relativePath = parseStartingPath(entryPath, path);
 		std::cout << COLOR_MAGENTA << relativePath << COLOR_RESET << std::endl;
         std::string fullLink = "<a href='" + relativePath + "'>" + entryName + "</a>";
         directoryFinding += "\t\t<p>";
@@ -53,7 +51,6 @@ static std::string buildDirectoryLinks(DIR *directory, std::string path)
         {
             directoryFinding += fullLink;
         }
-
         directoryFinding += "</p>\n";
     }
     directoryFinding += "\
