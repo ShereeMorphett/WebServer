@@ -26,18 +26,6 @@ clientData& WebServerProg::accessClientData(int clientSocket)
 	return m_clientDataMap.find(clientSocket)->second;
 }
 
-static int	countDepth(std::string path)
-{
-	int	depth = 0;
-
-	for (size_t i = 0; i < path.size(); i++) {
-		if (path[i] == '/')
-			depth++;
-	}
-
-	return depth;
-}
-
 static bool	isFile(std::string path)
 {
 	if (path.find('.') != std::string::npos)
@@ -222,6 +210,7 @@ static bool	addRequestLocation(clientData& client, std::string const & path)
 {
 	for (size_t i = 0; i < client.server.locations.size(); i++)
 	{
+		std::cout << "add req location path comparing: " << path << " : " << client.server.locations[i].locationPath << std::endl;
 		if (client.server.locations[i].locationPath == path)
 		{
 			client.location = &client.server.locations[i];
@@ -417,7 +406,7 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 		// stc::cout << 
 		buffer[bytes_received] = '\0';
 		std::string requestChunk(buffer, bytes_received);
-		accessClientData(clientSocket)._requestClient.append(buffer, buffer + bytes_received);
+		accessClientData(clientSocket)._requestClient.append(buffer, buffer + bytes_received);	
 		handleChunk(clientSocket, requestChunk, bytes_received);
 	}
 

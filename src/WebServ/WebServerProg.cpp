@@ -110,18 +110,28 @@ void WebServerProg::sendResponse(int clientSocket)
 
 		// some checks with the path
 		std::string myNewAwesomePath = accessDataInMap(clientSocket, "Path");
-		myNewAwesomePath = client.location->root + myNewAwesomePath.substr(myNewAwesomePath.find_last_of('/'));
+		// int depth = countDepth(myNewAwesomePath);
+		// size_t pos = myNewAwesomePath.find("WebServer"):
+		// myNewAwesomePath = parseStartingPath(myNewAwesomePath, "WebServer");
+		// size_t pos = myNewAwesomePath.find_first_of('/', 1);
+		// myNewAwesomePath = myNewAwesomePath.substr(pos);
+		myNewAwesomePath = client.location->root + myNewAwesomePath.substr(myNewAwesomePath.find_last_of("/"));  //TODO: there is an issue HERE
+		client._currentDirectory = myNewAwesomePath;
+		myNewAwesomePath = myNewAwesomePath.substr(client._currentDirectory.find_first_of(client.location->root));
+		// myNewAwesomePath = client.location->root + myNewAwesomePath.substr(myNewAwesomePath.find_first_of('/', 1));
 		std::cout << "myNewAwesomePath: " << myNewAwesomePath << std::endl;
 		if (isValidDirectory("." + myNewAwesomePath) && method == GET)
 		{
 			std::cout << "using awesome path" << std::endl;
+			std::cout << COLOR_MAGENTA << client._requestClient << COLOR_RESET << std::endl;
 			response.append(createDirectoryListing(clientSocket, myNewAwesomePath));
-			client.location->locationPath = client.location->root + myNewAwesomePath;
+
+			// client.location->locationPath = client.location->root + myNewAwesomePath;
 		}
 		else if ((!isValidFile(accessDataInMap(clientSocket, "Path")) || isValidDirectory(accessDataInMap(clientSocket, "Path")) ) && method == GET) {
 			std::cout << "using original path" << std::endl;
-			response.append(createDirectoryListing(clientSocket, client.location->root));
-			client.location->locationPath = client.location->root;
+			response.append(createDirectoryListing(clientSocket, client.location->locationPath));
+			// client.location->locationPath = client.location->root;
 		}
 		else {
 			std::cout << "went to get res" << std::endl;

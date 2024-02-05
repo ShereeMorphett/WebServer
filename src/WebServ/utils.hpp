@@ -40,3 +40,5 @@ void skipNonPrintable(std::istream& stream);
 void skipWhitespace(std::istream& stream);
 void printLocation(location &location);
 void printServer(server &server);
+int	countDepth(std::string path);
+std::string parseStartingPath(std::string startingPath, std::string root);

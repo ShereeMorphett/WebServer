@@ -7,31 +7,6 @@
 #include <dirent.h>
 #include <sys/types.h>
 
-
-
-
-
-static std::string parseStartingPath(std::string startingPath, std::string root)
-{
-
-    std::string parse = root;
-	 std::cout << COLOR_GREEN << "Parse:	" << parse << COLOR_RESET << std::endl;
-	size_t pos = startingPath.find(parse);
-	if (pos != std::string::npos)
-	{
-		std::string resultPath = startingPath.substr(pos + parse.length());
-
-		if (isValidDirectory(resultPath) && resultPath.back() != '/')
-			resultPath.append("/");
-		std::cout << COLOR_GREEN << "resultPath:	" << resultPath << COLOR_RESET << std::endl;
-		return resultPath;
-    } 
-	else
-	{
-		return "";
-    }
-}
-
 static std::string buildDirectoryLinks(DIR *directory, std::string path)
 {
     struct dirent *en;
@@ -63,7 +38,10 @@ static std::string buildDirectoryLinks(DIR *directory, std::string path)
             continue;
         }
 
-        std::string relativePath = parseStartingPath(entryPath, path);
+		std::cout << "build directoery links: " << entryPath << std::endl;
+
+        // std::string relativePath = parseStartingPath(entryPath, path);
+		std::string relativePath = entryPath;
 		std::cout << COLOR_MAGENTA << relativePath << COLOR_RESET << std::endl;
         std::string fullLink = "<a href='" + relativePath + "'>" + entryName + "</a>";
         directoryFinding += "\t\t<p>";

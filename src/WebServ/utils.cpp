@@ -59,6 +59,17 @@ void skipWhitespace(std::istream& stream)
     }
 }
 
+int	countDepth(std::string path)
+{
+	int	depth = 0;
+
+	for (size_t i = 0; i < path.size(); i++) {
+		if (path[i] == '/')
+			depth++;
+	}
+
+	return depth;
+}
 
 void printLocation(location &location)
 {
@@ -87,4 +98,25 @@ void printServer(server &server)
         for (size_t i = 0; i < server.locations.size(); i++)
 			printLocation(server.locations[i]);
 		std::cout << std::endl;
+}
+
+std::string parseStartingPath(std::string startingPath, std::string root)
+{
+
+    std::string parse = root;
+	 std::cout << COLOR_GREEN << "Parse:	" << parse << COLOR_RESET << std::endl;
+	size_t pos = startingPath.find(parse);
+	if (pos != std::string::npos)
+	{
+		std::string resultPath = startingPath.substr(pos + parse.length());
+
+		if (isValidDirectory(resultPath) && resultPath.back() != '/')
+			resultPath.append("/");
+		std::cout << COLOR_GREEN << "resultPath:	" << resultPath << COLOR_RESET << std::endl;
+		return resultPath;
+    } 
+	else
+	{
+		return "";
+    }
 }
