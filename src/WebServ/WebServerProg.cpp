@@ -43,6 +43,7 @@ void WebServerProg::initClientData(int clientSocket, int serverIndex)
 	server&	serv = servers[serverIndex];
 	clientData data(serv);
 
+	data.location = nullptr;
 	data.serverIndex = serverIndex;
 	data.connectionTime = std::chrono::steady_clock::now();
 	data._statusClient = NONE;
@@ -92,30 +93,23 @@ void WebServerProg::sendResponse(int clientSocket)
 	char method = accessDataInMap(clientSocket, "Method")[0];
 	std::string& response = accessClientData(clientSocket)._response;
 
-	if (client._status < ERRORS && client.location->redirection == true)
+	if (client.location && client.location->redirection == true)
 	{
-		client._status = NOT_SET;
+		std::cout << "REDIR" << std::endl;
 		std::string redirHeader = createRedirHeader(client);
-
 		appendStatus(response, client.location->redirStatus);
 		response.append(redirHeader);
 		appendMisc(response, 0);
 	}
-	else if (client.location->listing == true)
+	else if (client.location && client.location->listing == true)
 	{
-		if (isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET)
-			response.append(createDirectoryListing(clientSocket, accessDataInMap(clientSocket, "Path")));
-	}
-    else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
-	{
-		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
-		appendStatus(response, OK);
-		response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), accessClientData(clientSocket)._requestClient));
-    }
-	else
-	{
-		if (client._status < ERRORS)
-		{
+		std::cout << "went to listing" << std::endl;
+		if (!isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET) {
+			response.append(createDirectoryListing(clientSocket, client.location->root));
+			client.location->locationPath = client.location->root;
+		}
+		else {
+			std::cout << "went to get res" << std::endl;
 			switch (method) {
 			case GET:
 				getResponse(clientSocket);
@@ -131,6 +125,38 @@ void WebServerProg::sendResponse(int clientSocket)
 			}
 		}
 	}
+    else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
+	{
+		std::cout << "went to cgi" << std::endl;
+		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
+		appendStatus(response, OK);
+		response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), accessClientData(clientSocket)._requestClient));
+    }
+	else
+	{
+		std::cout << "went to get res" << std::endl;
+		switch (method) {
+		case GET:
+			getResponse(clientSocket);
+			break;
+		case POST:
+			postResponse(clientSocket);
+			break;
+		case DELETE:
+			deleteResponse(clientSocket);
+			break;
+		default:
+			break;
+		}
+	}
+	// else
+	// {
+	// 	std::cout << "TEST 5" << std::endl;
+	// 	client._status = INT_ERROR;
+	// }
+
+	std::cout << "statu: " << client._status << std::endl;
+
 	if (client._status >= ERRORS)
 	{
 		char buffer[1024] = {};

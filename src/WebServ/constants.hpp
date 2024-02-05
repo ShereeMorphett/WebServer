@@ -53,6 +53,7 @@
 # define	IN_BODY	1
 # define	CHUNKED	2
 # define	DONE	3
+# define 	REDIR	4
 
 
 # define	SERVER_PAGE			"/defaults/500.html"

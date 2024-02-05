@@ -4,6 +4,8 @@
 #include "../Color.hpp"
 #include <sys/stat.h>
 
+#include <iostream>
+
 void skipNonPrintable(std::istream& stream)
 {
     while (stream)
@@ -17,11 +19,19 @@ void skipNonPrintable(std::istream& stream)
 
 bool isDirectory(const std::string& path)
 {
-    struct stat fileInfo;
+    // struct stat fileInfo;
     
-    if (stat(path.c_str(), &fileInfo) != 0)
-        return false;
-    return S_ISDIR(fileInfo.st_mode);
+    // if (stat(path.c_str(), &fileInfo) != 0)
+    //     return false;
+    // return S_ISDIR(fileInfo.st_mode);
+
+	std::ifstream file(path);
+
+	if (file.good()) {
+		return true;
+	}
+
+	return false;
 }
 
 void skipWhitespace(std::istream& stream)

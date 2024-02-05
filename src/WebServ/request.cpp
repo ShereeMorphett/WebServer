@@ -195,6 +195,7 @@ void	WebServerProg::parseBody(int clientSocket)
 	}
 	else
 	{
+		std::cout << "COMING IN ELSE AT PARSEBODY" << std::endl;
 		client._status = BAD_REQUEST;
 		return;
 	}
@@ -244,23 +245,26 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	std::string			token;
 
 	if (!(requestStream >> token))
-		std::runtime_error("Request parsing error!");
+		throw std::runtime_error("Request parsing error!");
 	clientRequestMap.insert(std::make_pair("Method", token));
 	if (!(requestStream >> token))
-		std::runtime_error("Request parsing error!");
+		throw std::runtime_error("Request parsing error!");
 	if (!createPath(getClientServer(clientSocket), clientRequestMap, token))
 	{
+		std::cout << "TEST 3" << std::endl;
 		client._status = INT_ERROR;
-		std::runtime_error("Request parsing error!");
+		throw std::runtime_error("Request parsing error!");
 	}
+	client._requestPath = token;
 	if (!addRequestLocation(client, clientRequestMap.find("requestPath")->second))
 	{
-		client._status = NOT_FOUND;
-		std::runtime_error("Request parsing error!");
+		std::cout << "TEST 4" << std::endl;
+		client._status = INT_ERROR;
+		throw std::runtime_error("Request parsing error!");
 	}
 
 	if (!(requestStream >> token))
-		std::runtime_error("Request parsing error!");
+		throw std::runtime_error("Request parsing error!");
 	clientRequestMap.insert(std::make_pair("HTTP-version", token));
 	std::string line;
 	requestStream.ignore();
@@ -277,7 +281,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 				break;
 			else
 			{
-				std::runtime_error("Request parsing error\n");
+				throw std::runtime_error("Request parsing error\n");
 				client._status = BAD_REQUEST;
 			}
 		}
@@ -368,17 +372,24 @@ void WebServerProg::appendChunk(__attribute__((unused))int clientSocket, __attri
 
 void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int size)
 {
-	switch (accessClientData(clientSocket)._statusClient)
-	{
-		case NONE:
-			parseHeaders(clientSocket, requestChunk, size);
-			break;
-		case IN_BODY:
-			handleBody(clientSocket, requestChunk, size);
-			break;
-		case CHUNKED:
-			appendChunk(clientSocket, requestChunk);
-			break;
+	try {
+		switch (accessClientData(clientSocket)._statusClient)
+		{
+			case NONE:
+				parseHeaders(clientSocket, requestChunk, size);
+				break;
+			case IN_BODY:
+				handleBody(clientSocket, requestChunk, size);
+				break;
+			case CHUNKED:
+				appendChunk(clientSocket, requestChunk);
+				break;
+		}
+	}
+	catch(std::exception &e) {
+		std::cout << COLOR_RED << "handle chunk exception" << COLOR_RESET << std::endl;
+		accessClientData(clientSocket)._status = BAD_REQUEST;
+		accessClientData(clientSocket)._requestReady = true;
 	}
 
 }
@@ -394,7 +405,7 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 		if (m_pollSocketsVec[pollIndex].revents & (POLLIN | POLLRDNORM | POLLRDBAND)) // is not error, just waiting and try again after
             return true; 
         std::cerr << "Error! recv" << std::endl;
-        return true; //is error but not fatal
+        return true;
 	}
 	else if (bytes_received == 0)
 	{
@@ -403,6 +414,7 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	}
 	else
 	{
+		// stc::cout << 
 		buffer[bytes_received] = '\0';
 		std::string requestChunk(buffer, bytes_received);
 		accessClientData(clientSocket)._requestClient.append(buffer, buffer + bytes_received);

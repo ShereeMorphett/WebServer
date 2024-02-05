@@ -186,8 +186,8 @@ std::vector<struct server> parseConfigFile(std::istream &stream)
             }
             catch (const std::exception& e)
             {
+				// TODO: what happens if we are here?! Dont know
                 std::cerr << COLOR_RED << e.what() << COLOR_RESET << std::endl;
-                exit(EXIT_FAILURE);
             }
         }
         line.clear();
