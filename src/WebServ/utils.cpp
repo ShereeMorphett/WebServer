@@ -17,14 +17,18 @@ void skipNonPrintable(std::istream& stream)
     }
 }
 
-bool isDirectory(const std::string& path)
+bool isValidDirectory(const std::string& path)
 {
-    // struct stat fileInfo;
-    
-    // if (stat(path.c_str(), &fileInfo) != 0)
-    //     return false;
-    // return S_ISDIR(fileInfo.st_mode);
+	struct stat fileInfo;
+	std::cout << COLOR_GREEN << "path in validir:	" << path << COLOR_RESET << std::endl;
+    if (stat(path.c_str(), &fileInfo) != 0)
+        return false;
 
+    return S_ISDIR(fileInfo.st_mode);
+}
+
+bool isValidFile(const std::string& path)
+{
 	std::ifstream file(path);
 
 	if (file.good()) {

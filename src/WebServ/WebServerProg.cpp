@@ -103,8 +103,23 @@ void WebServerProg::sendResponse(int clientSocket)
 	}
 	else if (client.location && client.location->listing == true)
 	{
-		std::cout << "went to listing" << std::endl;
-		if (!isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET) {
+		std::cout << "went to listing with: " << accessDataInMap(clientSocket, "Path") << std::endl;
+		std::cout << "isValidFile: " << isValidFile(accessDataInMap(clientSocket, "Path")) << std::endl;
+		std::cout << "dir: " << isValidDirectory(accessDataInMap(clientSocket, "Path")) << std::endl;
+
+
+		// some checks with the path
+		std::string myNewAwesomePath = accessDataInMap(clientSocket, "Path");
+		myNewAwesomePath = client.location->root + myNewAwesomePath.substr(myNewAwesomePath.find_last_of('/'));
+		std::cout << "myNewAwesomePath: " << myNewAwesomePath << std::endl;
+		if (isValidDirectory("." + myNewAwesomePath) && method == GET)
+		{
+			std::cout << "using awesome path" << std::endl;
+			response.append(createDirectoryListing(clientSocket, myNewAwesomePath));
+			client.location->locationPath = client.location->root + myNewAwesomePath;
+		}
+		else if ((!isValidFile(accessDataInMap(clientSocket, "Path")) || isValidDirectory(accessDataInMap(clientSocket, "Path")) ) && method == GET) {
+			std::cout << "using original path" << std::endl;
 			response.append(createDirectoryListing(clientSocket, client.location->root));
 			client.location->locationPath = client.location->root;
 		}
