@@ -4,6 +4,8 @@
 #include "../Color.hpp"
 #include <sys/stat.h>
 
+#include <iostream>
+
 void skipNonPrintable(std::istream& stream)
 {
     while (stream)
@@ -15,13 +17,30 @@ void skipNonPrintable(std::istream& stream)
     }
 }
 
-bool isDirectory(const std::string& path)
+bool isValidDirectory(const std::string& path)
 {
-    struct stat fileInfo;
-    
+	struct stat fileInfo;
+	std::cout << COLOR_GREEN << "path in validir:	" << path << COLOR_RESET << std::endl;
     if (stat(path.c_str(), &fileInfo) != 0)
         return false;
+
     return S_ISDIR(fileInfo.st_mode);
+}
+
+bool isValidFile(const std::string& path)
+{
+	struct stat path_stat;
+    stat(path.c_str(), &path_stat);
+
+    bool isRegularFile = S_ISREG(path_stat.st_mode);
+
+    std::ifstream file(path);
+    if (file.good() && isRegularFile) {
+        file.close();
+        return true;
+    }
+    file.close();
+    return false;
 }
 
 void skipWhitespace(std::istream& stream)
@@ -45,6 +64,17 @@ void skipWhitespace(std::istream& stream)
     }
 }
 
+int	countDepth(std::string path)
+{
+	int	depth = 0;
+
+	for (size_t i = 0; i < path.size(); i++) {
+		if (path[i] == '/')
+			depth++;
+	}
+
+	return depth;
+}
 
 void printLocation(location &location)
 {
@@ -73,4 +103,37 @@ void printServer(server &server)
         for (size_t i = 0; i < server.locations.size(); i++)
 			printLocation(server.locations[i]);
 		std::cout << std::endl;
+}
+
+
+std::string parseStartingPath(std::string startingPath, std::string root)
+{
+
+    std::string parse = root;
+	 std::cout << COLOR_GREEN << "Parse:	" << parse << COLOR_RESET << std::endl;
+	size_t pos = startingPath.find(parse);
+	if (pos != std::string::npos)
+	{
+		std::string resultPath = startingPath.substr(pos + parse.length());
+
+		if (isValidDirectory(resultPath) && resultPath.back() != '/')
+			resultPath.append("/");
+		std::cout << COLOR_GREEN << "resultPath:	" << resultPath << COLOR_RESET << std::endl;
+		return resultPath;
+    } 
+	else
+	{
+		return "";
+    }
+}
+
+void replaceMapValue(std::string key, std::string& newValue, clientData& client)
+{
+	auto range = client.requestData.equal_range(key);
+
+	for (auto it = range.first; it != range.second;) {
+		it = client.requestData.erase(it);
+	}
+
+	client.requestData.insert(std::make_pair(key, newValue));
 }

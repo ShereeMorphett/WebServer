@@ -7,70 +7,63 @@
 #include <dirent.h>
 #include <sys/types.h>
 
-static std::string parseStartingPath(std::string startingPath)
+static std::string	absoluteToRelativePath(std::string root, std::string absoluePath)
 {
-
-    std::string parse = "WebServer";
-
-	size_t pos = startingPath.find(parse);
-	if (pos != std::string::npos)
-	{
-		std::string resultPath = startingPath.substr(pos + parse.length());
-		if (isDirectory(resultPath) && resultPath.back() != '/')
-			resultPath.append("/");
-		return resultPath;
-    } 
-	else
-	{
-		return "";
-    }
+	int rootLen = root.length();
+	std::string relativePath = absoluePath.substr(rootLen, absoluePath.length());
+	return(relativePath);
 }
 
-static std::string buildDirectoryLinks(DIR *directory, std::string rootPath)
+static std::string buildDirectoryLinks(DIR *directory, std::string path, clientData& client)
 {
-    struct dirent *en;
     std::string directoryFinding;
+    struct dirent *en;
+	std::string link;
 
-    directoryFinding += "<!DOCTYPE html>\n\
-                        <html>\n\
-                        <head>\n\
-                            <title>" + rootPath + "</title>\n\
-                        </head>\n\
-                        <body>\n\
-                            <h1>AUTOINDEX</h1>\n\
-                            <p>\n";
+//     directoryFinding += "<!DOCTYPE html>\n\
+//                         <html>\n\
+//                         <head>\n\
+//                             <title>" + path + "</title>\n\
+// 							<style>\n\
+// 								body { background-color: black }\n\
+// 								.link {\n\
+// 									display: flex;\n\
+// 									flex-direction: row;\n\
+// 									justify-content: center;\n\
+// 									align-items: center;\n\
+// 								}\n\
+// 								.link h2 {\n\
+// 									color: white;\n\
+// 									border: 2px solid white;\n\
+// 									padding: 5px 10px;\n\
+// 									text-decoration: none;\n\
+// 									display: inline-block;\n\
+// 									transition: background-color 0.3s, color 0.3s;\n\
+// }								}\n\
+// 							</style>\n\
+//                         </head>\n\
+//                         <body>\n\
+//                             <h1>AUTOINDEX</h1>\n\
+//                             <div className='link'>\n";
 
-    if (rootPath.back() != '/')
-        rootPath.append("/");
     while ((en = readdir(directory)) != NULL)
     {
-        std::string entryName = en->d_name;
-        if (entryName == "." || entryName == ".." || entryName[0] == '.' || entryName == "obj")
-            continue;
-        std::string entryPath = rootPath + entryName;
-        bool boolDirectory = (en->d_type == DT_DIR);
-       if (boolDirectory && !isDirectory(entryPath))
-        {
-            std::cerr << "Error: " << entryPath << " is not a directory as expected." << std::endl;
-            continue;
-        }
+		if (!strncmp(en->d_name, ".", 1))
+			continue;
 
-        std::string relativePath = parseStartingPath(entryPath);
-        std::string fullLink = "<a href='" + relativePath + "'>" + entryName + "</a>";
-        directoryFinding += "\t\t<p>";
-        if (boolDirectory)
-        {
-            directoryFinding += fullLink + "\n";
-        }
-        else
-        {
-            directoryFinding += fullLink;
-        }
+		link.append(absoluteToRelativePath(client._root, path));
+		link.append("/");
+		link.append(en->d_name);
+		
+        std::string fullLink = "<a href='" + link + "'>" + en->d_name + "</a>";
 
-        directoryFinding += "</p>\n";
+        directoryFinding += "\t\t<h2 class='link'>";
+		directoryFinding += fullLink;
+        directoryFinding += "</h2>\n";
+		link.clear();
     }
     directoryFinding += "\
-                            </p>\n\
+                            </div>\n\
                         </body>\n\
                         </html>";
 
@@ -78,36 +71,60 @@ static std::string buildDirectoryLinks(DIR *directory, std::string rootPath)
 }
 
 
+
 std::string WebServerProg::createDirectoryListing(int clientSocket, std::string startingPath)
 {
 	clientData&	client = accessClientData(clientSocket);
+	std::string path = startingPath;
+
 
     client._response.append(HTTP_HEADER);
     client._response.append(NEW_VALUE);
    	client._response.append("Content-Type: text/html\r\n");
     client._response.append(toString(client._status) + "\r\n");
     std::string directoryFinding;
-    DIR *directory = opendir(startingPath.c_str());
 
+    DIR *directory = opendir(path.c_str());
     if (directory == NULL)
     {
-        std::cerr << COLOR_RED << "Error: could not open " << startingPath << COLOR_RESET << std::endl;
+        std::cerr << COLOR_RED << "Error: could not open " << path << COLOR_RESET << std::endl;
 		client._status = NOT_FOUND;
         return "";
     }
     directoryFinding += "<!DOCTYPE html>\n\
                         <html>\n\
                         <head>\n\
-                            <title>" + startingPath + "</title>\n\
+                            <title>" + path + "</title>\n\
+							<style>\n\
+								body { background-color: black }\n\
+								h1 { color: white; }\n\
+								a { color: white; text-decoration: none; }\n\
+								.links-div {\n\
+									display: flex;\n\
+									flex-direction: column;\n\
+									justify-content: center;\n\
+									align-items: center;\n\
+								}\n\
+								.link {\n\
+									color: white;\n\
+									border-radius: 25px;\n\
+									border: 2px solid white;\n\
+									padding: 7.5px 10px;\n\
+									margin-bottom: 5px;\n\
+									text-decoration: none;\n\
+									display: inline-block;\n\
+									transition: background-color 0.3s, color 0.3s;\n\
+}								}\n\
+							</style>\n\
                         </head>\n\
                         <body>\n\
-                            <h1></h1>\n\
-                            <p>\n";
+                            <div class='links-div'>\n\
+							<h1>Auto listing: </h1>";
 
-    directoryFinding += buildDirectoryLinks(directory, startingPath);
+    directoryFinding += buildDirectoryLinks(directory, startingPath, client);
 
     directoryFinding += "\
-                            </p>\n\
+                        	</div>\n\
                         </body>\n\
                         </html>";
     closedir(directory);

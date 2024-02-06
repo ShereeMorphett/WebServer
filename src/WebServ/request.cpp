@@ -26,18 +26,6 @@ clientData& WebServerProg::accessClientData(int clientSocket)
 	return m_clientDataMap.find(clientSocket)->second;
 }
 
-static int	countDepth(std::string path)
-{
-	int	depth = 0;
-
-	for (size_t i = 0; i < path.size(); i++) {
-		if (path[i] == '/')
-			depth++;
-	}
-
-	return depth;
-}
-
 static bool	isFile(std::string path)
 {
 	if (path.find('.') != std::string::npos)
@@ -45,13 +33,15 @@ static bool	isFile(std::string path)
 	return false;
 }
 
-static bool createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path)
+static bool createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path, clientData& client)
 {
 	int	depth = countDepth(path);
 
 	char c = path.back();
 	if (c == '/' && depth > ROOT)
 		path.pop_back();
+
+	// std::cout << "rawPath: " << path << std::endl;
 	
 	char buffer[1024];
 	memset(buffer, 0, sizeof(buffer));
@@ -77,7 +67,9 @@ static bool createPath(server& server, std::multimap<std::string, std::string>& 
 		}
 	}
 
-	std::cout << "REQ PATH: " << clientRequestMap.find("Path")->second << std::endl;
+	client._root = buffer;
+
+	// std::cout << "REQ PATH: " << clientRequestMap.find("Path")->second << std::endl;
 
 	return true;
 }
@@ -122,7 +114,7 @@ static std::string	fetchName(std::string& body) {
 	{
 		target = "name=\"";
 		startPos = body.find(target);
-		std::cout << "target:	" << target << std::endl;
+		// std::cout << "target:	" << target << std::endl;
 		if (startPos == std::string::npos)
 			return "error";
 	}
@@ -195,6 +187,7 @@ void	WebServerProg::parseBody(int clientSocket)
 	}
 	else
 	{
+		std::cout << "COMING IN ELSE AT PARSEBODY" << std::endl;
 		client._status = BAD_REQUEST;
 		return;
 	}
@@ -221,6 +214,7 @@ static bool	addRequestLocation(clientData& client, std::string const & path)
 {
 	for (size_t i = 0; i < client.server.locations.size(); i++)
 	{
+		// std::cout << "add req location path comparing: " << path << " : " << client.server.locations[i].locationPath << std::endl;
 		if (client.server.locations[i].locationPath == path)
 		{
 			client.location = &client.server.locations[i];
@@ -233,6 +227,7 @@ static bool	addRequestLocation(clientData& client, std::string const & path)
 
 void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int size)
 {
+	char c;
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
 	if (it == m_clientDataMap.end())
 		return;
@@ -244,23 +239,26 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	std::string			token;
 
 	if (!(requestStream >> token))
-		std::runtime_error("Request parsing error!");
+		throw std::runtime_error("Request parsing error!");
 	clientRequestMap.insert(std::make_pair("Method", token));
 	if (!(requestStream >> token))
-		std::runtime_error("Request parsing error!");
-	if (!createPath(getClientServer(clientSocket), clientRequestMap, token))
+		throw std::runtime_error("Request parsing error!");
+	c = token.back();
+	if (c == '/')
+		token.pop_back();
+	if (!createPath(getClientServer(clientSocket), clientRequestMap, token, client))
 	{
 		client._status = INT_ERROR;
-		std::runtime_error("Request parsing error!");
+		throw std::runtime_error("Request parsing error!");
 	}
 	if (!addRequestLocation(client, clientRequestMap.find("requestPath")->second))
 	{
-		client._status = NOT_FOUND;
-		std::runtime_error("Request parsing error!");
+		client._status = INT_ERROR;
+		throw std::runtime_error("Request parsing error!");
 	}
-
+	client._requestPath = token;
 	if (!(requestStream >> token))
-		std::runtime_error("Request parsing error!");
+		throw std::runtime_error("Request parsing error!");
 	clientRequestMap.insert(std::make_pair("HTTP-version", token));
 	std::string line;
 	requestStream.ignore();
@@ -277,7 +275,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 				break;
 			else
 			{
-				std::runtime_error("Request parsing error\n");
+				throw std::runtime_error("Request parsing error\n");
 				client._status = BAD_REQUEST;
 			}
 		}
@@ -368,17 +366,24 @@ void WebServerProg::appendChunk(__attribute__((unused))int clientSocket, __attri
 
 void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int size)
 {
-	switch (accessClientData(clientSocket)._statusClient)
-	{
-		case NONE:
-			parseHeaders(clientSocket, requestChunk, size);
-			break;
-		case IN_BODY:
-			handleBody(clientSocket, requestChunk, size);
-			break;
-		case CHUNKED:
-			appendChunk(clientSocket, requestChunk);
-			break;
+	try {
+		switch (accessClientData(clientSocket)._statusClient)
+		{
+			case NONE:
+				parseHeaders(clientSocket, requestChunk, size);
+				break;
+			case IN_BODY:
+				handleBody(clientSocket, requestChunk, size);
+				break;
+			case CHUNKED:
+				appendChunk(clientSocket, requestChunk);
+				break;
+		}
+	}
+	catch(std::exception &e) {
+		std::cout << COLOR_RED << "handle chunk exception" << COLOR_RESET << std::endl;
+		accessClientData(clientSocket)._status = BAD_REQUEST;
+		accessClientData(clientSocket)._requestReady = true;
 	}
 
 }
@@ -394,7 +399,7 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 		if (m_pollSocketsVec[pollIndex].revents & (POLLIN | POLLRDNORM | POLLRDBAND)) // is not error, just waiting and try again after
             return true; 
         std::cerr << "Error! recv" << std::endl;
-        return true; //is error but not fatal
+        return true;
 	}
 	else if (bytes_received == 0)
 	{
@@ -403,9 +408,10 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	}
 	else
 	{
+		// stc::cout << 
 		buffer[bytes_received] = '\0';
 		std::string requestChunk(buffer, bytes_received);
-		accessClientData(clientSocket)._requestClient.append(buffer, buffer + bytes_received);
+		accessClientData(clientSocket)._requestClient.append(buffer, buffer + bytes_received);	
 		handleChunk(clientSocket, requestChunk, bytes_received);
 	}
 

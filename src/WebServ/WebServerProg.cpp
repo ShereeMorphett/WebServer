@@ -43,6 +43,7 @@ void WebServerProg::initClientData(int clientSocket, int serverIndex)
 	server&	serv = servers[serverIndex];
 	clientData data(serv);
 
+	data.location = nullptr;
 	data.serverIndex = serverIndex;
 	data.connectionTime = std::chrono::steady_clock::now();
 	data._statusClient = NONE;
@@ -92,19 +93,25 @@ void WebServerProg::sendResponse(int clientSocket)
 	char method = accessDataInMap(clientSocket, "Method")[0];
 	std::string& response = accessClientData(clientSocket)._response;
 
-	if (client._status < ERRORS && client.location->redirection == true)
+	if (client.location && client.location->redirection == true)
 	{
-		client._status = NOT_SET;
+		std::cout << "REDIR" << std::endl;
 		std::string redirHeader = createRedirHeader(client);
-
 		appendStatus(response, client.location->redirStatus);
 		response.append(redirHeader);
 		appendMisc(response, 0);
 	}
-	else if (client.location && client.location->listing == true)
+	else if ((client.location && client.location->listing == true) && method == GET)
 	{
-		if (isDirectory(accessDataInMap(clientSocket, "Path")) && method == GET)
-			response.append(createDirectoryListing(clientSocket, accessDataInMap(clientSocket, "Path")));
+		std::string myNewAwesomePath = client._root + client._requestPath;
+
+		if (!isValidFile(myNewAwesomePath)) {
+			response.append(createDirectoryListing(clientSocket, myNewAwesomePath));
+		}
+		else {
+			replaceMapValue("Path", myNewAwesomePath, client);
+			getResponse(clientSocket);
+		}
 	}
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
@@ -114,23 +121,21 @@ void WebServerProg::sendResponse(int clientSocket)
     }
 	else
 	{
-		if (client._status < ERRORS)
-		{
-			switch (method) {
-			case GET:
-				getResponse(clientSocket);
-				break;
-			case POST:
-				postResponse(clientSocket);
-				break;
-			case DELETE:
-				deleteResponse(clientSocket);
-				break;
-			default:
-				break;
-			}
+		switch (method) {
+		case GET:
+			getResponse(clientSocket);
+			break;
+		case POST:
+			postResponse(clientSocket);
+			break;
+		case DELETE:
+			deleteResponse(clientSocket);
+			break;
+		default:
+			break;
 		}
 	}
+
 	if (client._status >= ERRORS)
 	{
 		char buffer[1024] = {};
