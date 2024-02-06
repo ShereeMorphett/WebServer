@@ -88,7 +88,6 @@ std::string	createRedirHeader(clientData& client)
 	}
 	
 	if (root.empty() || defaultFile.empty()) {
-		std::cout << "TEST 1" << std::endl;
 		client._status = INT_ERROR;
 		return "";
 	}
