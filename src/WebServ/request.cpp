@@ -40,9 +40,6 @@ static bool createPath(server& server, std::multimap<std::string, std::string>& 
 	char c = path.back();
 	if (c == '/' && depth > ROOT)
 		path.pop_back();
-
-	// std::cout << "rawPath: " << path << std::endl;
-	
 	char buffer[1024];
 	memset(buffer, 0, sizeof(buffer));
 	for (std::vector<location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
@@ -68,9 +65,6 @@ static bool createPath(server& server, std::multimap<std::string, std::string>& 
 	}
 
 	client._root = buffer;
-
-	// std::cout << "REQ PATH: " << clientRequestMap.find("Path")->second << std::endl;
-
 	return true;
 }
 
@@ -114,7 +108,6 @@ static std::string	fetchName(std::string& body) {
 	{
 		target = "name=\"";
 		startPos = body.find(target);
-		// std::cout << "target:	" << target << std::endl;
 		if (startPos == std::string::npos)
 			return "error";
 	}
@@ -187,7 +180,6 @@ void	WebServerProg::parseBody(int clientSocket)
 	}
 	else
 	{
-		std::cout << "COMING IN ELSE AT PARSEBODY" << std::endl;
 		client._status = BAD_REQUEST;
 		return;
 	}
@@ -214,7 +206,6 @@ static bool	addRequestLocation(clientData& client, std::string const & path)
 {
 	for (size_t i = 0; i < client.server.locations.size(); i++)
 	{
-		// std::cout << "add req location path comparing: " << path << " : " << client.server.locations[i].locationPath << std::endl;
 		if (client.server.locations[i].locationPath == path)
 		{
 			client.location = &client.server.locations[i];
@@ -381,7 +372,6 @@ void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int 
 		}
 	}
 	catch(std::exception &e) {
-		std::cout << COLOR_RED << "handle chunk exception" << COLOR_RESET << std::endl;
 		accessClientData(clientSocket)._status = BAD_REQUEST;
 		accessClientData(clientSocket)._requestReady = true;
 	}
@@ -408,7 +398,6 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	}
 	else
 	{
-		// stc::cout << 
 		buffer[bytes_received] = '\0';
 		std::string requestChunk(buffer, bytes_received);
 		accessClientData(clientSocket)._requestClient.append(buffer, buffer + bytes_received);	

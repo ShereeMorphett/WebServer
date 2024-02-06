@@ -95,7 +95,6 @@ void WebServerProg::sendResponse(int clientSocket)
 
 	if (client.location && client.location->redirection == true)
 	{
-		std::cout << "REDIR" << std::endl;
 		std::string redirHeader = createRedirHeader(client);
 		appendStatus(response, client.location->redirStatus);
 		response.append(redirHeader);
