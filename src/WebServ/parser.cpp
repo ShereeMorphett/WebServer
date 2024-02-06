@@ -157,6 +157,12 @@ static server parseServer(std::istream &stream)
             sizeStream >> size;
             temp.clientMaxBodySize = size;
         }
+		else if (key == "uploadDirectory")
+        {
+            temp.uploadDirectory = value;
+			createDirectory(temp.uploadDirectory);
+			std::cout << "PRINTING FROM PARSER" << temp.uploadDirectory << std::endl;
+        }
         line.clear();
     }
     return temp;

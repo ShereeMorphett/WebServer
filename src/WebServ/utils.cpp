@@ -92,6 +92,15 @@ void printLocation(location &location)
 	}
 	std::cout << "\n_______________________________________" << std::endl;
 }
+bool createDirectory(const std::string& path) {
+	
+    if (mkdir(path.c_str(), 0777) == 0) {
+        return true;
+    } else {
+        std::cerr << "Failed to create directory: " << path << std::endl;
+        return false;
+    }
+}
 
 void printServer(server &server)
 {

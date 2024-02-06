@@ -31,9 +31,11 @@ std::string urlEncode(const std::string& value) {
 void WebServerProg::postResponse(int clientSocket) {
     clientData& client = accessClientData(clientSocket);
 	
+	std::string uploadPath = servers[accessClientData(clientSocket).serverIndex].uploadDirectory;
 	if (client._status < ERRORS) {
 
-		std::ofstream outFile("./uploads/" + client._fileName, std::ios::binary);
+		std::cout << COLOR_CYAN << uploadPath + "/" + client._fileName << COLOR_RESET << std::endl;
+		std::ofstream outFile(uploadPath + "/" + client._fileName, std::ios::binary);
 		if (!outFile) {
 			client._status = INT_ERROR;
 		}
@@ -45,7 +47,6 @@ void WebServerProg::postResponse(int clientSocket) {
 	}
 	client._response.clear();
     appendStatus(client._response, client._status);
-
 	std::string css_content = R"(body {
         font-family: 'Arial', sans-serif;
         background-color: #f2f2f2;}h1 {
