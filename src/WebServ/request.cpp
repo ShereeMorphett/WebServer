@@ -5,7 +5,6 @@
 #include <sstream>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <cerrno>
 #include <stdlib.h>
 #include "constants.hpp"
 #include <iterator>
@@ -184,10 +183,6 @@ void	WebServerProg::parseBody(int clientSocket)
 		return;
 	}
 }
-	// else
-	// {
-	// 	client._status = BAD_REQUEST;
-	// }
 
 
 static bool	checkValidBodySize(clientData& client)

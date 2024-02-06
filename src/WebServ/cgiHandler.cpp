@@ -1,6 +1,5 @@
 #include "utils.hpp"
 #include <cstdio>
-#include <cerrno>
 #include <iostream>
 #include <cstring>
 #include <unistd.h>
@@ -59,6 +58,7 @@ void CgiHandler::setupEnvironment(const std::string& scriptPath, int pipesIn[2],
 	dup2(pipesIn[0], STDIN_FILENO);
 	close(pipesIn[1]);
 	write(pipesIn[0], _request.c_str(), _request.length());
+	
 	close(pipesIn[0]);
 }
 
@@ -105,9 +105,6 @@ void CgiHandler::executeCgi(const std::string& scriptName)
 	scriptArray[1] = scriptName.c_str();
     scriptArray[2] = nullptr;
 
-	std::cerr << "script arr 0: " << interpreterPath.c_str() << std::endl;
-	std::cerr << "script arr 1: " << scriptName.c_str() << std::endl;
-
     if (execve(scriptArray[0], const_cast<char* const*>(scriptArray), const_cast<char* const*>(envArray)) == -1)
     {
         perror("execve");
@@ -127,6 +124,8 @@ std::string CgiHandler::readCgiOutput(int pipesOut[2])
     {
         output.append(buffer, bytesRead);
     }
+	if (bytesRead < 0)
+	 	std::cerr << COLOR_RED << "Error running CGI" << COLOR_RESET << std::endl;
 
     close(pipesOut[0]);
     return output;
@@ -154,7 +153,6 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
         dup2(pipesOut[1], STDOUT_FILENO);
         close(pipesIn[1]);
         close(pipesOut[0]);
-		std::cerr << "EXECUTING CGI" << std::endl;
         executeCgi(scriptPath);
     }
     else

@@ -1,0 +1,45 @@
+#!/Users/smorphet/.brew/bin/python3
+import sys
+
+def main():
+    # Detailed CSS content in an external file
+    css_content = """
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f2f2f2;
+    }
+    h1 {
+        color: rgb(0, 128, 128);
+        display: inline-block; 
+        margin-right: 10px; 
+    }
+    p {
+        color: black;
+        font-size: 40px;
+    }
+    """
+    
+    # Image source URL or file path
+    image_src = "../cgi-bin/partyPenguin_75.jpeg"
+
+    # Basic HTML response displaying the extracted values with linked CSS and an image
+    html_content = f"""<!DOCTYPE html>
+    <html>
+    <head>
+    <title>Hello There! This CGI Had issues</title>
+    <!-- <style>{css_content}</style> -->
+    </head>
+    <body>
+    <h1>Hello There! This CGI Had issues</h1>
+    <img src='{image_src}' alt='Party Penguin'>
+    </body>
+    </html>
+    """
+
+    response = f"Content-Type: text/html\r\nContent-Length: {len(html_content)}\r\n\r\n{html_content}"
+
+    # Print the HTTP response to stdout
+    sys.stdout.buffer.write(b"HTTP/1.1 200 OK\r\n" + response.encode())
+
+if __name__ == '__main__':
+    main()

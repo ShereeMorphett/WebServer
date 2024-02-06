@@ -1,7 +1,8 @@
-#!/usr/bin/python3
+#!/Users/smorphet/.brew/bin/python3
 
-from __future__ import print_function
-import cgi
+import os
+from urllib.parse import unquote
+import sys
 
 print("HTTP/1.1 200 OK")
 print("Content-type: text/html\r\n\r\n")

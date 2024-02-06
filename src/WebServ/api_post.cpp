@@ -27,7 +27,6 @@ std::string urlEncode(const std::string& value) {
     return escaped.str();
 }
 
-//TODO: make the css linked and correct the file path from these links to the root upload directory when its in
 void WebServerProg::postResponse(int clientSocket) {
     clientData& client = accessClientData(clientSocket);
 	
