@@ -244,7 +244,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	if (!(requestStream >> token))
 		throw std::runtime_error("Request parsing error!");
 	c = token.back();
-	if (c == '/')
+	if (c == '/' && token.length() > 1)
 		token.pop_back();
 	if (!createPath(getClientServer(clientSocket), clientRequestMap, token, client))
 	{
