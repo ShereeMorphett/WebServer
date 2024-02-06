@@ -42,3 +42,4 @@ void printLocation(location &location);
 void printServer(server &server);
 int	countDepth(std::string path);
 std::string parseStartingPath(std::string startingPath, std::string root);
+void replaceMapValue(std::string key, std::string& newValue, clientData& client);

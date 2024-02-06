@@ -35,7 +35,6 @@ void WebServerProg::postResponse(int clientSocket) {
 
 		std::ofstream outFile("./uploads/" + client._fileName, std::ios::binary);
 		if (!outFile) {
-			std::cout << "TEST 2" << std::endl;
 			client._status = INT_ERROR;
 		}
 		else {

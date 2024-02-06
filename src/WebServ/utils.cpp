@@ -29,13 +29,18 @@ bool isValidDirectory(const std::string& path)
 
 bool isValidFile(const std::string& path)
 {
-	std::ifstream file(path);
+	struct stat path_stat;
+    stat(path.c_str(), &path_stat);
 
-	if (file.good()) {
-		return true;
-	}
+    bool isRegularFile = S_ISREG(path_stat.st_mode);
 
-	return false;
+    std::ifstream file(path);
+    if (file.good() && isRegularFile) {
+        file.close();
+        return true;
+    }
+    file.close();
+    return false;
 }
 
 void skipWhitespace(std::istream& stream)
@@ -120,4 +125,15 @@ std::string parseStartingPath(std::string startingPath, std::string root)
 	{
 		return "";
     }
+}
+
+void replaceMapValue(std::string key, std::string& newValue, clientData& client)
+{
+	auto range = client.requestData.equal_range(key);
+
+	for (auto it = range.first; it != range.second;) {
+		it = client.requestData.erase(it);
+	}
+
+	client.requestData.insert(std::make_pair(key, newValue));
 }

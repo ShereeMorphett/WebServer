@@ -52,6 +52,7 @@ struct clientData
 	std::string								_currentDirectory;
 	std::string								_requestPath;
 	std::string								_rawRequest;
+	std::string								_root;
 
 	std::string								_bodyString;
 	std::string								_fileName;

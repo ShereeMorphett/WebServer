@@ -7,10 +7,18 @@
 #include <dirent.h>
 #include <sys/types.h>
 
-static std::string buildDirectoryLinks(DIR *directory, std::string path)
+static std::string	absoluteToRelativePath(std::string root, std::string absoluePath)
 {
-    struct dirent *en;
+	int rootLen = root.length();
+	std::string relativePath = absoluePath.substr(rootLen, absoluePath.length());
+	return(relativePath);
+}
+
+static std::string buildDirectoryLinks(DIR *directory, std::string path, clientData& client)
+{
     std::string directoryFinding;
+    struct dirent *en;
+	std::string link;
 
     directoryFinding += "<!DOCTYPE html>\n\
                         <html>\n\
@@ -21,37 +29,21 @@ static std::string buildDirectoryLinks(DIR *directory, std::string path)
                             <h1>AUTOINDEX</h1>\n\
                             <p>\n";
 
-    if (path.back() != '/')
-        path.append("/");
     while ((en = readdir(directory)) != NULL)
     {
-        std::string entryName = en->d_name;
-        if (entryName == "." || entryName == ".." || entryName[0] == '.' || entryName == "obj")
-            continue;
-        std::string entryPath = "." + path + entryName;
-		std::cout << COLOR_GREEN << "entry		" << entryPath << COLOR_RESET << std::endl;
-        bool boolDirectory = (en->d_type == DT_DIR);
-		std::cout << COLOR_GREEN << boolDirectory << COLOR_RESET << std::endl;
-       if (boolDirectory && !isValidDirectory(entryPath))
-        {
-            std::cerr << "Error: " << entryPath << " is not a directory as expected." << std::endl;
-            continue;
-        }
+		if (!strncmp(en->d_name, ".", 1))
+			continue;
 
-		std::cout << "build directoery links: " << entryPath << "Path	"<< path << std::endl;
-        std::string relativePath = parseStartingPath(entryPath, path);
-		std::cout << COLOR_MAGENTA << relativePath << COLOR_RESET << std::endl;
-        std::string fullLink = "<a href='" + relativePath + "'>" + entryName + "</a>";
+		link.append(absoluteToRelativePath(client._root, path));
+		link.append("/");
+		link.append(en->d_name);
+		
+        std::string fullLink = "<a href='" + link + "'>" + en->d_name + "</a>";
+
         directoryFinding += "\t\t<p>";
-        if (boolDirectory)
-        {
-            directoryFinding += fullLink + "\n";
-        }
-        else
-        {
-            directoryFinding += fullLink;
-        }
+		directoryFinding += fullLink;
         directoryFinding += "</p>\n";
+		link.clear();
     }
     directoryFinding += "\
                             </p>\n\
@@ -62,10 +54,11 @@ static std::string buildDirectoryLinks(DIR *directory, std::string path)
 }
 
 
+
 std::string WebServerProg::createDirectoryListing(int clientSocket, std::string startingPath)
 {
 	clientData&	client = accessClientData(clientSocket);
-	std::string path = "." + startingPath;
+	std::string path = startingPath;
 
 
     client._response.append(HTTP_HEADER);
@@ -73,8 +66,7 @@ std::string WebServerProg::createDirectoryListing(int clientSocket, std::string 
    	client._response.append("Content-Type: text/html\r\n");
     client._response.append(toString(client._status) + "\r\n");
     std::string directoryFinding;
-	std::cerr << COLOR_GREEN << "start " << startingPath << COLOR_RESET << std::endl;
-    std::cerr << COLOR_GREEN << "Dir " << path << COLOR_RESET << std::endl;
+
     DIR *directory = opendir(path.c_str());
     if (directory == NULL)
     {
@@ -91,7 +83,7 @@ std::string WebServerProg::createDirectoryListing(int clientSocket, std::string 
                             <h1></h1>\n\
                             <p>\n";
 
-    directoryFinding += buildDirectoryLinks(directory, startingPath);
+    directoryFinding += buildDirectoryLinks(directory, startingPath, client);
 
     directoryFinding += "\
                             </p>\n\

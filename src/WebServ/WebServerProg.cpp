@@ -101,64 +101,26 @@ void WebServerProg::sendResponse(int clientSocket)
 		response.append(redirHeader);
 		appendMisc(response, 0);
 	}
-	else if (client.location && client.location->listing == true)
+	else if ((client.location && client.location->listing == true) && method == GET)
 	{
-		std::cout << "went to listing with: " << accessDataInMap(clientSocket, "Path") << std::endl;
-		std::cout << "isValidFile: " << isValidFile(accessDataInMap(clientSocket, "Path")) << std::endl;
-		std::cout << "dir: " << isValidDirectory(accessDataInMap(clientSocket, "Path")) << std::endl;
+		std::string myNewAwesomePath = client._root + client._requestPath;
 
-
-		// some checks with the path
-		std::string myNewAwesomePath = accessDataInMap(clientSocket, "Path");
-		// int depth = countDepth(myNewAwesomePath);
-		// size_t pos = myNewAwesomePath.find("WebServer"):
-		// myNewAwesomePath = parseStartingPath(myNewAwesomePath, "WebServer");
-		// size_t pos = myNewAwesomePath.find_first_of('/', 1);
-		// myNewAwesomePath = myNewAwesomePath.substr(pos);
-		myNewAwesomePath = client.location->root + myNewAwesomePath.substr(myNewAwesomePath.find_last_of("/"));  //TODO: there is an issue HERE
-		client._currentDirectory = myNewAwesomePath;
-		myNewAwesomePath = myNewAwesomePath.substr(client._currentDirectory.find_first_of(client.location->root));
-		// myNewAwesomePath = client.location->root + myNewAwesomePath.substr(myNewAwesomePath.find_first_of('/', 1));
-		std::cout << "myNewAwesomePath: " << myNewAwesomePath << std::endl;
-		if (isValidDirectory("." + myNewAwesomePath) && method == GET)
-		{
-			std::cout << "using awesome path" << std::endl;
+		if (!isValidFile(myNewAwesomePath)) {
 			response.append(createDirectoryListing(clientSocket, myNewAwesomePath));
-
-			// client.location->locationPath = client.location->root + myNewAwesomePath;
-		}
-		else if ((!isValidFile(accessDataInMap(clientSocket, "Path")) || isValidDirectory(accessDataInMap(clientSocket, "Path")) ) && method == GET) {
-			std::cout << "using original path" << std::endl;
-			response.append(createDirectoryListing(clientSocket, client.location->locationPath));
-			client.location->locationPath = client.location->root;
 		}
 		else {
-			std::cout << "went to get res" << std::endl;
-			switch (method) {
-			case GET:
-				getResponse(clientSocket);
-				break;
-			case POST:
-				postResponse(clientSocket);
-				break;
-			case DELETE:
-				deleteResponse(clientSocket);
-				break;
-			default:
-				break;
-			}
+			replaceMapValue("Path", myNewAwesomePath, client);
+			getResponse(clientSocket);
 		}
 	}
     else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
-		std::cout << "went to cgi" << std::endl;
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
 		appendStatus(response, OK);
 		response.append(cgi.runCgi(accessDataInMap(clientSocket, "Path"), accessClientData(clientSocket)._requestClient));
     }
 	else
 	{
-		std::cout << "went to get res" << std::endl;
 		switch (method) {
 		case GET:
 			getResponse(clientSocket);
@@ -173,13 +135,6 @@ void WebServerProg::sendResponse(int clientSocket)
 			break;
 		}
 	}
-	// else
-	// {
-	// 	std::cout << "TEST 5" << std::endl;
-	// 	client._status = INT_ERROR;
-	// }
-
-	std::cout << "statu: " << client._status << std::endl;
 
 	if (client._status >= ERRORS)
 	{
