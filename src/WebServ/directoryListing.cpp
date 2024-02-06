@@ -20,14 +20,31 @@ static std::string buildDirectoryLinks(DIR *directory, std::string path, clientD
     struct dirent *en;
 	std::string link;
 
-    directoryFinding += "<!DOCTYPE html>\n\
-                        <html>\n\
-                        <head>\n\
-                            <title>" + path + "</title>\n\
-                        </head>\n\
-                        <body>\n\
-                            <h1>AUTOINDEX</h1>\n\
-                            <p>\n";
+//     directoryFinding += "<!DOCTYPE html>\n\
+//                         <html>\n\
+//                         <head>\n\
+//                             <title>" + path + "</title>\n\
+// 							<style>\n\
+// 								body { background-color: black }\n\
+// 								.link {\n\
+// 									display: flex;\n\
+// 									flex-direction: row;\n\
+// 									justify-content: center;\n\
+// 									align-items: center;\n\
+// 								}\n\
+// 								.link h2 {\n\
+// 									color: white;\n\
+// 									border: 2px solid white;\n\
+// 									padding: 5px 10px;\n\
+// 									text-decoration: none;\n\
+// 									display: inline-block;\n\
+// 									transition: background-color 0.3s, color 0.3s;\n\
+// }								}\n\
+// 							</style>\n\
+//                         </head>\n\
+//                         <body>\n\
+//                             <h1>AUTOINDEX</h1>\n\
+//                             <div className='link'>\n";
 
     while ((en = readdir(directory)) != NULL)
     {
@@ -40,13 +57,13 @@ static std::string buildDirectoryLinks(DIR *directory, std::string path, clientD
 		
         std::string fullLink = "<a href='" + link + "'>" + en->d_name + "</a>";
 
-        directoryFinding += "\t\t<p>";
+        directoryFinding += "\t\t<h2 class='link'>";
 		directoryFinding += fullLink;
-        directoryFinding += "</p>\n";
+        directoryFinding += "</h2>\n";
 		link.clear();
     }
     directoryFinding += "\
-                            </p>\n\
+                            </div>\n\
                         </body>\n\
                         </html>";
 
@@ -78,15 +95,36 @@ std::string WebServerProg::createDirectoryListing(int clientSocket, std::string 
                         <html>\n\
                         <head>\n\
                             <title>" + path + "</title>\n\
+							<style>\n\
+								body { background-color: black }\n\
+								h1 { color: white; }\n\
+								a { color: white; text-decoration: none; }\n\
+								.links-div {\n\
+									display: flex;\n\
+									flex-direction: column;\n\
+									justify-content: center;\n\
+									align-items: center;\n\
+								}\n\
+								.link {\n\
+									color: white;\n\
+									border-radius: 25px;\n\
+									border: 2px solid white;\n\
+									padding: 7.5px 10px;\n\
+									margin-bottom: 5px;\n\
+									text-decoration: none;\n\
+									display: inline-block;\n\
+									transition: background-color 0.3s, color 0.3s;\n\
+}								}\n\
+							</style>\n\
                         </head>\n\
                         <body>\n\
-                            <h1></h1>\n\
-                            <p>\n";
+                            <div class='links-div'>\n\
+							<h1>Auto listing: </h1>";
 
     directoryFinding += buildDirectoryLinks(directory, startingPath, client);
 
     directoryFinding += "\
-                            </p>\n\
+                        	</div>\n\
                         </body>\n\
                         </html>";
     closedir(directory);
