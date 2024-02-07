@@ -5,7 +5,6 @@
 #include <sstream>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <cerrno>
 #include <stdlib.h>
 #include "constants.hpp"
 #include <iterator>
@@ -433,7 +432,6 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 
 	if (accessClientData(clientSocket)._statusClient != CHUNKED && accessClientData(clientSocket)._requestReady)
 	{
-		std::cout << "WOO" << std::endl;
 		m_pollSocketsVec[pollIndex].revents = POLLOUT;
 	}
 	return 0;

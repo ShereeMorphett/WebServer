@@ -20,32 +20,6 @@ static std::string buildDirectoryLinks(DIR *directory, std::string path, clientD
     struct dirent *en;
 	std::string link;
 
-//     directoryFinding += "<!DOCTYPE html>\n\
-//                         <html>\n\
-//                         <head>\n\
-//                             <title>" + path + "</title>\n\
-// 							<style>\n\
-// 								body { background-color: black }\n\
-// 								.link {\n\
-// 									display: flex;\n\
-// 									flex-direction: row;\n\
-// 									justify-content: center;\n\
-// 									align-items: center;\n\
-// 								}\n\
-// 								.link h2 {\n\
-// 									color: white;\n\
-// 									border: 2px solid white;\n\
-// 									padding: 5px 10px;\n\
-// 									text-decoration: none;\n\
-// 									display: inline-block;\n\
-// 									transition: background-color 0.3s, color 0.3s;\n\
-// }								}\n\
-// 							</style>\n\
-//                         </head>\n\
-//                         <body>\n\
-//                             <h1>AUTOINDEX</h1>\n\
-//                             <div className='link'>\n";
-
     while ((en = readdir(directory)) != NULL)
     {
 		if (!strncmp(en->d_name, ".", 1))

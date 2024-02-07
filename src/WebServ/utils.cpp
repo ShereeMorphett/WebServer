@@ -20,7 +20,7 @@ void skipNonPrintable(std::istream& stream)
 bool isValidDirectory(const std::string& path)
 {
 	struct stat fileInfo;
-	std::cout << COLOR_GREEN << "path in validir:	" << path << COLOR_RESET << std::endl;
+
     if (stat(path.c_str(), &fileInfo) != 0)
         return false;
 
@@ -92,6 +92,13 @@ void printLocation(location &location)
 	}
 	std::cout << "\n_______________________________________" << std::endl;
 }
+bool createDirectory(const std::string& path) {
+	
+    if (mkdir(path.c_str(), 0777) == 0) {
+        return true;
+    } else
+        return false;
+}
 
 void printServer(server &server)
 {
@@ -110,7 +117,7 @@ std::string parseStartingPath(std::string startingPath, std::string root)
 {
 
     std::string parse = root;
-	 std::cout << COLOR_GREEN << "Parse:	" << parse << COLOR_RESET << std::endl;
+	
 	size_t pos = startingPath.find(parse);
 	if (pos != std::string::npos)
 	{
@@ -118,7 +125,7 @@ std::string parseStartingPath(std::string startingPath, std::string root)
 
 		if (isValidDirectory(resultPath) && resultPath.back() != '/')
 			resultPath.append("/");
-		std::cout << COLOR_GREEN << "resultPath:	" << resultPath << COLOR_RESET << std::endl;
+
 		return resultPath;
     } 
 	else

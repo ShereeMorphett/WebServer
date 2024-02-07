@@ -91,7 +91,7 @@ static std::map<int, std::string> parseErrorFile(const std::string &line)
 
     if (directive != "error_page")
 	{
-        std::cerr << "Invalid directive: " << directive << std::endl;
+        std::cerr << COLOR_RED << "Invalid directive: " << directive << COLOR_RESET << std::endl;
         return tempMap;
     }
     while (sstream >> key)
@@ -157,6 +157,11 @@ static server parseServer(std::istream &stream)
             sizeStream >> size;
             temp.clientMaxBodySize = size;
         }
+		else if (key == "uploadDirectory")
+        {
+            temp.uploadDirectory = value;
+			createDirectory(temp.uploadDirectory);
+        }
         line.clear();
     }
     return temp;
@@ -186,7 +191,6 @@ std::vector<struct server> parseConfigFile(std::istream &stream)
             }
             catch (const std::exception& e)
             {
-				// TODO: what happens if we are here?! Dont know
                 std::cerr << COLOR_RED << e.what() << COLOR_RESET << std::endl;
             }
         }

@@ -278,7 +278,6 @@ void WebServerProg::handleRequestResponse(int clientIndex)
 		{
 			closeClientConnection(clientIndex);
 		}
-		// TODO: If its keep alive, what should we reset?
 		else
 		{
 			int	clientSocket = m_pollSocketsVec[clientIndex].fd;
