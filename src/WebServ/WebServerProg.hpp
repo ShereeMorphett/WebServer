@@ -92,6 +92,7 @@ class WebServerProg
 		void parseHeaders(int clientSocket, std::string requestChunk, int size);
 		server& getClientServer(int clientSocket);
 		clientData& accessClientData(int clientSocket);
+		void removeChunkSizes(int clientSocket);
 		void appendChunk(int clientSocket, std::string requestChunk);
 
 		void	saveBody(int clientSocket, int size);
