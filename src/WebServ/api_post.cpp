@@ -33,7 +33,6 @@ void WebServerProg::postResponse(int clientSocket) {
 	std::string uploadPath = servers[accessClientData(clientSocket).serverIndex].uploadDirectory;
 	if (client._status < ERRORS) {
 
-		std::cout << COLOR_CYAN << uploadPath + "/" + client._fileName << COLOR_RESET << std::endl;
 		std::ofstream outFile(uploadPath + "/" + client._fileName, std::ios::binary);
 		if (!outFile) {
 			client._status = INT_ERROR;
