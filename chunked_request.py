@@ -36,7 +36,7 @@ def send_chunked_request(host, port, path, file_path):
             if not data:
                 break
             response += data
-
+    print(response)
     return response
 
 

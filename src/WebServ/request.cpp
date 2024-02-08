@@ -341,7 +341,7 @@ void WebServerProg::removeChunkSizes(int clientSocket)
     
     std::string line;
     std::string chunkData;
-	size_t		totalSize;
+	size_t		totalSize = 0;
     while (std::getline(iss, line))
 	{
 		if (line.substr(0, 2) == "0x")
