@@ -425,7 +425,7 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 		if (m_pollSocketsVec[pollIndex].revents & (POLLIN | POLLRDNORM | POLLRDBAND)) // is not error, just waiting and try again after
             return true; 
         std::cerr << "Error! recv" << std::endl;
-        return true;
+        return true; //TODO: close client here 
 	}
 	else if (bytes_received == 0)
 	{

@@ -150,6 +150,7 @@ void WebServerProg::sendResponse(int clientSocket)
 	if (bytes_sent < 0)
 	{
 		std::cout << "Error! send" << "\n";
+		//TODO: close client connect (make sure it does)
 	}
 	response.clear();
 }

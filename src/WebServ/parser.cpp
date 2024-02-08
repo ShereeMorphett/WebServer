@@ -156,6 +156,7 @@ static Server parseServer(std::istream &stream)
             std::stringstream sizeStream(value);
             sizeStream >> size;
             temp.clientMaxBodySize = size;
+			std::cout << "BODY SIZE PARSED: " << size << std::endl;
         }
 		else if (key == "uploadDirectory")
         {
