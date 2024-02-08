@@ -8,7 +8,7 @@
 # include <poll.h>
 # include <chrono>
 
-struct location
+struct Location
 {
     std::vector<std::string> allowedMethods;
 
@@ -23,23 +23,23 @@ struct location
     std::string	cgiPath;
 };
 
-struct server
+struct Server
 {
 	int port;
 	int socketFD;
 	std::string serverName;
     std::map<int, std::string> errorPages;
-    std::vector<location> locations; 
+    std::vector<Location> locations; 
     int clientMaxBodySize;
 	std::string uploadDirectory;
 };
 
 struct clientData
 {
-	clientData(server& serv) : server(serv) {}
+	clientData(Server& serv) : server(serv) {}
 
-	location								*location;
-	server									&server;
+	Location								*location;
+	Server									&server;
 
 	int 									serverIndex;
 	std::multimap<std::string, std::string> requestData;
@@ -70,7 +70,7 @@ class WebServerProg
 		std::string 						configFileName;
 		std::vector<struct pollfd> 			m_pollSocketsVec;
 		std::map<int, struct clientData>	m_clientDataMap;
-		std::vector<server> 				servers;
+		std::vector<Server> 				servers;
 
 	public:
 
@@ -90,8 +90,9 @@ class WebServerProg
 		void handleChunk(int clientSocket, std::string request, int size);
 		void handleBody(int clientSocket, std::string request, int size);
 		void parseHeaders(int clientSocket, std::string requestChunk, int size);
-		server& getClientServer(int clientSocket);
+		Server& getClientServer(int clientSocket);
 		clientData& accessClientData(int clientSocket);
+		void removeChunkSizes(int clientSocket);
 		void appendChunk(int clientSocket, std::string requestChunk);
 
 		void	saveBody(int clientSocket, int size);
@@ -113,8 +114,8 @@ class WebServerProg
 		void	closeClientConnection(int clientIndex);
 };
 
-std::vector<struct server> parseConfigFile(const std::string& fileName);
-void validateServers(const std::vector<struct server> &servers);
+std::vector<struct Server> parseConfigFile(const std::string& fileName);
+void validateServers(const std::vector<struct Server> &servers);
 
 std::string runCgi();
 

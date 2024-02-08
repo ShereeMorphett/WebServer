@@ -40,7 +40,7 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 
 void WebServerProg::initClientData(int clientSocket, int serverIndex)
 {
-	server&	serv = servers[serverIndex];
+	Server&	serv = servers[serverIndex];
 	clientData data(serv);
 
 	data.location = nullptr;

@@ -10,7 +10,7 @@
 #include <iterator>
 
 
-server& WebServerProg::getClientServer(int clientSocket)
+Server& WebServerProg::getClientServer(int clientSocket)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
 	if (it == m_clientDataMap.end())
@@ -32,7 +32,7 @@ static bool	isFile(std::string path)
 	return false;
 }
 
-static bool createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path, clientData& client)
+static bool createPath(Server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path, clientData& client)
 {
 	int	depth = countDepth(path);
 
@@ -41,7 +41,7 @@ static bool createPath(server& server, std::multimap<std::string, std::string>& 
 		path.pop_back();
 	char buffer[1024];
 	memset(buffer, 0, sizeof(buffer));
-	for (std::vector<location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
+	for (std::vector<Location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
 	{	
 		if (path == it->locationPath)
 		{
@@ -184,7 +184,6 @@ void	WebServerProg::parseBody(int clientSocket)
 	}
 }
 
-
 static bool	checkValidBodySize(clientData& client)
 {
 	if (client._currentBodySize != client._expectedBodySize)
@@ -289,8 +288,20 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 		return;
 	}
 
-	client._expectedBodySize = std::stoi(accessDataInMap(clientSocket, "Content-Length"));
-	client._statusClient = IN_BODY;
+	if (accessDataInMap(clientSocket, "Transfer-Encoding") == "chunked")
+	{
+		if (accessDataInMap(clientSocket, "Content-Type") != "plain/text")
+		{
+			//! BAD REQUEST HERE
+		}
+		accessClientData(clientSocket)._statusClient = CHUNKED_FIRST_LOOP;
+	}
+	else
+	{
+		client._expectedBodySize = std::stoi(accessDataInMap(clientSocket, "Content-Length"));
+		client._statusClient = IN_BODY;
+	}
+
 	client._currentBodySize = 0;
 	
 	std::streampos position = requestStream.tellg();
@@ -305,17 +316,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 			parseBody(clientSocket);
 		}
 	}
-
-	// TODO: Do we need a chunked one? If so handle it here
-	
-	// if (accessDataInMap(clientSocket, "Transfer-Encoding") == "chunked")
-	// {
-	// 	accessClientData(clientSocket)._statusClient = CHUNKED;
-	// 	return;
-	// }
 }
-
-
 
 void WebServerProg::handleBody(int clientSocket, std::string requestChunk, int size)
 {
@@ -331,23 +332,62 @@ void WebServerProg::handleBody(int clientSocket, std::string requestChunk, int s
 	}
 }
 
-void WebServerProg::appendChunk(__attribute__((unused))int clientSocket, __attribute__((unused))std::string requestChunk)
+void WebServerProg::removeChunkSizes(int clientSocket)
 {
-	std::istringstream ss(requestChunk);
+    std::string &bodyStr = accessClientData(clientSocket)._bodyString;
 
-	size_t chunkSize;
-
-	ss >> chunkSize;
-	ss.ignore();
-	ss.ignore();
-	if (chunkSize == 0)
+    std::istringstream iss(bodyStr);
+    std::ostringstream oss; // New string stream to build the string without chunk sizes
+    
+    std::string line;
+    std::string chunkData;
+	size_t		totalSize;
+    while (std::getline(iss, line))
 	{
-		accessClientData(clientSocket)._statusClient = DONE;
-		return;
+		if (line.substr(0, 2) == "0x")
+			line = line.substr(2);
+		int size = std::stoi(line, nullptr, 16);
+		if (size == 0)
+			break;
+		totalSize += size;
+		if (totalSize > 50000)
+		{
+			//! BAD REQUEST SIZE ERROR?
+		}
+		for (int i = 0; i < size; i++)
+		{
+			char nextChar;
+			iss.get(nextChar);
+			chunkData.append(1, nextChar);
+		}
+		// ignore CRLF
+		iss.ignore(); iss.ignore();
+    }
+
+    bodyStr = chunkData;
+	accessClientData(clientSocket)._statusClient = DONE;
+	accessClientData(clientSocket)._requestReady = true;
+}
+
+void WebServerProg::appendChunk(int clientSocket, std::string requestChunk)
+{
+	std::string &bodyStr = accessClientData(clientSocket)._bodyString;
+	if (bodyStr.length() > 5)
+	{
+		// Check if end of request has been received
+		std::string lastFive = bodyStr.substr(bodyStr.length() - 5);
+		if (lastFive != "0\r\n\r\n" && accessClientData(clientSocket)._statusClient != CHUNKED_FIRST_LOOP)
+		{
+			bodyStr.append(requestChunk);
+			lastFive = bodyStr.substr(bodyStr.length() - 5);
+		}
+		if (lastFive == "0\r\n\r\n")
+		{
+			removeChunkSizes(clientSocket);
+			return;
+		}
 	}
-	std::string actualChunk;
-	actualChunk.assign(std::istreambuf_iterator<char>(ss), std::istreambuf_iterator<char>());
-	accessDataInMap(clientSocket, "Body").append(actualChunk);
+	accessClientData(clientSocket)._statusClient = CHUNKED;
 }
 
 void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int size)
@@ -361,9 +401,10 @@ void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int 
 			case IN_BODY:
 				handleBody(clientSocket, requestChunk, size);
 				break;
-			case CHUNKED:
-				appendChunk(clientSocket, requestChunk);
-				break;
+		}
+		if (accessClientData(clientSocket)._statusClient == CHUNKED || accessClientData(clientSocket)._statusClient == CHUNKED_FIRST_LOOP)
+		{
+			appendChunk(clientSocket, requestChunk);
 		}
 	}
 	catch(std::exception &e) {

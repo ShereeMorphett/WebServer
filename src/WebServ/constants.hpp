@@ -49,11 +49,12 @@
 # define	NOT_ALLOWED_PAGE	"/defaults/405.html"
 
 // Request statuses
-# define	NONE	0
-# define	IN_BODY	1
-# define	CHUNKED	2
-# define	DONE	3
-# define 	REDIR	4
+# define	NONE				0
+# define	IN_BODY				1
+# define	DONE				2
+# define 	REDIR				3
+# define	CHUNKED_FIRST_LOOP	4
+# define	CHUNKED			5
 
 
 # define	SERVER_PAGE			"/defaults/500.html"

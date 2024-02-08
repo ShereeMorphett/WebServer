@@ -6,8 +6,8 @@
 #include "WebServerProg.hpp"
 
 
-struct server;
-struct location;
+struct Server;
+struct Location;
 
 template <typename T>
 std::string toString(const T& value)
@@ -39,8 +39,8 @@ bool isValidDirectory(const std::string& path);
 bool isValidFile(const std::string& path);
 void skipNonPrintable(std::istream& stream);
 void skipWhitespace(std::istream& stream);
-void printLocation(location &location);
-void printServer(server &server);
+void printLocation(Location &location);
+void printServer(Server &server);
 int	countDepth(std::string path);
 std::string parseStartingPath(std::string startingPath, std::string root);
 void replaceMapValue(std::string key, std::string& newValue, clientData& client);
