@@ -7,7 +7,7 @@
 #include "../Color.hpp"
 #include "utils.hpp"
 
-static bool	isValidRedirLocation(const server &server, std::string const & newPath)
+static bool	isValidRedirLocation(const Server &server, std::string const & newPath)
 {
 	for (size_t i = 0; i < server.locations.size(); i++) {
 		if (newPath == server.locations[i].locationPath) {
@@ -18,7 +18,7 @@ static bool	isValidRedirLocation(const server &server, std::string const & newPa
 	return false;
 }
 
-static int validateLocation(const server &server)
+static int validateLocation(const Server &server)
 {
     for (size_t i = 0; i < server.locations.size() ; i++)
     {
@@ -45,7 +45,7 @@ static int validateLocation(const server &server)
 }
 
 
-static int validateErrorPage(const server &servers)
+static int validateErrorPage(const Server &servers)
 {
     for (std::map<int, std::string>::const_iterator it = servers.errorPages.begin(); it != servers.errorPages.end(); it++)
     {
@@ -57,7 +57,7 @@ static int validateErrorPage(const server &servers)
     return 0;
 }
 
-static int_least16_t validateServerConfigurations(const std::vector<struct server> &servers)
+static int_least16_t validateServerConfigurations(const std::vector<struct Server> &servers)
 {
     for (auto it1 = servers.begin(); it1 != servers.end(); ++it1)
     {
@@ -75,7 +75,7 @@ static int_least16_t validateServerConfigurations(const std::vector<struct serve
     Port numbers 49152 - 65535 are reserved for clients.
     If you have a server in the client port range (49152 - 65535), define that server in the TCP/IP network services database to prevent port number conflicts.
 */
-void validateServers(const std::vector<struct server> &servers) //if there is any valid server it should run 
+void validateServers(const std::vector<struct Server> &servers) //if there is any valid server it should run 
 {
     for (size_t i = 0; i < servers.size(); i++)
     {

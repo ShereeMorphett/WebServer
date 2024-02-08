@@ -13,6 +13,7 @@ def send_chunked_request(host, port, path, file_path):
 
         # Send the Transfer-Encoding header
         s.sendall(b"Transfer-Encoding: chunked\r\n")
+        s.sendall(b"Content-Type: plain/text\r\n")
 
         # Send an empty line to indicate the start of the headers
         s.sendall(b"\r\n")
@@ -39,4 +40,4 @@ def send_chunked_request(host, port, path, file_path):
     return response
 
 
-send_chunked_request("localhost", 8080, "/test/index.html", "./test/second/test.txt")
+send_chunked_request("localhost", 8080, "/test/index.html", "./test/Second/test.txt")

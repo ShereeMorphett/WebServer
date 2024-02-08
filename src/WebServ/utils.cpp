@@ -76,7 +76,7 @@ int	countDepth(std::string path)
 	return depth;
 }
 
-void printLocation(location &location)
+void printLocation(Location &location)
 {
 	std::cout << "\n_______________________________________" << std::endl;
 	std::cout << "LocationPath:		"<< location.locationPath << std::endl;
@@ -100,7 +100,7 @@ bool createDirectory(const std::string& path) {
         return false;
 }
 
-void printServer(server &server)
+void printServer(Server &server)
 {
         std::cout << server.serverName << ":    port: " << server.port << std::endl;
         std::cout << "client body max size: " << server.clientMaxBodySize << std::endl;

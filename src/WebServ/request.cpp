@@ -10,7 +10,7 @@
 #include <iterator>
 
 
-server& WebServerProg::getClientServer(int clientSocket)
+Server& WebServerProg::getClientServer(int clientSocket)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
 	if (it == m_clientDataMap.end())
@@ -32,7 +32,7 @@ static bool	isFile(std::string path)
 	return false;
 }
 
-static bool createPath(server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path, clientData& client)
+static bool createPath(Server& server, std::multimap<std::string, std::string>& clientRequestMap, std::string path, clientData& client)
 {
 	int	depth = countDepth(path);
 
@@ -41,7 +41,7 @@ static bool createPath(server& server, std::multimap<std::string, std::string>& 
 		path.pop_back();
 	char buffer[1024];
 	memset(buffer, 0, sizeof(buffer));
-	for (std::vector<location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
+	for (std::vector<Location>::iterator it = server.locations.begin(); it != server.locations.end(); it++)
 	{	
 		if (path == it->locationPath)
 		{
@@ -290,6 +290,10 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 
 	if (accessDataInMap(clientSocket, "Transfer-Encoding") == "chunked")
 	{
+		if (accessDataInMap(clientSocket, "Content-Type") != "plain/text")
+		{
+			//! BAD REQUEST HERE
+		}
 		accessClientData(clientSocket)._statusClient = CHUNKED_FIRST_LOOP;
 	}
 	else
@@ -337,6 +341,7 @@ void WebServerProg::removeChunkSizes(int clientSocket)
     
     std::string line;
     std::string chunkData;
+	size_t		totalSize;
     while (std::getline(iss, line))
 	{
 		if (line.substr(0, 2) == "0x")
@@ -344,6 +349,11 @@ void WebServerProg::removeChunkSizes(int clientSocket)
 		int size = std::stoi(line, nullptr, 16);
 		if (size == 0)
 			break;
+		totalSize += size;
+		if (totalSize > 50000)
+		{
+			//! BAD REQUEST SIZE ERROR?
+		}
 		for (int i = 0; i < size; i++)
 		{
 			char nextChar;

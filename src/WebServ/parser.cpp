@@ -33,9 +33,9 @@ static std::string	checkDefaultFile(std::string& defaultFile)
 	return defaultFile;
 }
 
-static location parseLocation(std::istream &stream, std::string extValue)
+static Location parseLocation(std::istream &stream, std::string extValue)
 {
-    location temp;
+    Location temp;
     char c;
 
     temp.locationPath = extValue;
@@ -103,9 +103,9 @@ static std::map<int, std::string> parseErrorFile(const std::string &line)
     return tempMap;
 }
 
-static server parseServer(std::istream &stream)
+static Server parseServer(std::istream &stream)
 {
-    server temp;
+    Server temp;
     std::string line;
 
     while (stream)
@@ -167,9 +167,9 @@ static server parseServer(std::istream &stream)
     return temp;
 }
 
-std::vector<struct server> parseConfigFile(std::istream &stream)
+std::vector<struct Server> parseConfigFile(std::istream &stream)
 {
-    std::vector<server> servers;
+    std::vector<Server> servers;
     std::string line;
     while (stream)
     {      
@@ -199,9 +199,9 @@ std::vector<struct server> parseConfigFile(std::istream &stream)
     return servers;
 }
 
-std::vector<struct server> parseConfigFile(const std::string& fileName)
+std::vector<struct Server> parseConfigFile(const std::string& fileName)
 {
-    std::vector<struct server> servers;
+    std::vector<struct Server> servers;
 
     std::ifstream file(fileName.c_str());
     if (!file)

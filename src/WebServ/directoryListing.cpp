@@ -2,6 +2,7 @@
 #include "../Color.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include <cstring>
 #include <string>
 #include <iostream>
 #include <dirent.h>
