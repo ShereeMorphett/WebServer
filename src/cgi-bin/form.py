@@ -43,7 +43,7 @@ def main():
 	"""
 	
 	# Image source URL or file path
-	image_src = "../cgi-bin/partyPenguin_75.jpeg"
+	image_src = "partyPenguin_75.jpeg"
 
 	# Basic HTML response displaying the extracted values with linked CSS and an image
 	html_content = f"<!DOCTYPE html>\n<html>\n<head>\n<title>Hello There!</title>\n<style>{css_content}</style>\n</head>\n<body>\n<h1>Welcome to our site {name} {last_name}</h1>\n<img src='{image_src}' alt='Party Penguin'>\n</body>\n</html>\r\n\r\n" #<img src='{image_src}' alt='Party Penguin'>

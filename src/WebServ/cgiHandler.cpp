@@ -113,16 +113,6 @@ void CgiHandler::executeCgi(const std::string& scriptName)
     }
 }
 
-// void CgiHandler::checkProcessTimeout()
-// {
-// 	std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
-// 	std::chrono::duration<double> duration =  currentTime - scriptTimePoint;
-// 	if (duration > std::chrono::milliseconds(10))
-// 	{
-//         std::cerr << COLOR_RED <<"Error in CGI script" << COLOR_RESET << std::endl;
-// 	}
-// }
-
 
 std::string CgiHandler::readCgiOutput(int pipesOut[2])
 {
@@ -196,6 +186,11 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
 
     if ((cgiPid = fork()) == 0)
     {
+        if (chdir("src/cgi-bin") != 0)
+        {
+            perror("chdir");
+            exit(EXIT_FAILURE);
+        }
         // Child process
         dup2(pipesIn[0], STDIN_FILENO);
         dup2(pipesOut[1], STDOUT_FILENO);
