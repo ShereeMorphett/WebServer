@@ -416,9 +416,8 @@ void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int 
 
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 {
-	char buffer[50000];
+	char buffer[50000] = {};
 
-	std::memset(buffer, 0, 50000);
 	int bytes_received = recv(clientSocket, buffer, 50000, 0);
 	if (bytes_received < 0)
 	{
@@ -434,15 +433,13 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 	}
 	else
 	{
-		buffer[bytes_received] = '\0';
 		std::string requestChunk(buffer, bytes_received);
 		accessClientData(clientSocket)._requestClient.append(buffer, buffer + bytes_received);	
 		handleChunk(clientSocket, requestChunk, bytes_received);
 	}
-
 	if (accessClientData(clientSocket)._statusClient != CHUNKED && accessClientData(clientSocket)._requestReady)
 	{
-		m_pollSocketsVec[pollIndex].revents = POLLOUT;
+		m_pollSocketsVec[pollIndex].events = POLLOUT;
 	}
 	return 0;
 }
