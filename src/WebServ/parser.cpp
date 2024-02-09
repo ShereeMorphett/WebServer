@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include "utils.hpp"
 #include "constants.hpp"
+#include <float.h>
 
 static	std::string	checkRoot(std::string& root)
 {
@@ -152,11 +153,12 @@ static Server parseServer(std::istream &stream)
         }
         else if (key == "client_max_body_size")
         {
-            int size;
+            double size;
             std::stringstream sizeStream(value);
             sizeStream >> size;
             temp.clientMaxBodySize = size;
-			std::cout << "BODY SIZE PARSED: " << size << std::endl;
+            if (size == DBL_MAX)
+                std::cout << COLOR_YELLOW << "WARNING: clientMaxBody exceeds double. Client max body size set to 1.7976931348623158e+308" << COLOR_RESET << std::endl;
         }
 		else if (key == "uploadDirectory")
         {

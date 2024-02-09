@@ -30,7 +30,7 @@ struct Server
 	std::string serverName;
     std::map<int, std::string> errorPages;
     std::vector<Location> locations; 
-    int clientMaxBodySize;
+    double clientMaxBodySize;
 	std::string uploadDirectory;
 };
 
