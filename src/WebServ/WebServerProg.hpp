@@ -99,7 +99,8 @@ class WebServerProg
 		void	parseBody(int clientSocket);
 
 		void handleEvents();
-		void handleRequestResponse(int clientIndex);
+		void handleRequest(int clientIndex);
+		void handleResponse(int clientIndex);
 		int  acceptConnection(int listenSocket, int serverIndex);
 		void checkClientTimeout();
 
