@@ -113,15 +113,15 @@ void CgiHandler::executeCgi(const std::string& scriptName)
     }
 }
 
-void CgiHandler::checkProcessTimeout()
-{
-	std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
-	std::chrono::duration<double> duration =  currentTime - scriptTimePoint;
-	if (duration > std::chrono::milliseconds(10))
-	{
-        std::cerr << COLOR_RED <<"Error in CGI script" << COLOR_RESET << std::endl;
-	}
-}
+// void CgiHandler::checkProcessTimeout()
+// {
+// 	std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+// 	std::chrono::duration<double> duration =  currentTime - scriptTimePoint;
+// 	if (duration > std::chrono::milliseconds(10))
+// 	{
+//         std::cerr << COLOR_RED <<"Error in CGI script" << COLOR_RESET << std::endl;
+// 	}
+// }
 
 
 std::string CgiHandler::readCgiOutput(int pipesOut[2])
@@ -161,9 +161,20 @@ static std::string cgiError(int error_status)
         </body>
         </html>
         )";
-
     else
-        errorResponse = "";
+        errorResponse = R"(HTTP/1.1 500 Content-Type: text/html
+        Content-Length: [length]
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <title>500 Internal Server Error!</title>
+        </head>
+        <body>
+        <h1>500 Internal Server Error!</h1>
+        </body>
+        </html>
+        )";;
     return errorResponse;
 }
 
@@ -200,7 +211,7 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
         close(pipesIn[1]);
         close(pipesOut[0]);
         close(pipesOut[1]);
-        return "";
+        return cgiError(500);
     }
     else
     {
