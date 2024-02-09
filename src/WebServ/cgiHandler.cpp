@@ -143,6 +143,30 @@ std::string CgiHandler::readCgiOutput(int pipesOut[2])
     return output;
 }
 
+static std::string cgiError(int error_status)
+{
+    std::string errorResponse;
+    if (error_status == 504)
+        errorResponse = R"(HTTP/1.1 504 Gateway Timeout
+        Content-Type: text/html
+        Content-Length: [length]
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <title>504 Gateway Timeout</title>
+        </head>
+        <body>
+        <h1>504 Gateway Timeout</h1>
+        </body>
+        </html>
+        )";
+
+    else
+        errorResponse = "";
+    return errorResponse;
+}
+
 std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _request)
 {
     int pipesIn[2];
@@ -192,13 +216,13 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
 
             if (elapsedTime > timeoutDuration)
             {
-                std::cerr << "Timeout occurred while waiting for CGI process" << std::endl;
+                std::cerr << COLOR_RED << "Timeout occurred while waiting for CGI process" << COLOR_RESET << std::endl;
                 close(pipesIn[0]);
                 close(pipesIn[1]);
                 close(pipesOut[0]);
                 close(pipesOut[1]);
-                kill(cgiPid, SIGTERM); // Terminate child process
-                return ""; // Or handle timeout appropriately
+                kill(cgiPid, SIGTERM);
+                return cgiError(504);
             }
 
             // Check for timeout every 100 milliseconds
@@ -225,51 +249,6 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
     dup2(resetStdout, STDOUT_FILENO);
     return cgiOutput;
 }
-
-
-
-// std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _request)
-// {
-//     int pipesIn[2];
-//     int pipesOut[2];
-	
-//     setupEnvironment(scriptPath, pipesIn, _request);
-
-//     pipe(pipesIn);
-// 	pipe(pipesOut);
-
-
-//     int resetStdin = dup(STDIN_FILENO);
-//     int resetStdout = dup(STDOUT_FILENO);
-//     pid_t cgiPid;
-//     std::string cgiOutput;
-// 	scriptTimePoint = std::chrono::steady_clock::now();
-//     if ((cgiPid = fork()) == 0)
-//     {
-//         // Child process
-//         dup2(pipesIn[0], STDIN_FILENO);
-//         dup2(pipesOut[1], STDOUT_FILENO);
-//         close(pipesIn[1]);
-//         close(pipesOut[0]);
-//         executeCgi(scriptPath);
-//     }
-//     else
-//     {
-//         // Parent process
-//         int status;
-//         //if timeout or waitpid happens then close pipe, if timeout reach set status to gateway timeout in header
-//         waitpid(cgiPid, &status, 0);
-//         //if timeout then return the gateway header etc?
-//         cgiOutput = readCgiOutput(pipesOut);
-// 		close(pipesIn[0]);
-// 		close(pipesIn[1]);
-// 		close(pipesOut[0]);
-// 		close(pipesOut[1]);
-//     }
-// 	dup2(resetStdin, STDIN_FILENO);
-// 	dup2(resetStdout, STDOUT_FILENO);
-//     return cgiOutput;
-// }
 
 CgiHandler::CgiHandler(std::multimap<std::string, std::string> requestData): _requestData(requestData)
 {}
