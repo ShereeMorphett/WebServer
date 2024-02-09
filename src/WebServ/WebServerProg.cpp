@@ -219,14 +219,13 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
         close(clientSocket);  
         return -1;
     }
-    addSocketToPoll(clientSocket, POLLIN);
+    addSocketToPoll(clientSocket, POLLIN | POLLOUT);
 	initClientData(clientSocket, serverIndex);
 	
     return clientSocket;
 }		
 void	WebServerProg::closeClientConnection(int clientIndex)
 {
-
 	if (clientIndex >= 0 && clientIndex < static_cast<int>(m_pollSocketsVec.size()))
 	{
 		close(m_pollSocketsVec[clientIndex].fd);		
@@ -264,30 +263,30 @@ static void	clearClientData(clientData& client)
 	client.connectionTime = std::chrono::steady_clock::now();
 }
 
-void WebServerProg::handleRequestResponse(int clientIndex)
+void WebServerProg::handleRequest(int clientIndex)
 {
 	int check = receiveRequest(m_pollSocketsVec[clientIndex].fd, clientIndex);
 	if (check)
 	{
 		return;
 	}
-	if (m_pollSocketsVec[clientIndex].revents & POLLOUT)
-	{
-
-		sendResponse(m_pollSocketsVec[clientIndex].fd);
-		if (accessDataInMap(m_pollSocketsVec[clientIndex].fd,  "Connection") == "close")
-		{
-			closeClientConnection(clientIndex);
-		}
-		else
-		{
-			int	clientSocket = m_pollSocketsVec[clientIndex].fd;
-			clientData& client = accessClientData(clientSocket);
-			clearClientData(client);
-		}
-	}
 }
 
+void WebServerProg::handleResponse(int clientIndex)
+{
+	sendResponse(m_pollSocketsVec[clientIndex].fd);
+	m_pollSocketsVec[clientIndex].events = POLLIN;
+	if (accessDataInMap(m_pollSocketsVec[clientIndex].fd,  "Connection") == "close")
+	{
+		closeClientConnection(clientIndex);
+	}
+	else
+	{
+		int	clientSocket = m_pollSocketsVec[clientIndex].fd;
+		clientData& client = accessClientData(clientSocket);
+		clearClientData(client);
+	}
+}
 void WebServerProg::handleEvents()
 {
 	for (size_t i  = 0; i < m_pollSocketsVec.size(); i++)
@@ -300,8 +299,12 @@ void WebServerProg::handleEvents()
 			}
 			else
 			{
-				handleRequestResponse(i);
+				handleRequest(i);
 			}
+		}
+		else if (m_pollSocketsVec[i].revents & POLLOUT)
+		{
+			handleResponse(i);
 		}
 	}
 }
