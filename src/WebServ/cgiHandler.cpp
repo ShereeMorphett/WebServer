@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <sys/wait.h>
+#include <thread>
 #include <cctype>
 #include "../Color.hpp"
 #include "CgiHandler.hpp"
@@ -112,6 +113,7 @@ void CgiHandler::executeCgi(const std::string& scriptName)
     }
 }
 
+
 std::string CgiHandler::readCgiOutput(int pipesOut[2])
 {
     close(pipesOut[1]); 
@@ -131,6 +133,41 @@ std::string CgiHandler::readCgiOutput(int pipesOut[2])
     return output;
 }
 
+static std::string cgiError(int error_status)
+{
+    std::string errorResponse;
+    if (error_status == 504)
+        errorResponse = R"(HTTP/1.1 504 Gateway Timeout
+        Content-Type: text/html
+        Content-Length: [length]
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <title>504 Gateway Timeout</title>
+        </head>
+        <body>
+        <h1>504 Gateway Timeout</h1>
+        </body>
+        </html>
+        )";
+    else
+        errorResponse = R"(HTTP/1.1 500 Content-Type: text/html
+        Content-Length: [length]
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <title>500 Internal Server Error!</title>
+        </head>
+        <body>
+        <h1>500 Internal Server Error!</h1>
+        </body>
+        </html>
+        )";;
+    return errorResponse;
+}
+
 std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _request)
 {
     int pipesIn[2];
@@ -139,15 +176,21 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
     setupEnvironment(scriptPath, pipesIn, _request);
 
     pipe(pipesIn);
-	pipe(pipesOut);
-
+    pipe(pipesOut);
 
     int resetStdin = dup(STDIN_FILENO);
     int resetStdout = dup(STDOUT_FILENO);
     pid_t cgiPid;
     std::string cgiOutput;
+    scriptTimePoint = std::chrono::steady_clock::now();
+
     if ((cgiPid = fork()) == 0)
     {
+        if (chdir("src/cgi-bin") != 0)
+        {
+            perror("chdir");
+            exit(EXIT_FAILURE);
+        }
         // Child process
         dup2(pipesIn[0], STDIN_FILENO);
         dup2(pipesOut[1], STDOUT_FILENO);
@@ -155,19 +198,61 @@ std::string CgiHandler::runCgi(const std::string& scriptPath, std::string& _requ
         close(pipesOut[0]);
         executeCgi(scriptPath);
     }
+    else if (cgiPid < 0)
+    {
+        // Fork failed
+        std::cerr << "Fork failed" << std::endl;
+        close(pipesIn[0]);
+        close(pipesIn[1]);
+        close(pipesOut[0]);
+        close(pipesOut[1]);
+        return cgiError(500);
+    }
     else
     {
         // Parent process
         int status;
-        waitpid(cgiPid, &status, 0);
-        cgiOutput = readCgiOutput(pipesOut);
-		close(pipesIn[0]);
-		close(pipesIn[1]);
-		close(pipesOut[0]);
-		close(pipesOut[1]);
+        int timeoutSeconds = 10; 
+        std::chrono::duration<double> timeoutDuration(timeoutSeconds);
+
+        while (true)
+        {
+            std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+            std::chrono::duration<double> elapsedTime = currentTime - scriptTimePoint;
+
+            if (elapsedTime > timeoutDuration)
+            {
+                std::cerr << COLOR_RED << "Timeout occurred while waiting for CGI process" << COLOR_RESET << std::endl;
+                close(pipesIn[0]);
+                close(pipesIn[1]);
+                close(pipesOut[0]);
+                close(pipesOut[1]);
+                kill(cgiPid, SIGTERM);
+                return cgiError(504);
+            }
+
+            // Check for timeout every 100 milliseconds
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+            // Check if child process has finished
+            if (waitpid(cgiPid, &status, WNOHANG) != 0)
+                break;
+        }
+
+        // Read CGI output if the child process exited normally
+        if (WIFEXITED(status))
+        {
+            cgiOutput = readCgiOutput(pipesOut);
+        }
+
+        close(pipesIn[0]);
+        close(pipesIn[1]);
+        close(pipesOut[0]);
+        close(pipesOut[1]);
     }
-	dup2(resetStdin, STDIN_FILENO);
-	dup2(resetStdout, STDOUT_FILENO);
+
+    dup2(resetStdin, STDIN_FILENO);
+    dup2(resetStdout, STDOUT_FILENO);
     return cgiOutput;
 }
 

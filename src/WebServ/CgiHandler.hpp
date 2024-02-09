@@ -9,8 +9,10 @@ class CgiHandler
 {
     private:
         std::map<std::string, std::string> cgiEnvironment;
-		std::multimap<std::string, std::string> _requestData;
+    		std::multimap<std::string, std::string> _requestData;
+    	  std::chrono::steady_clock::time_point scriptTimePoint;
     public:
+    void checkProcessTimeout();
 		void setupEnvironment(const std::string& scriptPath, int pipesIn[2], std::string& _request);
 		void executeCgi(const std::string& scriptName);
 		std::string readCgiOutput(int pipesOut[2]);
