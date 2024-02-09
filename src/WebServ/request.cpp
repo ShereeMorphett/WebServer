@@ -2,6 +2,7 @@
 #include "utils.hpp"
 #include "Color.hpp"
 #include <cstring>
+#include <iomanip>
 #include <sstream>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -148,6 +149,17 @@ static bool	removeBoundary(clientData& client, std::string& boundary)
 	return false;
 }
 
+static std::string getCurrentTimestamp()
+{
+    auto now = std::chrono::system_clock::now();
+    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+    std::tm* timeInfo = std::localtime(&currentTime);
+    std::stringstream ss;
+    ss << std::put_time(timeInfo, "%Y-%m-%d_%H-%M-%S");
+    
+    return ss.str();
+}
+
 // NOTE: Currently handles just multipart form 
 void	WebServerProg::parseBody(int clientSocket)
 {
@@ -161,7 +173,7 @@ void	WebServerProg::parseBody(int clientSocket)
 		client._requestReady = true;
 		return;
 	}
-	if (format.find("multipart/form-data;") != std::string::npos)
+	else if (format.find("multipart/form-data;") != std::string::npos)
 	{
 		client._fileName = fetchName(client._bodyString);
 		std::string boundary = parseBoundary(format);
@@ -175,6 +187,12 @@ void	WebServerProg::parseBody(int clientSocket)
 			client._status = BAD_REQUEST;
 			return;
 		}
+		client._requestReady = true;
+	}
+	else if (format.find("plain/text") != std::string::npos)
+	{
+		client._fileName = getCurrentTimestamp() + ".txt";
+		client._fileData = client._bodyString;
 		client._requestReady = true;
 	}
 	else

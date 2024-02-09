@@ -286,6 +286,7 @@ void WebServerProg::handleResponse(int clientIndex)
 		clearClientData(client);
 	}
 }
+
 void WebServerProg::handleEvents()
 {
 	for (size_t i  = 0; i < m_pollSocketsVec.size(); i++)
@@ -359,7 +360,6 @@ void WebServerProg::startProgram()
 		return ;
 	}
 }
-
 
 WebServerProg::WebServerProg() : serverCount(0)
 {	
