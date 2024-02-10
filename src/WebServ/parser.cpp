@@ -78,6 +78,8 @@ static Location parseLocation(std::istream &stream, std::string extValue)
 			temp.defaultFile = checkDefaultFile(value);
 		else if (key == "cgi_path")
         	temp.cgiPath = value; 
+        else if (key == "alias")
+            temp.alias = value;
 		line.clear();
     }
 	return temp;

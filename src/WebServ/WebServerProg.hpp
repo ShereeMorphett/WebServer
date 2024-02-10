@@ -21,6 +21,7 @@ struct Location
     bool 		listing;
     std::string	defaultFile;
     std::string	cgiPath;
+	std::string alias;
 };
 
 struct Server

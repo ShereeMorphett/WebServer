@@ -77,6 +77,17 @@ bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string,
 	{
 		if (location.locationPath == clientRequestMap.find("requestPath")->second)
 		{	
+			// Change path to alias path if it exists
+			if (!location.alias.empty())
+			{
+				std::string newAliasPath = accessDataInMap(clientSocket, "Path");
+				size_t startPos = newAliasPath.find(location.locationPath);
+				newAliasPath.replace(startPos, location.locationPath.size(), location.alias);
+				accessClientData(clientSocket).requestData.find("Path")->second = newAliasPath;
+
+				startPos = accessClientData(clientSocket)._requestPath.find(location.locationPath);
+				accessClientData(clientSocket)._requestPath.replace(startPos, location.locationPath.size(), location.alias);
+			}
 			for (const auto& methods : location.allowedMethods)
 			{
 				if (methods == clientRequestMap.find("Method")->second)
