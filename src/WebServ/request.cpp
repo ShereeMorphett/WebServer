@@ -15,8 +15,8 @@ Server& WebServerProg::getClientServer(int clientSocket)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
 	if (it == m_clientDataMap.end())
-	{
-		;// TODO: !throw?
+	{	
+		;// TODO: return internal server error behavior
 	}
 	return servers[it->second.serverIndex];
 }
@@ -442,7 +442,8 @@ bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
 		if (m_pollSocketsVec[pollIndex].revents & (POLLIN | POLLRDNORM | POLLRDBAND)) // is not error, just waiting and try again after
             return true; 
         std::cerr << "Error! recv" << std::endl;
-        return true; //TODO: close client here 
+		closeClientConnection(clientSocket);
+        return true;
 	}
 	else if (bytes_received == 0)
 	{

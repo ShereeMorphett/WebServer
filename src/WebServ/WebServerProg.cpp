@@ -134,7 +134,6 @@ void WebServerProg::sendResponse(int clientSocket)
 			break;
 		}
 	}
-
 	if (client._status >= ERRORS)
 	{
 		char buffer[1024] = {};
@@ -145,14 +144,14 @@ void WebServerProg::sendResponse(int clientSocket)
 		appendStatus(response, client._status);
 		appendBody(response, body, path);
 	}
-  
 	int bytes_sent = send(clientSocket, response.c_str(), response.size(), 0);
-	if (bytes_sent < 0)
+	if (bytes_sent == -1)
 	{
-		std::cout << "Error! send" << "\n";
-		//TODO: close client connect (make sure it does)
+		std::cerr << COLOR_RED << "Error! send" << COLOR_RESET << std::endl;
+		closeClientConnection(clientSocket);
 	}
-	response.clear();
+	else if (bytes_sent >= 0)
+		response.clear();
 }
 
 void WebServerProg::initServers()
@@ -206,8 +205,8 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
         return -1; 
     }
 
-	int maxBufferSize = BUFFER_SIZE;
-	if (setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, &maxBufferSize, sizeof(maxBufferSize)) == -1) 
+    int maxBufferSize = BUFFER_SIZE;
+    if (setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, &maxBufferSize, sizeof(maxBufferSize)) == -1) 
     {
         errnoPrinting("setsockopt", errno);
         close(clientSocket);
@@ -219,11 +218,53 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
         close(clientSocket);  
         return -1;
     }
+
+    int serverPort = servers[serverIndex].port;
+    std::string tempServerName = servers[serverIndex].serverName;
+
+    for (size_t i = 0; i < servers.size(); ++i) {
+        if (servers[i].port == serverPort && servers[i].serverName == tempServerName)
+		{
+            serverIndex = i;
+            break;
+        }
+    }
+
     addSocketToPoll(clientSocket, POLLIN | POLLOUT);
-	initClientData(clientSocket, serverIndex);
-	
+    initClientData(clientSocket, serverIndex);
+    
     return clientSocket;
-}		
+}
+
+
+// int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
+// {
+//     int clientSocket = accept(listenSocket, NULL, NULL);
+//     if (clientSocket < 0)
+//     {
+//         errnoPrinting("Accept", errno);
+//         return -1; 
+//     }
+
+// 	int maxBufferSize = BUFFER_SIZE;
+// 	if (setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, &maxBufferSize, sizeof(maxBufferSize)) == -1) 
+//     {
+//         errnoPrinting("setsockopt", errno);
+//         close(clientSocket);
+//         return -1;
+//     }
+//     if (fcntl(clientSocket, F_SETFL, O_NONBLOCK | FD_CLOEXEC))
+//     {
+//         errnoPrinting("fcntl", errno);
+//         close(clientSocket);  
+//         return -1;
+//     }
+//     addSocketToPoll(clientSocket, POLLIN | POLLOUT);
+// 	initClientData(clientSocket, serverIndex);
+	
+//     return clientSocket;
+// }
+
 void	WebServerProg::closeClientConnection(int clientIndex)
 {
 	if (clientIndex >= 0 && clientIndex < static_cast<int>(m_pollSocketsVec.size()))
