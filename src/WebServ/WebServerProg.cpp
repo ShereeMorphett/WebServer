@@ -102,6 +102,7 @@ void WebServerProg::sendResponse(int clientSocket)
 	}
 	else if ((client.location && client.location->listing == true) && method == GET)
 	{
+		std::cout << client._requestPath << std::endl;
 		std::string myNewAwesomePath = client._root + client._requestPath;
 
 		if (!isValidFile(myNewAwesomePath)) {
