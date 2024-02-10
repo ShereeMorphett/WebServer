@@ -14,11 +14,12 @@
 
 static	std::string	checkRoot(std::string& root)
 {
-	if (root[0] != '/')
+	
+    if (root[0] != '/')
 		throw std::runtime_error("Root path must start with '/'");
-	if (root[root.size() - 1] == '/')
+	else  if (root[root.size() - 1] == '/' && root.size() != 1)
 		throw std::runtime_error("Root path must NOT end with '/'");
-	if (root.find('.') != std::string::npos)
+	else if (root.find('.') != std::string::npos)
 		throw std::runtime_error("Root path must NOT contain '.'");
 	
 	return root;
