@@ -90,7 +90,7 @@ void WebServerProg::sendResponse(int clientSocket)
 {
 	clientData& client = accessClientData(clientSocket);
 
-	char method = accessDataInMap(clientSocket, "Method")[0];
+	std::string method = accessDataInMap(clientSocket, "Method");
 	std::string& response = accessClientData(clientSocket)._response;
 
 	if (client.location && client.location->redirection == true)
@@ -100,7 +100,7 @@ void WebServerProg::sendResponse(int clientSocket)
 		response.append(redirHeader);
 		appendMisc(response, 0);
 	}
-	else if ((client.location && client.location->listing == true) && method == GET)
+	else if ((client.location && client.location->listing == true) && method == "GET")
 	{
 		std::string myNewAwesomePath = client._root + client._requestPath;
 
@@ -120,20 +120,14 @@ void WebServerProg::sendResponse(int clientSocket)
     }
 	else
 	{
-		switch (method) {
-		case GET:
+		if (method == "GET")
 			getResponse(clientSocket);
-			break;
-		case POST:
+		else if (method == "POST")
 			postResponse(clientSocket);
-			break;
-		case DELETE:
+		else if (method == "DELETE")
 			deleteResponse(clientSocket);
-			break;
-		default:
-			break;
-		}
 	}
+
 	if (client._status >= ERRORS)
 	{
 		char buffer[1024] = {};
