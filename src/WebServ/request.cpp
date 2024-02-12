@@ -70,14 +70,10 @@ static bool createPath(Server& server, std::multimap<std::string, std::string>& 
 
 bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
 {
-	if (clientRequestMap.find("requestPath")->second == "/src")
-		return true;
-	
 	for (const auto& location : getClientServer(clientSocket).locations)
 	{
 		if (location.locationPath == clientRequestMap.find("requestPath")->second)
 		{	
-			// Change path to alias path if it exists
 			if (!location.alias.empty())
 			{
 				std::string newAliasPath = accessDataInMap(clientSocket, "Path");

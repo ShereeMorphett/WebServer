@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <sys/wait.h>
 #include <thread>
+#include <signal.h>
 #include <cctype>
 #include "../Color.hpp"
 #include "CgiHandler.hpp"

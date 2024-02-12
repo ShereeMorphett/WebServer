@@ -231,7 +231,7 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
     return clientSocket;
 }
 
-
+// TODO: REMOVE OR SAVE?
 // int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
 // {
 //     int clientSocket = accept(listenSocket, NULL, NULL);
