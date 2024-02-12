@@ -37,7 +37,8 @@ void WebServerProg::addSocketToPoll(int socket, int event)
 
 void WebServerProg::initClientData(int clientSocket, int serverIndex)
 {
-	Server&	serv = servers[serverIndex];
+	std::cout << "INIT CLIENT DATA" << std::endl;
+	Server	serv = servers[serverIndex];
 	clientData data(serv);
 
 	data.location = nullptr;

@@ -37,10 +37,10 @@ struct Server
 
 struct clientData
 {
-	clientData(Server& serv) : server(serv) {}
+	clientData(Server serv) : server(serv) {}
 
 	Location								*location;
-	Server									&server;
+	Server									server;
 
 	int 									serverIndex;
 	std::multimap<std::string, std::string> requestData;

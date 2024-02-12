@@ -503,6 +503,8 @@ void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int 
 		}
 	}
 	catch(std::exception &e) {
+		// TODO WE GET IN HERE FROM parseheaders or in body
+		// add comment to each BAD_REQUEST and see what is being thrown
 		accessClientData(clientSocket)._status = BAD_REQUEST;
 		accessClientData(clientSocket)._requestReady = true;
 	}

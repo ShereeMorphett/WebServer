@@ -173,7 +173,6 @@ static Server parseServer(std::istream &stream)
         }
         line.clear();
     }
-	std::cout << COLOR_GREEN << "RETURNING TEMP: " << temp.serverName << COLOR_RESET << std::endl;
     return temp;
 }
 
