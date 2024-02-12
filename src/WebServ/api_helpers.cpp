@@ -4,7 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <unistd.h>
-
+#include <sys/stat.h>
 
 // Get path out of request string
 std::string extractPath(std::string const & request)
@@ -181,15 +181,14 @@ void	appendBody(std::string& _res, std::string& body, std::string const & path) 
 // Check permissions and adjust status accordingly
 void	checkRequest(int* status, std::string const & path)
 {
-	std::ifstream	file(path.c_str());
+	struct stat path_stat;
 
-	if (file.is_open())
+	if (stat(path.c_str(), &path_stat) == 0)
 	{
-		if (file.good())
+		if (S_ISREG(path_stat.st_mode))
 			*status = OK;
 		else
 			*status = NOT_FOUND;
-		file.close();
 	}
 	else
 	{	
