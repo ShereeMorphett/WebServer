@@ -19,10 +19,7 @@
 #include "CgiHandler.hpp"
 #include <chrono>
 
-
-
 # define MAXSOCKET 25
-
 
 static void errnoPrinting(std::string message, int error) 
 {
@@ -93,16 +90,15 @@ void WebServerProg::sendResponse(int clientSocket)
 	std::string method = accessDataInMap(clientSocket, "Method");
 	std::string& response = accessClientData(clientSocket)._response;
 
-	if (client.location && client.location->redirection == true)
+	if (client._status < ERRORS && (client.location && client.location->redirection == true))
 	{
 		std::string redirHeader = createRedirHeader(client);
 		appendStatus(response, client.location->redirStatus);
 		response.append(redirHeader);
 		appendMisc(response, 0);
 	}
-	else if ((client.location && client.location->listing == true) && method == "GET")
+	else if (client._status < ERRORS && (client.location && client.location->listing == true) && method == "GET")
 	{
-		std::cout << client._requestPath << std::endl;
 		std::string myNewAwesomePath = client._root + client._requestPath;
 
 		if (!isValidFile(myNewAwesomePath)) {
@@ -113,7 +109,7 @@ void WebServerProg::sendResponse(int clientSocket)
 			getResponse(clientSocket);
 		}
 	}
-    else if (hasCgiExtension(accessDataInMap(clientSocket, "Path")))
+    else if (client._status < ERRORS && hasCgiExtension(accessDataInMap(clientSocket, "Path")))
 	{
 		CgiHandler cgi(m_clientDataMap.find(clientSocket)->second.requestData);
 		appendStatus(response, OK);
@@ -121,7 +117,9 @@ void WebServerProg::sendResponse(int clientSocket)
     }
 	else
 	{
-		if (method == "GET")
+		if (client._status >= ERRORS)
+			;
+		else if (method == "GET")
 			getResponse(clientSocket);
 		else if (method == "POST")
 			postResponse(clientSocket);
@@ -131,13 +129,21 @@ void WebServerProg::sendResponse(int clientSocket)
 
 	if (client._status >= ERRORS)
 	{
+		client._response.clear();
 		char buffer[1024] = {};
 		std::string path = chooseErrorPage(client);
-		path = getcwd(buffer, sizeof(buffer)) + path;
-		std::string body = readFile(path);
-
-		appendStatus(response, client._status);
-		appendBody(response, body, path);
+		if (path.empty()) {
+			appendStatus(client._response, client._status);
+			client._response.append("Content-length: 0");
+			client._response.append(END_HEADER);
+		}
+		else {
+			path = getcwd(buffer, sizeof(buffer)) + path;
+			std::string body = readFile(path);
+			client._response.clear();
+			appendStatus(response, client._status);
+			appendBody(response, body, path);
+		}
 	}
 	int bytes_sent = send(clientSocket, response.c_str(), response.size(), 0);
 	if (bytes_sent == -1)

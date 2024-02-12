@@ -26,6 +26,7 @@
 
 void WebServerProg::deleteResponse(int clientSocket) {
     std::string& response = accessClientData(clientSocket)._response;
+	clientData& client = accessClientData(clientSocket);
     int status = OK;
     std::string body = "";
     std::string path;
@@ -47,10 +48,16 @@ void WebServerProg::deleteResponse(int clientSocket) {
     }
 
     if (status >= ERRORS) {
-        char buffer[1024] = {};
-        path = chooseErrorPage(accessClientData(clientSocket));
-        path = getcwd(buffer, sizeof(buffer)) + path;
-    }
+		char buffer[1024] = {};
+		path = chooseErrorPage(client);
+		if (path.empty()) {
+			appendStatus(client._response, client._status);
+			appendMisc(client._response, 0);
+			return;
+		}
+		path = getcwd(buffer, sizeof(buffer)) + path;
+		body = readFile(path);
+	}
 
     appendStatus(response, status);
     appendBody(response, body, path);

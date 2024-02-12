@@ -11,14 +11,7 @@ void	WebServerProg::getResponse(int clientSocket) {
 	path = accessDataInMap(clientSocket, "Path");
 	checkRequest(&client._status, path);
 	if (client._status >= ERRORS) {
-		char buffer[1024] = {};
-		path = chooseErrorPage(client);
-		if (path.empty()) {
-			appendStatus(client._response, client._status);
-			appendMisc(client._response, 0);
-			return;
-		}
-		path = getcwd(buffer, sizeof(buffer)) + path;
+		return;
 	}
 	body = readFile(path);
 

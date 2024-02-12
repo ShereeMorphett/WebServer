@@ -52,26 +52,6 @@ std::string	readFile(std::string const & path) {
 	return body;
 }
 
-// std::string	chooseErrorPage(int status) {
-// 	switch (status) {
-// 		case FORBIDDEN:
-// 			return FORBIDDEN_PAGE;
-		
-// 		case UNAUTHORIZED:
-// 			return UNAUTHORIZED_PAGE;
-
-// 		case NOT_FOUND:
-// 			return NOT_FOUND_PAGE;
-
-// 		case NOT_ALLOWED:
-// 			return NOT_ALLOWED_PAGE;
-
-// 		default:
-// 			break; 
-// 	}
-// 	return SERVER_PAGE;
-// }
-
 std::string	chooseErrorPage(clientData& client) {
 	std::string	path = "/defaults";
 
