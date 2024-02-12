@@ -52,24 +52,35 @@ std::string	readFile(std::string const & path) {
 	return body;
 }
 
-std::string	chooseErrorPage(int status) {
-	switch (status) {
-		case FORBIDDEN:
-			return FORBIDDEN_PAGE;
-		
-		case UNAUTHORIZED:
-			return UNAUTHORIZED_PAGE;
+std::string	chooseErrorPage(clientData& client) {
+	std::string	path = "/defaults";
 
+	if (client.server.errorPages.find(client._status)->second.empty()) {
+		return "";
+	}
+
+	switch (client._status) {
 		case NOT_FOUND:
-			return NOT_FOUND_PAGE;
+			path.append(client.server.errorPages.find(NOT_FOUND)->second);
+			break;
 
 		case NOT_ALLOWED:
-			return NOT_ALLOWED_PAGE;
+			path.append(client.server.errorPages.find(NOT_ALLOWED)->second);
+			break;
+
+		case INT_ERROR:
+			path.append(client.server.errorPages.find(NOT_FOUND)->second);
+			break;
+		
+		case 504:
+			path.append(client.server.errorPages.find(504)->second);
+			break;
 
 		default:
 			break; 
 	}
-	return SERVER_PAGE;
+
+	return path;
 }
 
 std::string	createRedirHeader(clientData& client)
@@ -107,21 +118,13 @@ void	appendStatus(std::string& _res, int status) {
 		case OK:
 			_res.append(" OK");
 			break;
-		
-		case CREATED:
-			_res.append(" Created");
-			break;
 
 		case NOT_FOUND:
 			_res.append(" Not Found");
 			break;
 
-		case UNAUTHORIZED:
-			_res.append(" Unauthorized");
-			break;
-		
-		case FORBIDDEN:
-			_res.append(" Forbidden");
+		case NOT_ALLOWED:
+			_res.append(" Not Allowed");
 			break;
 		
 		case ACCEPTED:

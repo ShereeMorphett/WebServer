@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include "utils.hpp"
 #include "constants.hpp"
+#include <unistd.h>
 #include <float.h>
 
 static	std::string	checkRoot(std::string& root)
@@ -102,7 +103,7 @@ static std::map<int, std::string> parseErrorFile(const std::string &line)
 	{
 	    std::stringstream keystream;
 	    keystream << key;
-        tempMap[key] = "/" + keystream.str() + ".html";
+		tempMap[key] = "/" + keystream.str() + ".html";
     }
     return tempMap;
 }

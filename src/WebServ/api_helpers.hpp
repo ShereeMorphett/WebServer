@@ -17,6 +17,6 @@ std::string	readFile(std::string const & path);
 void		checkRequest(int* status, std::string const & path);
 
 std::string	createRedirHeader(clientData& client);
-std::string	chooseErrorPage(int status);
+std::string	chooseErrorPage(clientData& client); 
 
 #endif // !API_HELPERS_HPP

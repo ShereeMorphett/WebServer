@@ -6,6 +6,7 @@
 #include "WebServerProg.hpp"
 #include "../Color.hpp"
 #include "utils.hpp"
+#include <unistd.h>
 
 static bool	isValidRedirLocation(const Server &server, std::string const & newPath)
 {
@@ -49,10 +50,21 @@ static int validateErrorPage(const Server &servers)
 {
     for (std::map<int, std::string>::const_iterator it = servers.errorPages.begin(); it != servers.errorPages.end(); it++)
     {
+		char root[1024] = {};
+		getcwd(root, sizeof(root));
+
         if (it->first < 100 || it->first > 599)
             throw std::runtime_error("Server config file is invalid: Invalid Error Code in server");
         if (it->second.empty())
             throw std::runtime_error("Server config file is invalid: Empty Error Page Path in server");
+
+		std::string file;
+		file.append(root);
+		file.append("/defaults");
+		file.append(it->second);
+		if (!isValidFile(file))
+			throw std::runtime_error("Error page defined but not present. Aborting server start! Add default files and try again :)");
+			
     }
     return 0;
 }
@@ -79,19 +91,19 @@ void validateServers(const std::vector<struct Server> &servers) //if there is an
 {
     for (size_t i = 0; i < servers.size(); i++)
     {
-        if(servers[i].port < 1024 && servers[i].port > 49151)
+        if (servers[i].port < 1024 && servers[i].port > 49151)
             throw std::runtime_error("Server config file is invalid: Invalid port");
-        if(servers[i].clientMaxBodySize <= 0 && servers[i].clientMaxBodySize <= 6144)
+        if (servers[i].clientMaxBodySize <= 0 && servers[i].clientMaxBodySize <= 6144)
             throw std::runtime_error("Server config file is invalid: The max client body size must be less that 6144 bytes and greater that 0 bytes");
-        if(servers[i].socketFD < 0)
+        if (servers[i].socketFD < 0)
             throw std::runtime_error("Server config file is invalid: Socket file descriptor invaild");
-		if(servers[i].uploadDirectory.empty() && isValidDirectory(servers[i].uploadDirectory))
+		if (servers[i].uploadDirectory.empty() && isValidDirectory(servers[i].uploadDirectory))
             throw std::runtime_error("Server config file is invalid: Must have a default uploads path");
         if (validateErrorPage(servers[i]))
 			throw std::runtime_error("Server config file is invalid: Error pages invaild");
         if (validateLocation(servers[i]))
 			throw std::runtime_error("Server config file is invalid: Locations invaild");
-		if(validateServerConfigurations(servers))
+		if (validateServerConfigurations(servers))
 			throw std::runtime_error("Server config file is invalid: Servers on the same port MUST have different configurations");
     }
     std::cout << COLOR_GREEN << "Servers are valid" << COLOR_RESET << std::endl;
