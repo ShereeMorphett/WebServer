@@ -75,7 +75,6 @@ static bool createPath(Server& server, std::multimap<std::string, std::string>& 
 			break;
 		}
 	}
-
 	client._root = buffer;
 	return true;
 }
@@ -249,6 +248,48 @@ static bool	addRequestLocation(clientData& client, std::string const & path)
 	return false;
 }
 
+void WebServerProg::confirmServerPort(int clientSocket)
+{
+	clientData& client = accessClientData(clientSocket);
+
+	// FIND LINE WITH "Host: "
+	size_t startPos = client._rawRequest.find("Host: ");
+	size_t endPos = client._rawRequest.find(NEW_VALUE, startPos);
+
+	std::string HostString = client._rawRequest.substr(startPos, endPos);
+	std::cout << "host: " << HostString << std::endl;
+
+	// std::string hostString = accessDataInMap(clientSocket, "Host");
+	// std::istringstream hostStream(client._rawRequest.find());
+	// char c;
+	// std::string name;
+	// std::string port;
+	// while (hostStream.get(c) && c != ':')
+	// 	name += c;
+	// while (hostStream.get(c))
+	// 	port += c;		
+	// for (size_t i = 0; i < servers.size(); ++i)
+	// {
+	// 	if (!port.empty() && servers[i].port == std::stoi(port) && servers[i].serverName == name)
+	// 	{
+	// 		m_clientDataMap.find(clientSocket)->second.serverIndex = i;
+	// 		m_clientDataMap.find(clientSocket)->second.server = servers[i];
+	// 		// std::cout << &m_clientDataMap.find(clientSocket)->second.location << std::endl;
+	// 		std::string oldRoot = m_clientDataMap.find(clientSocket)->second.location->locationPath;
+	// 		for (size_t j = 0; j < servers[i].locations.size(); j++)
+	// 		{
+	// 			if (servers[i].locations[j].locationPath == oldRoot)
+	// 				m_clientDataMap.find(clientSocket)->second.location = &servers[i].locations[j];
+	// 		}
+			
+	// 		break;
+	// 	}
+	// }
+	// std::cout << COLOR_GREEN << "PRINTING SERVERS TO CHECK FOR OVERWRITE" << COLOR_RESET << std::endl;
+	// for(size_t i = 0; i < servers.size(); i++)
+	// 	printServer(servers[i]);
+}
+
 void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int size)
 {
 	char c;
@@ -257,6 +298,8 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 		return;
 	
 	clientData& client = accessClientData(clientSocket);
+	confirmServerPort(clientSocket);
+	std::cout << "AFTER SERVER PORT" << std::endl;
 
 	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
 	std::istringstream	requestStream(requestChunk);
@@ -464,29 +507,6 @@ void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int 
 		accessClientData(clientSocket)._requestReady = true;
 	}
 
-}
-
-void WebServerProg::confirmServerPort(int clientSocket)
-{
-
-	std::string hostString = accessDataInMap(clientSocket, "Host");
-	std::istringstream hostStream(hostString);
-	char c;
-	std::string name;
-	std::string port;
-	while (hostStream.get(c) && c != ':')
-		name += c;
-	while (hostStream.get(c))
-		port += c;		
-	for (size_t i = 0; i < servers.size(); ++i)
-	{
-		if (!port.empty() && servers[i].port == std::stoi(port) && servers[i].serverName == name)
-		{
-			m_clientDataMap.find(clientSocket)->second.serverIndex = i;
-			m_clientDataMap.find(clientSocket)->second.server = servers[i];
-			break;
-		}
-	}
 }
 
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
