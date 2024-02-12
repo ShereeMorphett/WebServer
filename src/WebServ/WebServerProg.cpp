@@ -132,7 +132,7 @@ void WebServerProg::sendResponse(int clientSocket)
 	if (client._status >= ERRORS)
 	{
 		char buffer[1024] = {};
-		std::string path = chooseErrorPage(client._status);
+		std::string path = chooseErrorPage(client);
 		path = getcwd(buffer, sizeof(buffer)) + path;
 		std::string body = readFile(path);
 

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <dirent.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 static std::string	absoluteToRelativePath(std::string root, std::string absoluePath)
 {
@@ -52,20 +53,18 @@ std::string WebServerProg::createDirectoryListing(int clientSocket, std::string 
 	clientData&	client = accessClientData(clientSocket);
 	std::string path = startingPath;
 
-
-    client._response.append(HTTP_HEADER);
-    client._response.append(NEW_VALUE);
-   	client._response.append("Content-Type: text/html\r\n");
-    client._response.append(toString(client._status) + "\r\n");
     std::string directoryFinding;
 
     DIR *directory = opendir(path.c_str());
     if (directory == NULL)
     {
-        std::cerr << COLOR_RED << "Error: could not open " << path << COLOR_RESET << std::endl;
 		client._status = NOT_FOUND;
-        return "";
+		return "";
     }
+	client._response.append(HTTP_HEADER);
+    client._response.append(NEW_VALUE);
+   	client._response.append("Content-Type: text/html\r\n");
+    client._response.append(toString(client._status) + "\r\n");
     directoryFinding += "<!DOCTYPE html>\n\
                         <html>\n\
                         <head>\n\

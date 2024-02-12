@@ -48,7 +48,7 @@ void WebServerProg::deleteResponse(int clientSocket) {
 
     if (status >= ERRORS) {
         char buffer[1024] = {};
-        path = chooseErrorPage(status);
+        path = chooseErrorPage(accessClientData(clientSocket));
         path = getcwd(buffer, sizeof(buffer)) + path;
     }
 
