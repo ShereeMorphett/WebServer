@@ -111,7 +111,6 @@ static Server parseServer(std::istream &stream)
 {
     Server temp;
     std::string line;
-
     while (stream)
     {
         char c;
@@ -121,10 +120,9 @@ static Server parseServer(std::istream &stream)
         while (stream.get(c) && c != ';' && c != '{')
         {
             skipNonPrintable(stream);
-			char peek = stream.peek();
-            if (c == '}' && peek == '}')
+            if (c == '}')
 				return temp;
-			if (c != '}')
+			else
 				line += c;
         }
         std::stringstream sstream(line);
@@ -140,9 +138,13 @@ static Server parseServer(std::istream &stream)
             }
         }
         else if (key == "server_name")
+		{
             temp.serverName = value;
+		}
         else if (key == "location")
-            temp.locations.push_back(parseLocation(stream, value));
+		{
+			temp.locations.push_back(parseLocation(stream, value));
+		}
         else if (key == "listen")
         {
             int port;
@@ -170,6 +172,7 @@ static Server parseServer(std::istream &stream)
         }
         line.clear();
     }
+	std::cout << COLOR_GREEN << "RETURNING TEMP: " << temp.serverName << COLOR_RESET << std::endl;
     return temp;
 }
 
@@ -193,7 +196,8 @@ std::vector<struct Server> parseConfigFile(std::istream &stream)
         {
             try
             {
-                servers.push_back(parseServer(stream));
+				Server temp = parseServer(stream);
+                servers.push_back(temp);
             }
             catch (const std::exception& e)
             {
@@ -202,6 +206,7 @@ std::vector<struct Server> parseConfigFile(std::istream &stream)
         }
         line.clear();
     }
+
     return servers;
 }
 
