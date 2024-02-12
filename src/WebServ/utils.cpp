@@ -107,8 +107,8 @@ void printServer(Server &server)
         std::cout << COLOR_CYAN << "Error pages map <number, page>" << COLOR_RESET << std::endl;
         printMap(server.errorPages);
         std::cout << COLOR_CYAN <<"printing server locations:	" << server.locations.size() << COLOR_RESET << std::endl; 
-        for (size_t i = 0; i < server.locations.size(); i++)
-			printLocation(server.locations[i]);
+        // for (size_t i = 0; i < server.locations.size(); i++)
+		// 	printLocation(server.locations[i]);
 		std::cout << std::endl;
 }
 

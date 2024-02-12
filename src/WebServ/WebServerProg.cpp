@@ -213,52 +213,12 @@ int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
         close(clientSocket);  
         return -1;
     }
-
-    int serverPort = servers[serverIndex].port;
-    std::string tempServerName = servers[serverIndex].serverName;
-
-    for (size_t i = 0; i < servers.size(); ++i) {
-        if (servers[i].port == serverPort && servers[i].serverName == tempServerName)
-		{
-            serverIndex = i;
-            break;
-        }
-    }
-
+	
     addSocketToPoll(clientSocket, POLLIN | POLLOUT);
     initClientData(clientSocket, serverIndex);
     
     return clientSocket;
 }
-
-// TODO: REMOVE OR SAVE?
-// int WebServerProg::acceptConnection(int listenSocket, int serverIndex)
-// {
-//     int clientSocket = accept(listenSocket, NULL, NULL);
-//     if (clientSocket < 0)
-//     {
-//         errnoPrinting("Accept", errno);
-//         return -1; 
-//     }
-
-// 	int maxBufferSize = BUFFER_SIZE;
-// 	if (setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, &maxBufferSize, sizeof(maxBufferSize)) == -1) 
-//     {
-//         errnoPrinting("setsockopt", errno);
-//         close(clientSocket);
-//         return -1;
-//     }
-//     if (fcntl(clientSocket, F_SETFL, O_NONBLOCK | FD_CLOEXEC))
-//     {
-//         errnoPrinting("fcntl", errno);
-//         close(clientSocket);  
-//         return -1;
-//     }
-//     addSocketToPoll(clientSocket, POLLIN | POLLOUT);
-// 	initClientData(clientSocket, serverIndex);
-	
-//     return clientSocket;
-// }
 
 void	WebServerProg::closeClientConnection(int clientIndex)
 {

@@ -70,6 +70,7 @@ static bool createPath(Server& server, std::multimap<std::string, std::string>& 
 
 bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
 {
+	confirmServerPort(clientSocket);
 	for (const auto& location : getClientServer(clientSocket).locations)
 	{
 		if (location.locationPath == clientRequestMap.find("requestPath")->second)
@@ -352,9 +353,8 @@ void WebServerProg::handleBody(int clientSocket, std::string requestChunk, int s
 	client._rawRequest.clear();
 
 	// TODO: Check correct status
-	if (checkValidBodySize(client)) {
+	if (checkValidBodySize(client))
 		parseBody(clientSocket);
-	}
 }
 
 void WebServerProg::removeChunkSizes(int clientSocket)
@@ -437,6 +437,29 @@ void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int 
 		accessClientData(clientSocket)._requestReady = true;
 	}
 
+}
+
+void WebServerProg::confirmServerPort(int clientSocket)
+{
+
+	std::string hostString = accessDataInMap(clientSocket, "Host");
+	std::istringstream hostStream(hostString);
+	char c;
+	std::string name;
+	std::string port;
+	while (hostStream.get(c) && c != ':')
+		name += c;
+	while (hostStream.get(c))
+		port += c;		
+	for (size_t i = 0; i < servers.size(); ++i)
+	{
+		if (!port.empty() && servers[i].port == std::stoi(port) && servers[i].serverName == name)
+		{
+			m_clientDataMap.find(clientSocket)->second.serverIndex = i;
+			m_clientDataMap.find(clientSocket)->second.server = servers[i];
+			break;
+		}
+	}
 }
 
 bool WebServerProg::receiveRequest(int clientSocket, int pollIndex)
