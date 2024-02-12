@@ -81,7 +81,6 @@ static bool createPath(Server& server, std::multimap<std::string, std::string>& 
 
 bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap)
 {
-	confirmServerPort(clientSocket);
 	for (const auto& location : getClientServer(clientSocket).locations)
 	{
 		if (location.locationPath == clientRequestMap.find("requestPath")->second)
@@ -248,58 +247,53 @@ static bool	addRequestLocation(clientData& client, std::string const & path)
 	return false;
 }
 
-void WebServerProg::confirmServerPort(int clientSocket)
+void WebServerProg::confirmServerPort(clientData& client, std::string request)
 {
-	clientData& client = accessClientData(clientSocket);
+	std::string hostString;
+	std::string name;
+	std::string port;
 
-	// FIND LINE WITH "Host: "
-	size_t startPos = client._rawRequest.find("Host: ");
-	size_t endPos = client._rawRequest.find(NEW_VALUE, startPos);
+	size_t startPos = request.find("Host: ");
+	if (startPos != std::string::npos) {
+		size_t endPos = request.find("\r\n", startPos);
+		startPos += 6;
+		hostString = request.substr(startPos, endPos - startPos);
+	}
+	else {
+		client._status = BAD_REQUEST;
+		client._requestReady = true;
+		return;
+	}
 
-	std::string HostString = client._rawRequest.substr(startPos, endPos);
-	std::cout << "host: " << HostString << std::endl;
+	std::istringstream hostStream(hostString);
+	char c;
+	
+	while (hostStream.get(c) && c != ':')
+		name += c;
+	while (hostStream.get(c))
+		port += c;
+	
 
-	// std::string hostString = accessDataInMap(clientSocket, "Host");
-	// std::istringstream hostStream(client._rawRequest.find());
-	// char c;
-	// std::string name;
-	// std::string port;
-	// while (hostStream.get(c) && c != ':')
-	// 	name += c;
-	// while (hostStream.get(c))
-	// 	port += c;		
-	// for (size_t i = 0; i < servers.size(); ++i)
-	// {
-	// 	if (!port.empty() && servers[i].port == std::stoi(port) && servers[i].serverName == name)
-	// 	{
-	// 		m_clientDataMap.find(clientSocket)->second.serverIndex = i;
-	// 		m_clientDataMap.find(clientSocket)->second.server = servers[i];
-	// 		// std::cout << &m_clientDataMap.find(clientSocket)->second.location << std::endl;
-	// 		std::string oldRoot = m_clientDataMap.find(clientSocket)->second.location->locationPath;
-	// 		for (size_t j = 0; j < servers[i].locations.size(); j++)
-	// 		{
-	// 			if (servers[i].locations[j].locationPath == oldRoot)
-	// 				m_clientDataMap.find(clientSocket)->second.location = &servers[i].locations[j];
-	// 		}
-			
-	// 		break;
-	// 	}
-	// }
-	// std::cout << COLOR_GREEN << "PRINTING SERVERS TO CHECK FOR OVERWRITE" << COLOR_RESET << std::endl;
-	// for(size_t i = 0; i < servers.size(); i++)
-	// 	printServer(servers[i]);
+	for (size_t i = 0; i < servers.size(); ++i)
+	{
+		if (!port.empty() && servers[i].port == std::stoi(port) && servers[i].serverName == name)
+		{
+			client.serverIndex = i;
+			client.server = servers[i];
+		}
+	}
 }
 
 void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int size)
 {
 	char c;
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
-	if (it == m_clientDataMap.end())
+	if (it == m_clientDataMap.end()) {
 		return;
+	}
 	
 	clientData& client = accessClientData(clientSocket);
-	confirmServerPort(clientSocket);
-	std::cout << "AFTER SERVER PORT" << std::endl;
+	confirmServerPort(client, requestChunk);
 
 	std::multimap<std::string, std::string>& clientRequestMap = it->second.requestData;
 	std::istringstream	requestStream(requestChunk);
@@ -356,8 +350,9 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 				break;
 			else
 			{
-				throw std::runtime_error("Request parsing error\n");
 				client._status = BAD_REQUEST;
+				client._requestReady = true;
+				return;
 			}
 		}
 
@@ -388,7 +383,9 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 	{
 		if (accessDataInMap(clientSocket, "Content-Type") != "plain/text")
 		{
-			//! TODO: BAD REQUEST HERE
+			accessClientData(clientSocket)._status = BAD_REQUEST;
+			accessClientData(clientSocket)._requestReady = true;
+			return;
 		}
 		accessClientData(clientSocket)._statusClient = CHUNKED_FIRST_LOOP;
 	}
@@ -432,7 +429,7 @@ void WebServerProg::removeChunkSizes(int clientSocket)
     std::string &bodyStr = accessClientData(clientSocket)._bodyString;
 
     std::istringstream iss(bodyStr);
-    std::ostringstream oss; // New string stream to build the string without chunk sizes
+    std::ostringstream oss;
     
     std::string line;
     std::string chunkData;
@@ -447,7 +444,7 @@ void WebServerProg::removeChunkSizes(int clientSocket)
 		totalSize += size;
 		if (totalSize > 50000)
 		{
-			//! BAD REQUEST SIZE ERROR?
+			// TODO: BAD REQUEST SIZE ERROR?
 		}
 		for (int i = 0; i < size; i++)
 		{
@@ -455,7 +452,6 @@ void WebServerProg::removeChunkSizes(int clientSocket)
 			iss.get(nextChar);
 			chunkData.append(1, nextChar);
 		}
-		// ignore CRLF
 		iss.ignore(); iss.ignore();
     }
 
@@ -491,20 +487,22 @@ void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int 
 		switch (accessClientData(clientSocket)._statusClient)
 		{
 			case NONE:
+				std::cout << "parse headers " << accessClientData(clientSocket)._status << std::endl;
+				
 				parseHeaders(clientSocket, requestChunk, size);
 				break;
 			case IN_BODY:
+				std::cout << "parse body" << std::endl;
 				handleBody(clientSocket, requestChunk, size);
 				break;
 		}
 		if (accessClientData(clientSocket)._statusClient == CHUNKED || accessClientData(clientSocket)._statusClient == CHUNKED_FIRST_LOOP)
 		{
+			std::cout << "parse CHUNK" << std::endl;
 			appendChunk(clientSocket, requestChunk);
 		}
 	}
 	catch(std::exception &e) {
-		// TODO WE GET IN HERE FROM parseheaders or in body
-		// add comment to each BAD_REQUEST and see what is being thrown
 		accessClientData(clientSocket)._status = BAD_REQUEST;
 		accessClientData(clientSocket)._requestReady = true;
 	}

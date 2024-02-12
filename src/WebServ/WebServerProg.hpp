@@ -114,7 +114,7 @@ class WebServerProg
 		bool 	validateRequest(int clientSocket, std::multimap<std::string, std::string>& clientRequestMap);
 		std::string createDirectoryListing(int clientSocket, std::string startingPath);
 		void	closeClientConnection(int clientIndex);
-		void	confirmServerPort(int clientSocket);
+		void 	confirmServerPort(clientData& client, std::string request);
 };
 
 std::vector<struct Server> parseConfigFile(const std::string& fileName);
