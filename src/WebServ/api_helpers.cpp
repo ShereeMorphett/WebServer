@@ -29,7 +29,7 @@ std::string getFileExtension(std::string const & fileName) {
     if (dotPosition != std::string::npos && dotPosition != fileName.length() - 1) {
         return fileName.substr(dotPosition + 1);
     } else {
-		std::cout << "Invalid file, no extension \n";
+		std::cerr << COLOR_RED << "Invalid file, no extension \n" << COLOR_RESET << std::endl;
         return "";
 	}
 }

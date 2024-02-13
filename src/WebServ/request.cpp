@@ -210,7 +210,7 @@ void	WebServerProg::parseBody(int clientSocket)
 		}
 		client._requestReady = true;
 	}
-	else if (format.find("plain/text") != std::string::npos)
+	else if (format.find("plain/text") != std::string::npos || format.find("text/plain") != std::string::npos)
 	{
 		client._fileName = getCurrentTimestamp() + ".txt";
 		client._fileData = client._bodyString;
@@ -228,7 +228,11 @@ static bool	checkValidBodySize(clientData& client)
 	if (client._currentBodySize != client._expectedBodySize)
 		return false;
 	if (client._currentBodySize > client.server.clientMaxBodySize)
+	{
+		client._status = TOO_LARGE;
+		client._requestReady = true;
 		return false;
+	}
 	if (client._currentBodySize > client._expectedBodySize)
 		return false;
 
@@ -383,7 +387,7 @@ void WebServerProg::parseHeaders(int clientSocket, std::string requestChunk, int
 
 	if (accessDataInMap(clientSocket, "Transfer-Encoding") == "chunked")
 	{
-		if (accessDataInMap(clientSocket, "Content-Type") != "plain/text")
+		if (accessDataInMap(clientSocket, "Content-Type") != "text/plain")
 		{
 			accessClientData(clientSocket)._status = BAD_REQUEST;
 			accessClientData(clientSocket)._requestReady = true;

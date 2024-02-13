@@ -20,9 +20,8 @@ def main():
     query_string = os.environ.get("QUERY_STRING")
     decoded_string = decode_url_encoded(query_string)
 
-    # Extract values for "name" and "lastName" from the query string
     text = get_parameter_value("textcontent", decoded_string)
-    # Detailed CSS content in an external file
+
     css_content = """
     body {
         font-family: 'Arial', sans-serif;

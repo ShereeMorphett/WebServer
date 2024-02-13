@@ -11,7 +11,6 @@
 # define	BAD_REQUEST		400
 # define 	REQUEST_TIMEOUT 408
 
-# define 	LISTING			418 //repurpose of the "I'm a teapot" status
 # define	TOO_LARGE		413
 # define	NOT_ALLOWED		405
 # define	NOT_FOUND		404

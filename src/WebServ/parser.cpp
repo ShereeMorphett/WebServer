@@ -183,7 +183,6 @@ static Server parseServer(std::istream &stream)
 			serverStart =  false;
 			return temp;
         }
-		std::cout << line << std::endl;
         line.clear();
     }
     return temp;
