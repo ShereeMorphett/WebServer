@@ -7,6 +7,7 @@
 #include "../Color.hpp"
 #include "utils.hpp"
 #include <unistd.h>
+#include "constants.hpp"
 
 static bool	isValidRedirLocation(const Server &server, std::string const & newPath)
 {
@@ -27,16 +28,13 @@ static int validateLocation(const Server &server)
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
         if (server.locations[i].locationPath.empty())
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
-		// NOTE: might not be needed since bool will always have default value
-        // if (server.locations[i].listing < 0 || server.locations[i].listing > 1)
-        //     throw std::runtime_error("Server config file is invalid: Invalid location in server");
         if (server.locations[i].root.empty())
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
         if (server.locations[i].defaultFile.empty())
             throw std::runtime_error("Server config file is invalid: Invalid location in server");
 		if (server.locations[i].redirection == true)
 		{
-			if (server.locations[i].redirStatus != 307 && server.locations[i].redirStatus != 308)
+			if (server.locations[i].redirStatus != TEMP_REDIR && server.locations[i].redirStatus != PERMA_REDIR)
 				throw std::runtime_error("Server config file is invalid: Invalid location in server");
 			if (!isValidRedirLocation(server, server.locations[i].redirLocation))
 				throw std::runtime_error("Server config file is invalid: Invalid location in server");
