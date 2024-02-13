@@ -134,8 +134,11 @@ void WebServerProg::sendResponse(int clientSocket)
 		std::string path = chooseErrorPage(client);
 		if (path.empty()) {
 			appendStatus(client._response, client._status);
-			client._response.append("Content-length: 0");
+			client._response.append("Content-length: 100");
+			client._response.append(NEW_VALUE);
+			client._response.append("Content-Type: text/html");
 			client._response.append(END_HEADER);
+			client._response.append("<!DOCTYPE html><html><head><title>Error</title></head><body><h2> Error: " + std::to_string(client._status) + "</h2></body></html>");
 		}
 		else {
 			path = getcwd(buffer, sizeof(buffer)) + path;
