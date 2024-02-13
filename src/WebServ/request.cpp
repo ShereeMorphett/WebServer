@@ -487,18 +487,14 @@ void WebServerProg::handleChunk(int clientSocket, std::string requestChunk, int 
 		switch (accessClientData(clientSocket)._statusClient)
 		{
 			case NONE:
-				std::cout << "parse headers " << accessClientData(clientSocket)._status << std::endl;
-				
 				parseHeaders(clientSocket, requestChunk, size);
 				break;
 			case IN_BODY:
-				std::cout << "parse body" << std::endl;
 				handleBody(clientSocket, requestChunk, size);
 				break;
 		}
 		if (accessClientData(clientSocket)._statusClient == CHUNKED || accessClientData(clientSocket)._statusClient == CHUNKED_FIRST_LOOP)
 		{
-			std::cout << "parse CHUNK" << std::endl;
 			appendChunk(clientSocket, requestChunk);
 		}
 	}
