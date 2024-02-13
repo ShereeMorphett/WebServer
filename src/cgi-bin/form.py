@@ -1,4 +1,4 @@
-#!/Users/smorphet/.brew/bin/python3
+#!/Users/ttalvenh/.brew/bin/python3
 import os
 from urllib.parse import unquote
 import sys
