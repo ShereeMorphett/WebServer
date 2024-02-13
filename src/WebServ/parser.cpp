@@ -112,20 +112,27 @@ static Server parseServer(std::istream &stream)
 {
     Server temp;
     std::string line;
+	bool serverStart = true;
+
     while (stream)
     {
         char c;
         std::string key;
         std::string value;
         skipWhitespace(stream);
-        while (stream.get(c) && c != ';' && c != '{')
+		while (stream.get(c) && c != ';' && c != '{')
         {
             skipNonPrintable(stream);
-            if (c == '}')
-				return temp;
-			else
+			if (c != '}')
 				line += c;
+			char peek = stream.peek();
+			if (c == '}' && peek == ';')
+			{
+				stream.get(c);
+				return temp;
+			}
         }
+
         std::stringstream sstream(line);
         sstream >> key >> value;
         if (key == "error_page")
@@ -171,6 +178,12 @@ static Server parseServer(std::istream &stream)
             temp.uploadDirectory = value;
 			createDirectory(temp.uploadDirectory);
         }
+		else if (key == "EOS")
+        {
+			serverStart =  false;
+			return temp;
+        }
+		std::cout << line << std::endl;
         line.clear();
     }
     return temp;

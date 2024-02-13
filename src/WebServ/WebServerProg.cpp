@@ -356,6 +356,8 @@ void WebServerProg::startProgram()
 	{
 		servers = parseConfigFile(configFileName);
 		std::cout << COLOR_GREEN << "servers parsed" << COLOR_RESET << std::endl;
+		for (size_t i = 0; i < servers.size(); i++)
+			printServer(servers[i]);
 		validateServers(servers);
 		initServers();
 		runPoll();
