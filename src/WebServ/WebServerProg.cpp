@@ -363,7 +363,7 @@ void WebServerProg::startProgram()
 	}
 	catch (const std::exception& e)
 	{
-		std::cout << COLOR_RED << "Error! " << e.what() << "\nServer cannot start" << COLOR_RESET << std::endl;
+		std::cout << COLOR_RED << "Error! " << e.what() << "\nClosing Servers" << COLOR_RESET << std::endl;
 		return ;
 	}
 }
