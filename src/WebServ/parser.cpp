@@ -178,7 +178,7 @@ static Server parseServer(std::istream &stream)
             temp.uploadDirectory = value;
 			createDirectory(temp.uploadDirectory);
         }
-		else if (key == "EOS")
+		else if (key == "EOS" && serverStart == true)
         {
 			serverStart =  false;
 			return temp;

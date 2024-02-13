@@ -58,11 +58,13 @@ static bool createPath(Server& server, std::multimap<std::string, std::string>& 
 	{	
 		if (path == it->locationPath)
 		{
+			// TODO: REMOVE PRINT
+			// std::cout << it->locationPath << " == " << path << std::endl;
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + '/' + it->defaultFile));
 			clientRequestMap.insert(std::make_pair("requestPath", it->locationPath));
 			break;
 		}
-		else if (depth <= ROOT && isFile(path))
+		else if (depth <= ROOT && isFile(path))	
 		{
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + path));
 			clientRequestMap.insert(std::make_pair("requestPath", "/"));
