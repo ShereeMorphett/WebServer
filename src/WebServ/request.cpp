@@ -14,13 +14,6 @@
 Server& WebServerProg::getClientServer(int clientSocket)
 {
 	std::map<int, clientData>::iterator it = m_clientDataMap.find(clientSocket);
-	if (it != m_clientDataMap.end())
-	{	
-		// TODO: int error stuff
-		// std::cout << "getClientServer" << std::endl;
-		// accessClientData(clientSocket)._status = INT_ERROR;
-		// accessClientData(clientSocket)._requestReady = true;
-	}
 	return servers[it->second.serverIndex];
 }
 
@@ -58,8 +51,6 @@ static bool createPath(Server& server, std::multimap<std::string, std::string>& 
 	{	
 		if (path == it->locationPath)
 		{
-			// TODO: REMOVE PRINT
-			// std::cout << it->locationPath << " == " << path << std::endl;
 			clientRequestMap.insert(std::make_pair("Path", getcwd(buffer, sizeof(buffer)) + it->root + '/' + it->defaultFile));
 			clientRequestMap.insert(std::make_pair("requestPath", it->locationPath));
 			break;
@@ -87,7 +78,6 @@ bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string,
 	{
 		if (location.locationPath == clientRequestMap.find("requestPath")->second)
 		{	
-			// TODO: add a check that it's not it's self
 			if (!location.alias.empty())
 			{
 				std::string newAliasPath = accessDataInMap(clientSocket, "Path");
@@ -430,8 +420,7 @@ void WebServerProg::handleBody(int clientSocket, std::string requestChunk, int s
 	client._rawRequest.append(requestChunk);
 	saveBody(clientSocket, size);
 	client._rawRequest.clear();
-
-	// TODO: Check correct status
+	
 	if (checkValidBodySize(client))
 		parseBody(clientSocket);
 }
@@ -454,10 +443,6 @@ void WebServerProg::removeChunkSizes(int clientSocket)
 		if (size == 0)
 			break;
 		totalSize += size;
-		if (totalSize > 50000)
-		{
-			// TODO: BAD REQUEST SIZE ERROR?
-		}
 		for (int i = 0; i < size; i++)
 		{
 			char nextChar;
