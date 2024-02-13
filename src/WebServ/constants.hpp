@@ -47,6 +47,7 @@
 # define	FORBIDDEN_PAGE		"/defaults/403.html"
 # define	UNAUTHORIZED_PAGE	"/defaults/401.html"
 # define	NOT_ALLOWED_PAGE	"/defaults/405.html"
+# define	SERVER_PAGE			"/defaults/500.html"
 
 // Request statuses
 # define	NONE				0
@@ -57,7 +58,6 @@
 # define	CHUNKED			5
 
 
-# define	SERVER_PAGE			"/defaults/500.html"
 
 // All methods server supports
 # define	DELETE	'D'
