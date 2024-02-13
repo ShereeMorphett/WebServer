@@ -92,7 +92,17 @@ bool WebServerProg::validateRequest(int clientSocket, std::multimap<std::string,
 			{
 				std::string newAliasPath = accessDataInMap(clientSocket, "Path");
 				size_t startPos = newAliasPath.find(location.locationPath);
-				newAliasPath.replace(startPos, location.locationPath.size(), location.alias);
+				size_t replaceStrSize;
+				if (startPos == std::string::npos)
+				{
+					startPos = newAliasPath.find(location.root);
+					replaceStrSize = location.root.size();
+				}
+				else
+				{
+					replaceStrSize = location.locationPath.size();
+				}
+				newAliasPath.replace(startPos, replaceStrSize, location.alias);
 				accessClientData(clientSocket).requestData.find("Path")->second = newAliasPath;
 
 				startPos = accessClientData(clientSocket)._requestPath.find(location.locationPath);
