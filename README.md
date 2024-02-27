@@ -1,5 +1,4 @@
 # Webserv: Lightweight HTTP Server
-**  PLEASE NOTE: This project is still in progress **
 
 ## Introduction
 
@@ -52,10 +51,6 @@ server {
     }
 }
 ```
-
-## Testing
-
-To ensure the server's correctness and resilience, use various testing methods. A provided tester can be used, and manual tests with browsers or scripting languages like Python, Golang, or C++ are recommended.
 
 ## Comparison with NGINX
 
